@@ -1,0 +1,24 @@
+[core]
+ #ignorecase = true
+ excludesfile = /home/stas/.gitignore
+
+[user]
+ name = "Stanislav Prykhodko"
+ email = "stas@***mail***.com"
+
+[color]
+ status = auto
+ branch = auto
+ ui = true
+
+#[http]
+#proxy = http://login:password@our-proxy-server:8088
+#proxy = http://domain\\login:password@our-proxy-server:8088
+
+[alias]
+ st = status
+ ci = commit
+ my-status = status -s -b
+ my-log = log --pretty=format:'%h - %s' --graph
+
+
