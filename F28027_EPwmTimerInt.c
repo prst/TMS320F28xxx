@@ -55,7 +55,7 @@
 
 // Configure which ePWM timer interrupts are enabled at the PIE level:
 // 1 = enabled,  0 = disabled
-#define PWM1_INT_ENABLE   1
+#define PWM1_INT_ENABLE   0
 #define PWM2_INT_ENABLE   0
 #define PWM3_INT_ENABLE   0
 
@@ -66,8 +66,8 @@
 #define PWM3_TIMER_TBPRD  0x1FFF
 
 //#define CPU_FREQ          (40E6)   // Default = 40 MHz. Change to 50E6 for 50 MHz devices
-#define CPU_FREQ          (50E6)   // Default = 40 MHz. Change to 50E6 for 50 MHz devices
-#define LSPCLK_FREQ       CPU_FREQ/4
+#define CPU_FREQ          CPU_FRQ_50MHZ // Default = 40 MHz. Change to 50E6 for 50 MHz devices
+#define LSPCLK_FREQ       (CPU_FREQ/4)
 
 //#define CPU_FRQ_40MHZ
 //#define CPU_FRQ_50MHZ
@@ -159,7 +159,7 @@ void main(void) {
     } else {
     	wrapper_Error_Handle (err);
     }
-    sciaTxFifoIsr();
+    //sciaTxFifoIsr();
 
 	// Main code
     for(;;) {
@@ -177,6 +177,8 @@ void main(void) {
  * RET  - void
    ========================================================================== */
 void wrapper_Main ( void ) {
+	uint16_t  ui16_gpio_in;
+
     /* asm (" NOP");
     for ( i=1; i<=10; i++ ) {
         GPIO_setPortData (myGpio, GPIO_Port_A, i );
@@ -187,9 +189,21 @@ void wrapper_Main ( void ) {
 	// -- Timer #0 as base CLI (Command Line Interface)
 	// -- CLI (Command Line Interface)
 	// -- PWM #0, #1, #2 : On-Off
-	// -- GPIO
 	// -- UART_PWM_generator
 	// -- LCD and LEDs
+	// -- GPIO
+
+
+	// -- GPIO
+	ui16_gpio_in = GPIO_getPortData (myGpio, GPIO_Port_A);
+	if ( ui16_gpio_in & (1<<12) ) {
+		//GPIO_setLow(myGpio, GPIO_Number_0 );
+		GPIO_setPortData (myGpio, GPIO_Port_A, 0xF );
+		//SCI_write(mySci, '3');
+	} else {
+		//GPIO_setHigh(myGpio, GPIO_Number_0 );
+		GPIO_setPortData (myGpio, GPIO_Port_A, 0xE );
+	}
 }
  /* ========================================================================== */
 
@@ -340,8 +354,10 @@ t_error wrapper_Init_PWM_IRQs (void) {
  * RET  - t_error err
    ========================================================================== */
 t_error wrapper_Init_GPIO (void) {
+	uint16_t  dir=0x0000;
     // Initalize GPIO
-    GPIO_setDirection (myGpio, GPIO_Port_A, 0x000F);
+	dir |= 0x000F; // set outputs
+    GPIO_setDirection (myGpio, GPIO_Port_A, dir);
     GPIO_setPortData  (myGpio, GPIO_Port_A, 0x000F);
 
     return E_OK;
@@ -367,21 +383,22 @@ t_error wrapper_Init_UART_IRQ (void) {
 	// Interrupts that are used in this example are re-mapped to
 	// ISR functions found within this file.
 	EALLOW;    // This is needed to write to EALLOW protected registers
-		   PieVectTable.SCIRXINTA = &sciaRxFifoIsr;
-		//((PIE_Obj *)myPie)->SCIRXINTA = &sciaRxFifoIsr;
-		   PieVectTable.SCITXINTA = &sciaTxFifoIsr;
-		//((PIE_Obj *)myPie)->SCITXINTA = &sciaTxFifoIsr;
+		//PieVectTable.SCIRXINTA = &sciaRxFifoIsr;
+		((PIE_Obj *)myPie)->SCIRXINTA = &sciaRxFifoIsr;
+		//PieVectTable.SCITXINTA = &sciaTxFifoIsr;
+		((PIE_Obj *)myPie)->SCITXINTA = &sciaTxFifoIsr;
 	EDIS;   // This is needed to disable write to EALLOW protected registers
 
 	// Register interrupt handlers in the PIE vector table
-	PIE_registerPieIntHandler(myPie, PIE_GroupNumber_9, PIE_SubGroupNumber_1, (intVec_t)&sciaRxFifoIsr);
-	PIE_registerPieIntHandler(myPie, PIE_GroupNumber_9, PIE_SubGroupNumber_2, (intVec_t)&sciaTxFifoIsr);
+	PIE_registerPieIntHandler
+		(myPie, PIE_GroupNumber_9, PIE_SubGroupNumber_1, (intVec_t)&sciaRxFifoIsr);
+	PIE_registerPieIntHandler
+		(myPie, PIE_GroupNumber_9, PIE_SubGroupNumber_2, (intVec_t)&sciaTxFifoIsr);
 
-	scia_init();        // Init SCI-A
-	scia_fifo_init();   // Init SCI-A Fifos
+	scia_init();            // Init SCI-A
+	scia_fifo_init();       // Init SCI-A Fifos
     SCI_enableTxInt(mySci);
     SCI_enableRxInt(mySci);
-
 
     // Init send data.  After each transmission this data
     // will be updated for the next transmission
@@ -584,6 +601,7 @@ void scia_init()
     SCI_enableTxInt(mySci);
     SCI_enableRxInt(mySci);
     //SCI_enableLoopBack(mySci);
+    SCI_disableLoopBack(mySci);
 
     // SCI BRR = LSPCLK/(SCI BAUDx8) - 1
 #if (CPU_FRQ_50MHZ)

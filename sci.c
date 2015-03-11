@@ -485,8 +485,7 @@ void SCI_putDataBlocking(SCI_Handle sciHandle, uint16_t data)
 {
     SCI_Obj *sci = (SCI_Obj *)sciHandle;
 
-    while(SCI_isTxReady(sciHandle) != true){
-    }
+    while(SCI_isTxReady(sciHandle) != true){ }
     
     // write the data
     sci->SCITXBUF = data;
