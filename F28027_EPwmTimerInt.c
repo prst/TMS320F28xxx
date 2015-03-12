@@ -1,40 +1,11 @@
-//#############################################################################
-//  File:   f2802x_examples_ccsv4/epwm_timer_interrupts/Example_F2802xEPwmTimerInt.c
-//  Title:  F2802x ePWM Timer Interrupt example.
-//#############################################################################
+/* ========================================================================== */
+/* ========================================================================== */
 //  Group:          C2000
 //  Target Device:  TMS320F2802x
-//#############################################################################
-//! \addtogroup example_list
-//!  <h1>PWM Timer Interrupt</h1>
-//!
-//!   This example configures the ePWM Timers and increments
-//!   a counter each time an interrupt is taken.
-//!
-//!   As supplied:
-//!   All ePWM's are initalized.
-//!   All timers have the same period. \n
-//!   The timers are started sync'ed. \n
-//!   An interrupt is taken on a zero event for each ePWM timer.
-//!      ePWM1: takes an interrupt every event \n
-//!      ePWM2: takes an interrupt every 2nd event \n
-//!      ePWM3: takes an interrupt every 3rd event 
-//!
-//!   Thus the Interrupt count for ePWM1 and ePWM4 should be equal.
-//!   The interrupt count for ePWM2 should be about half that of ePWM1,
-//!   and the interrupt count for ePWM3 should be about 1/3 that of ePWM1
-//!   Watch Variables:
-//!   - EPwm1TimerIntCount
-//!   - EPwm2TimerIntCount
-//!   - EPwm3TimerIntCount
-//#############################################################################
-//  (C) Copyright 2012, Texas Instruments, Inc.
-//#############################################################################
-// $TI Release: LaunchPad f2802x Support Library v100 $
-// $Release Date: Wed Jul 25 10:45:39 CDT 2012 $
-//#############################################################################
+/* ========================================================================== */
+/* ========================================================================== */
 
-#include "./include/DSP28x_Project.h"     // Device Headerfile and Examples Include File
+#include "./include/DSP28x_Project.h" // Device Headerfile and Examples Include File
 #include "./include/F2802x_Examples.h"
 #include "./include/cpu.h"
 #include "./include/clk.h"
@@ -51,8 +22,7 @@
 #include "./include/sci.h"
 
 
-//#############################################################################
-
+/* ========================================================================== */
 // Configure which ePWM timer interrupts are enabled at the PIE level:
 // 1 = enabled,  0 = disabled
 #define PWM1_INT_ENABLE   0
@@ -83,13 +53,18 @@ typedef enum {
 } t_error;
 
 // Prototype statements for functions found within this file.
-interrupt void sciaTxFifoIsr(void);
-interrupt void sciaRxFifoIsr(void);
+interrupt void  sciaTxFifoIsr (void);
+interrupt void  sciaRxFifoIsr (void);
 //interrupt void scibTxFifoIsr(void);
 //interrupt void scibRxFifoIsr(void);
-void scia_init(void);
-void scia_fifo_init(void);
-void error(void);
+void  scia_init(void);
+void  scia_fifo_init(void);
+void  error(void);
+
+void  scia_echoback_init (void);
+void  scia_xmit (int a);
+void  scia_msg (char * msg);
+void  scia_echoback_fifo_init (void);
 
 // Prototype statements for functions found within this file.
 interrupt void epwm1_timer_isr(void);
@@ -101,11 +76,16 @@ void init_EPwmTimer(void);
 t_error wrapper_Init_Sys (void);
 t_error wrapper_Init_PWM_IRQs (void);
 t_error wrapper_Init_GPIO (void);
+t_error wrapper_Init_UART_pooling (void);
+t_error wrapper_Init_UART_IRQ (void);
 void    wrapper_Main ( void );
 void    wrapper_Error_Handle( t_error err );
 
 
-// Global variables used in this example
+/* ========================================================================== */
+/* Global variables */
+/* ========================================================================== */
+
 uint32_t     EPwm1TimerIntCount;
 uint32_t     EPwm2TimerIntCount;
 uint32_t     EPwm3TimerIntCount;
@@ -126,10 +106,15 @@ t_error      err = E_OK;
 int          i=0;
 int          i_pwm0=0;
 
-// Global variables
 uint16_t     sdataA[2];     // Send data for SCI-A
 uint16_t     rdataA[2];     // Received data for SCI-A
 uint16_t     rdata_pointA;  // Used for checking the received data
+
+char         *p_sci_msg;
+uint16_t     LoopCount;
+uint16_t     ErrorCount;
+uint16_t     ReceivedChar;
+
 
 
 /* ==========================================================================
@@ -149,13 +134,14 @@ void main(void) {
     }*/
 
     if (E_OK==err) {
-    	err = wrapper_Init_GPIO ();   // GPIO system
+    	err = wrapper_Init_GPIO ();   // Init GPIO system
     } else {
     	wrapper_Error_Handle (err);
     }
 
     if (E_OK==err) {
-    	err = wrapper_Init_UART_IRQ ();   // GPIO system
+    	//err = wrapper_Init_UART_IRQ ();   // Init UART IRQ
+    	err = wrapper_Init_UART_pooling ();   // Init UART without IRQ
     } else {
     	wrapper_Error_Handle (err);
     }
@@ -168,6 +154,14 @@ void main(void) {
 }
 /* ========================================================================== */
 
+
+typedef enum {
+	TERMINAL_PRINT=0,
+	TERMINAL_READ,
+	TERMINAL_SHOW,
+	TERMINAL_ENTER,
+	TERMINAL_WAIT,
+} t_terminal_state;
 
 
 /* ==========================================================================
@@ -204,6 +198,56 @@ void wrapper_Main ( void ) {
 		//GPIO_setHigh(myGpio, GPIO_Number_0 );
 		GPIO_setPortData (myGpio, GPIO_Port_A, 0xE );
 	}
+
+    {
+    	t_terminal_state terminal_state;
+		static uint16_t  try=0xffff;
+
+    	switch ( terminal_state ){
+    		case TERMINAL_PRINT:
+    	    	p_sci_msg = "\rEnter a character: \0";
+    	        scia_msg(p_sci_msg);
+    			terminal_state = TERMINAL_READ;
+    		break;
+
+    		case TERMINAL_READ:
+    	        if (SCI_getRxFifoStatus(mySci) >= SCI_FifoStatus_1_Word) {
+    	            ReceivedChar = SCI_getData(mySci); // Get character
+        			terminal_state = TERMINAL_SHOW;
+    	        } else {
+        			if (--try)
+        				terminal_state = TERMINAL_READ;
+        			else
+        				terminal_state = TERMINAL_SHOW;
+    	        }
+    		break;
+
+    		case TERMINAL_SHOW:
+    			try=0xffff;
+
+	            // Echo character back
+	            p_sci_msg = "  You sent: \0";
+	    		terminal_state = TERMINAL_ENTER;
+    		break;
+
+    		case TERMINAL_ENTER:
+	            scia_msg(p_sci_msg);
+	            scia_xmit(ReceivedChar);
+	            //LoopCount++;
+	    		terminal_state = TERMINAL_WAIT;
+    		break;
+
+    		case TERMINAL_WAIT:
+    	        // Wait for inc character
+    	        //while (SCI_getRxFifoStatus(mySci) < SCI_FifoStatus_4_Words) {}
+	    		terminal_state = TERMINAL_PRINT;
+	        break;
+
+    		default:
+	    		terminal_state = TERMINAL_PRINT;
+    		break;
+    	}
+    }
 }
  /* ========================================================================== */
 
@@ -355,6 +399,7 @@ t_error wrapper_Init_PWM_IRQs (void) {
    ========================================================================== */
 t_error wrapper_Init_GPIO (void) {
 	uint16_t  dir=0x0000;
+
     // Initalize GPIO
 	dir |= 0x000F; // set outputs
     GPIO_setDirection (myGpio, GPIO_Port_A, dir);
@@ -367,7 +412,41 @@ t_error wrapper_Init_GPIO (void) {
 
 
 /* ==========================================================================
- * NAME - Wrapper_Init_Cfg_Sys
+ * NAME - wrapper_Init_UART_pooling
+ * IN   - void
+ * OUT  - void
+ * RET  - t_error err
+   ========================================================================== */
+t_error wrapper_Init_UART_pooling (void) {
+    // Initalize GPIO
+    GPIO_setPullUp(myGpio, GPIO_Number_28, GPIO_PullUp_Enable);
+    GPIO_setPullUp(myGpio, GPIO_Number_29, GPIO_PullUp_Disable);
+    GPIO_setQualification(myGpio, GPIO_Number_28, GPIO_Qual_ASync);
+    GPIO_setMode(myGpio, GPIO_Number_28, GPIO_28_Mode_SCIRXDA);
+    GPIO_setMode(myGpio, GPIO_Number_29, GPIO_29_Mode_SCITXDA);
+
+    // Setup a debug vector table and enable the PIE
+    PIE_setDebugIntVectorTable(myPie);
+    PIE_enable(myPie);
+
+    LoopCount = 0;
+    ErrorCount = 0;
+
+    scia_echoback_init();           // Initalize SCI for echoback
+    scia_echoback_fifo_init();      // Initialize the SCI FIFO
+
+    p_sci_msg = "\r\n\n\nHello World!\0";
+    scia_msg(p_sci_msg);
+
+    p_sci_msg = "\r\nYou will enter a character, and the DSP will echo it back! \n\0";
+    scia_msg(p_sci_msg);
+}
+/* ========================================================================== */
+
+
+
+/* ==========================================================================
+ * NAME - wrapper_Init_UART_IRQ
  * IN   - void
  * OUT  - void
  * RET  - t_error err
@@ -420,8 +499,13 @@ t_error wrapper_Init_UART_IRQ (void) {
 
 
 
-/* ========================================================================== */
-void init_EPwmTimer() {
+/* ==========================================================================
+ * NAME - init_EPwmTimer
+ * IN   - void
+ * OUT  - void
+ * RET  - void
+   ========================================================================== */
+void init_EPwmTimer (void) {
     // Stop all the TB clocks
     CLK_disableTbClockSync(myClk);
     
@@ -468,9 +552,14 @@ void init_EPwmTimer() {
 
 
 
-/* ========================================================================== */
+/* ==========================================================================
+ * NAME - epwm1_timer_isr
+ * IN   - void
+ * OUT  - void
+ * RET  - void
+   ========================================================================== */
 // Interrupt routines uses in this example:
-interrupt void epwm1_timer_isr(void) {
+interrupt void epwm1_timer_isr (void) {
 #if (1==PWM1_INT_ENABLE)
     EPwm1TimerIntCount++;
 
@@ -487,8 +576,13 @@ interrupt void epwm1_timer_isr(void) {
 
 
 
-/* ========================================================================== */
-interrupt void epwm2_timer_isr(void) {
+/* ==========================================================================
+ * NAME - epwm2_timer_isr
+ * IN   - void
+ * OUT  - void
+ * RET  - void
+   ========================================================================== */
+interrupt void epwm2_timer_isr (void) {
 #if (1==PWM2_INT_ENABLE)
     EPwm2TimerIntCount++;
 
@@ -503,8 +597,13 @@ interrupt void epwm2_timer_isr(void) {
 
 
 
-/* ========================================================================== */
-interrupt void epwm3_timer_isr(void) {
+/* ==========================================================================
+ * NAME - epwm3_timer_isr
+ * IN   - void
+ * OUT  - void
+ * RET  - void
+   ========================================================================== */
+interrupt void epwm3_timer_isr (void) {
 #if (1==PWM3_INT_ENABLE)
     EPwm3TimerIntCount++;
 
@@ -519,8 +618,13 @@ interrupt void epwm3_timer_isr(void) {
 
 
 
-/* ========================================================================== */
-interrupt void timer0_isr(void) {
+/* ==========================================================================
+ * NAME - timer0_isr
+ * IN   - void
+ * OUT  - void
+ * RET  - void
+   ========================================================================== */
+interrupt void timer0_isr (void) {
     Timer0IntCount++;
 
     // Clear INT flag for this timer
@@ -533,10 +637,13 @@ interrupt void timer0_isr(void) {
 
 
 
-/* ========================================================================== */
-/* ========================================================================== */
-interrupt void sciaTxFifoIsr(void)
-{
+/* ==========================================================================
+ * NAME - sciaTxFifoIsr
+ * IN   - void
+ * OUT  - void
+ * RET  - void
+   ========================================================================== */
+interrupt void sciaTxFifoIsr (void) {
     uint16_t i;
     for(i=0; i< 2; i++) {
         // Send data
@@ -560,10 +667,13 @@ interrupt void sciaTxFifoIsr(void)
 
 
 
-/* ========================================================================== */
-/* ========================================================================== */
-interrupt void sciaRxFifoIsr(void)
-{
+/* ==========================================================================
+ * NAME - sciaRxFifoIsr
+ * IN   - void
+ * OUT  - void
+ * RET  - void
+   ========================================================================== */
+interrupt void sciaRxFifoIsr (void) {
     uint16_t  i;
     for ( i=0; i<2; i++ ) {
         rdataA[i] = SCI_read(mySci);  // Read data
@@ -584,11 +694,14 @@ interrupt void sciaRxFifoIsr(void)
 
 
 
-/* ========================================================================== */
-/* ========================================================================== */
-void scia_init()
-{
-    CLK_enableSciaClock(myClk);
+/* ==========================================================================
+ * NAME - scia_init
+ * IN   - void
+ * OUT  - void
+ * RET  - void
+   ========================================================================== */
+void scia_init (void) {
+    CLK_enableSciaClock (myClk);
 
     // 1 stop bit, No loopback, No parity, 8 bits, Async-Mode, Idle-Line protocol
     SCI_disableParity(mySci);
@@ -618,10 +731,13 @@ void scia_init()
 
 
 
-/* ========================================================================== */
-/* ========================================================================== */
-void scia_fifo_init()
-{
+/* ==========================================================================
+ * NAME - scia_fifo_init
+ * IN   - void
+ * OUT  - void
+ * RET  - void
+   ========================================================================== */
+void scia_fifo_init (void) {
     SCI_enableFifoEnh(mySci);
     SCI_resetTxFifo(mySci);
     SCI_clearTxFifoInt(mySci);
@@ -640,14 +756,114 @@ void scia_fifo_init()
 
 
 
-/* ========================================================================== */
-void error(void)
-{
+/* ==========================================================================
+ * NAME - error
+ * IN   - void
+ * OUT  - void
+ * RET  - void
+   ========================================================================== */
+void error(void) {
     asm(" ESTOP0"); // Test failed!! Stop!
     for (;;){ }
 }
 /* ========================================================================== */
 
+
+
+/* ==========================================================================
+ * NAME - scia_echoback_init
+ * IN   - void
+ * OUT  - void
+ * RET  - void
+   ========================================================================== */
+// Test 1,SCIA  DLB, 8-bit word, baud rate 0x000F, default, 1 STOP bit, no parity
+void scia_echoback_init (void) {
+    CLK_enableSciaClock(myClk);
+
+    // 1 stop bit, No loopback, No parity,8 char bits, async mode, idle-line protocol
+    SCI_disableParity(mySci);
+    SCI_setNumStopBits(mySci, SCI_NumStopBits_One);
+    SCI_setCharLength(mySci, SCI_CharLength_8_Bits);
+
+    SCI_enableTx(mySci);
+    SCI_enableRx(mySci);
+    SCI_enableTxInt(mySci);
+    SCI_enableRxInt(mySci);
+
+    // SCI BRR = LSPCLK/(SCI BAUDx8) - 1
+#if (CPU_FRQ_60MHZ)
+    SCI_setBaudRate(mySci, (SCI_BaudRate_e)194);
+#elif (CPU_FRQ_50MHZ)
+    //SCI_setBaudRate(mySci, (SCI_BaudRate_e)162);  // @ 9600
+    SCI_setBaudRate(mySci, (SCI_BaudRate_e)13);   // @ 115200
+#elif (CPU_FRQ_40MHZ)
+    SCI_setBaudRate(mySci, (SCI_BaudRate_e)129);
+#endif
+    SCI_enable(mySci);
+
+    return;
+}
+/* ========================================================================== */
+
+
+
+/* ==========================================================================
+ * NAME - scia_xmit
+ * IN   - int
+ * OUT  - void
+ * RET  - void
+   ========================================================================== */
+// Transmit a character from the SCI
+void scia_xmit (int a) {
+//    while (SciaRegs.SCIFFTX.bit.TXFFST != 0) {}
+    while(SCI_getTxFifoStatus(mySci) != SCI_FifoStatus_Empty){
+    }
+//    SciaRegs.SCITXBUF=a;
+    SCI_putDataBlocking(mySci, a);
+}
+/* ========================================================================== */
+
+
+
+/* ==========================================================================
+ * NAME - scia_msg
+ * IN   - char *
+ * OUT  - void
+ * RET  - void
+   ========================================================================== */
+void scia_msg (char * msg) {
+    int i;
+    i = 0;
+    while(msg[i] != '\0')     {
+        scia_xmit(msg[i]);
+        i++;
+    }
+}
+/* ========================================================================== */
+
+
+
+/* ==========================================================================
+ * NAME - scia_echoback_fifo_init
+ * IN   - void
+ * OUT  - void
+ * RET  - void
+   ========================================================================== */
+// Initalize the SCI FIFO
+void scia_echoback_fifo_init (void) {
+    SCI_enableFifoEnh(mySci);
+    SCI_resetTxFifo(mySci);
+    SCI_clearTxFifoInt(mySci);
+    SCI_resetChannels(mySci);
+    SCI_setTxFifoIntLevel(mySci, SCI_FifoLevel_Empty);
+
+    SCI_resetRxFifo(mySci);
+    SCI_clearRxFifoInt(mySci);
+    SCI_setRxFifoIntLevel(mySci, SCI_FifoLevel_4_Words);
+
+    return;
+}
+/* ========================================================================== */
 
 
 //===========================================================================
