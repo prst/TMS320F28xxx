@@ -440,6 +440,8 @@ t_error wrapper_Init_UART_pooling (void) {
 
     p_sci_msg = "\r\nYou will enter a character, and the DSP will echo it back! \n\0";
     scia_msg(p_sci_msg);
+
+    return E_OK;
 }
 /* ========================================================================== */
 
@@ -660,8 +662,7 @@ interrupt void sciaTxFifoIsr (void) {
 
     // Issue PIE ACK
     PIE_clearInt(myPie, PIE_GroupNumber_9);
-
-    return;
+    //return;
 }
 /* ========================================================================== */
 
@@ -687,8 +688,7 @@ interrupt void sciaRxFifoIsr (void) {
     SCI_clearRxFifoOvf(mySci);     // Clear Overflow  flag
     SCI_clearRxFifoInt(mySci);     // Clear Interrupt flag
     PIE_clearInt(myPie, PIE_GroupNumber_9);   // Issue PIE ack
-
-    return;
+    //return;
 }
 /* ========================================================================== */
 

@@ -20,7 +20,10 @@
 
 // **************************************************************************
 // the includes
-#include "f2802x_common/include/cpu.h"
+//#include "f2802x_common/include/cpu.h"
+#include "stdio.h"
+#include "stddef.h"
+#include "../include/cpu.h"
 
 
 //!
