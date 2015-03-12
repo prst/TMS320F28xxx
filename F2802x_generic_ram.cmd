@@ -77,52 +77,45 @@
          if required to create a larger memory block.
 */
 
-MEMORY
-{
+MEMORY {
 PAGE 0 :
    /* For this example, L0 is split between PAGE 0 and PAGE 1 */
    /* BEGIN is used for the "boot to SARAM" bootloader mode   */
-
    BEGIN      : origin = 0x000000, length = 0x000002
-   RAMM0      : origin = 0x000050, length = 0x0003B0
-   RAML0     : origin = 0x008000, length = 0x000800
-   RESET      : origin = 0x3FFFC0, length = 0x000002
-
+   //RAMM0      : origin = 0x000050, length = 0x0003B0
+   RAMM01     : origin = 0x000050, length = 0x0007B0
+   RAML0      : origin = 0x008000, length = 0x000800
+   BOOTROM    : origin = 0x3FF27C, length = 0x000D44
    IQTABLES   : origin = 0x3FE000, length = 0x000B50     /* IQ Math Tables in Boot ROM */
    IQTABLES2  : origin = 0x3FEB50, length = 0x00008C     /* IQ Math Tables in Boot ROM */
    IQTABLES3  : origin = 0x3FEBDC, length = 0x0000AA     /* IQ Math Tables in Boot ROM */
-
-   BOOTROM    : origin = 0x3FF27C, length = 0x000D44
-
+   RESET      : origin = 0x3FFFC0, length = 0x000002
 
 PAGE 1 :
-
    /* For this example, L0 is split between PAGE 0 and PAGE 1 */
    BOOT_RSVD   : origin = 0x000002, length = 0x00004E     /* Part of M0, BOOT rom will use this for stack */
-   RAMM1       : origin = 0x000400, length = 0x000400     /* on-chip RAM block M1 */
+   //RAMM1       : origin = 0x000400, length = 0x000400     /* on-chip RAM block M1 */
 }
 
-
-SECTIONS
-{
+SECTIONS {
    /* Setup for "boot to SARAM" mode:
       The codestart section (found in DSP28_CodeStartBranch.asm)
       re-directs execution to the start of user code.  */
-   codestart        : >  BEGIN,              PAGE = 0
-   ramfuncs         : >> RAMM0 | RAML0      PAGE = 0
-   .text            : >> RAMM0 | RAML0,      PAGE = 0
-   .cinit           : > RAMM0,     PAGE = 0
-   .pinit           : >> RAMM0 | RAML0,     PAGE = 0
-   .switch          : > RAMM0,     PAGE = 0
-   .reset           : >  RESET,              PAGE = 0, TYPE = DSECT /* not used, */
+   codestart        : >  BEGIN,           PAGE = 0
 
-   .stack           : > RAMM1,     PAGE = 1
-   .ebss            : > RAMM1,     PAGE = 1
-   .econst          : > RAMM1,     PAGE = 1
-   .esysmem         : > RAMM1,     PAGE = 1
+   ramfuncs         : >> RAMM01 | RAML0   PAGE = 0
+   .text            : >> RAMM01 | RAML0,  PAGE = 0
+   .cinit           : > RAMM01,           PAGE = 0
+   .pinit           : >> RAMM01 | RAML0,  PAGE = 0
+   .switch          : > RAMM01,           PAGE = 0
+   .reset           : >  RESET,           PAGE = 0, TYPE = DSECT /* not used, */
+   .stack           : > RAMM01,            PAGE = 0
+   .ebss            : > RAMM01,            PAGE = 0
+   .econst          : > RAMM01,            PAGE = 0
+   .esysmem         : > RAMM01,            PAGE = 0
 
-   IQmath           : > RAML0,     PAGE = 0
-   IQmathTables     : > IQTABLES,  PAGE = 0, TYPE = NOLOAD
+   IQmath           : > RAML0,            PAGE = 0
+   IQmathTables     : > IQTABLES,         PAGE = 0, TYPE = NOLOAD
 
   /* Uncomment the section below if calling the IQNexp() or IQexp()
       functions from the IQMath.lib library in order to utilize the
@@ -134,9 +127,7 @@ SECTIONS
    /*
    IQmathTables2    : > IQTABLES2, PAGE = 0, TYPE = NOLOAD
    {
-
               IQmath.lib<IQNexpTable.obj> (IQmathTablesRam)
-
    }
    */
    /* Uncomment the section below if calling the IQNasin() or IQasin()
@@ -149,12 +140,9 @@ SECTIONS
    /*
    IQmathTables3    : > IQTABLES3, PAGE = 0, TYPE = NOLOAD
    {
-
               IQmath.lib<IQNasinTable.obj> (IQmathTablesRam)
-
    }
    */
-
 }
 
 /*

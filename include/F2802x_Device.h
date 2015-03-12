@@ -108,6 +108,7 @@ extern cregister volatile unsigned int IER;
 // C99 defines boolean type to be _Bool, but this doesn't match the format of
 // the other standard integer types.  bool_t has been defined to fill this gap.
 typedef _Bool bool_t;
+//typedef enum {FALSE=0, TRUE=1} bool_t;
 
 // Work around for code that might accidently use uint8_t
 typedef unsigned char uint8_t;

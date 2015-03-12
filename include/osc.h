@@ -20,7 +20,7 @@
 
 // **************************************************************************
 // the includes
-#include "f2802x_common/include/cpu.h"
+#include "./cpu.h"
 
 //!
 //! \defgroup OSC

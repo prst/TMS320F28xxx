@@ -17,6 +17,40 @@
 
 #include "F2802x_Device.h"     // DSP2802x Headerfile Include File
 #include "F2802x_Examples.h"   // DSP2802x Examples Include File
+/*
+
+*/
+
+/*
+CPU_Handle   myCpu;
+PLL_Handle   myPll;
+CLK_Handle   myClk;
+FLASH_Handle myFlash;
+ADC_Handle   myAdc;
+SCI_Handle   mySci;
+GPIO_Handle  myGpio;
+PIE_Handle   myPie;
+PWM_Handle   myPwm1, myPwm2, myPwm3;
+TIMER_Handle myTimer;
+WDOG_Handle  myWDog;
+*/
+
+/*
+typedef enum {
+	E_OK,
+	E_FAIL,
+	E_BADPTR
+} t_error;
+*/
+
+//! \brief External reference to the interrupt flag register (IFR) register
+cregister volatile unsigned int IFR;
+
+
+//! \brief External reference to the interrupt enable register (IER) register
+cregister volatile unsigned int IER;
+
+
 
 #endif  // end of DSP28x_PROJECT_H definition
 
