@@ -849,14 +849,19 @@ interrupt void sciaTxFifoIsr (void) {
     //for(i=0; i< 2; i++) {
  	//   SciaRegs.SCITXBUF=rdataA[i];   // Send data
 	//}
-    //SciaRegs.SCITXBUF=RxTx; //rdataA[0]; // Send data
+    SciaRegs.SCITXBUF=RxTx; //rdataA[0]; // Send data
     //for(i=0; i< 2; i++)               //Increment send data for next cycle
     //{
  	//   sdataA[i] = (sdataA[i]+1) & 0x00FF;
 	//}
 
 	SciaRegs.SCIFFTX.bit.TXFFINTCLR=1;	// Clear SCI Interrupt flag
-	//PieCtrlRegs.PIEACK.all |= 0x100;    // Issue PIE ACK
+	//SciaRegs.SCIFFTX.bit.TXFFINT=0;	    // Clear SCI Interrupt flag
+	PieCtrlRegs.PIEACK.all |= 0x100;    // Issue PIE ACK
+
+    //SCI_clearTxFifoInt(mySci);               // Clear SCI Interrupt flag
+    //PIE_clearInt(myPie, PIE_GroupNumber_9);  // Issue PIE ACK
+
     #endif //USE_UART_IRQ_2
 }
 /* ========================================================================== */
