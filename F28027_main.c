@@ -76,6 +76,20 @@ typedef enum {
 	E_BADPTR
 } t_error;
 
+typedef enum {
+	SCI_TX_READY=0,
+	SCI_TX_SENDING,
+	SCI_TX_FINISH,
+	SCI_NONE
+} t_sci_stat;
+
+typedef struct {
+	struct {
+		t_sci_stat tx :2;
+	} sci;
+} t_status;
+
+t_status sys_stat;
 
 // Prototype statements for functions found within this file.
 interrupt void epwm1_timer_isr(void);
@@ -129,15 +143,15 @@ TIMER_Handle myTimer;
 WDOG_Handle  myWDog;
 
 
-t_error      err    = E_OK;
-int          i      = 0;
-int          i_pwm0 = 0;
+t_error      err=E_OK;
+int          i=0, i_tx=0, i_rx=0;
+int          i_pwm0=0;
 
 char         *p_sci_msg;
 uint16_t     LoopCount;
 uint16_t     ErrorCount;
 uint16_t     ReceivedChar;
-#define      RX_LEN   (8)
+#define      RX_LEN         (8)
 uint16_t     sdataA[RX_LEN];     // Send data for SCI-A
 uint16_t     rdataA[RX_LEN];     // Received data for SCI-A
 uint16_t     rdata_pointA;  // Used for checking the received data
@@ -801,9 +815,23 @@ void scia_fifo_init (void) {
     SCI_enableTxInt(mySci);
     SCI_enableRxInt(mySci);
     //SCI_enableLoopBack(mySci);
-    SCI_setRxFifoIntLevel(mySci, SCI_FifoLevel_1_Word);
-    SCI_setTxFifoIntLevel(mySci, SCI_FifoLevel_Empty);
+    SCI_setTxFifoIntLevel(mySci, /*SCI_FifoLevel_Empty*/31);
+    SCI_setRxFifoIntLevel(mySci, /*SCI_FifoLevel_4_Words*/31);
+    //SCI_disableFifoEnh(mySci);
 
+	/*
+	SCI_enableFifoEnh(mySci);
+	SCI_resetTxFifo(mySci);
+	SCI_clearTxFifoInt(mySci);
+	SCI_resetChannels(mySci);
+	SCI_setTxFifoIntLevel(mySci, SCI_FifoLevel_Empty);
+	SCI_enableTxFifoInt(mySci);
+
+	SCI_resetRxFifo(mySci);
+	SCI_clearRxFifoInt(mySci);
+	SCI_setRxFifoIntLevel(mySci, SCI_FifoLevel_1_Word);
+	SCI_enableRxFifoInt(mySci);
+	*/
     // SCI BRR = LSPCLK/(SCI BAUDx8) - 1
 #if (CPU_FRQ_50MHZ)
     //SCI_setBaudRate(mySci, SCI_BaudRate_9_6_kBaud);
@@ -847,24 +875,33 @@ interrupt void sciaTxFifoIsr (void) {
 #endif //USE_UART_IRQ_1
 
 #if (USE_UART_IRQ_2==1)
-    //Uint16 i=0;
-    //for(i=0; i< 2; i++) {
- 	//   SciaRegs.SCITXBUF=rdataA[i];   // Send data
-	//}
-    SciaRegs.SCITXBUF=RxTx; //rdataA[0]; // Send data
-    //for(i=0; i< 2; i++)               //Increment send data for next cycle
-    //{
- 	//   sdataA[i] = (sdataA[i]+1) & 0x00FF;
-	//}
+    switch (sys_stat.sci.tx){
+    	case SCI_TX_READY:
+    	break;
 
-	SciaRegs.SCIFFTX.bit.TXFFINTCLR=1;	// Clear SCI Interrupt flag
-	//SciaRegs.SCIFFTX.bit.TXFFINT=0;	    // Clear SCI Interrupt flag
-	PieCtrlRegs.PIEACK.all |= 0x100;    // Issue PIE ACK
+    	case SCI_TX_SENDING:
+    		if (i_tx < RX_LEN) {
+    	        SciaRegs.SCITXBUF=rdataA[i_tx];     // Send data
+        		i_tx++;
+        		SciaRegs.SCICTL2.bit.TXINTENA=1;
+        		//SciaRegs.SCIFFTX.bit.TXFFINTCLR=1;  // Clear SCI Interrupt flag
+        		PieCtrlRegs.PIEACK.all |= 0x100;    // Issue PIE ACK
+    	        SCI_enableTxInt(mySci);
+    		} else {
+    			sys_stat.sci.tx = SCI_TX_FINISH;
+    			i_tx=0;
+    		}
+    	break;
 
-    //SCI_clearTxFifoInt(mySci);               // Clear SCI Interrupt flag
-    //PIE_clearInt(myPie, PIE_GroupNumber_9);  // Issue PIE ACK
-
-    #endif //USE_UART_IRQ_2
+    	case SCI_TX_FINISH:
+    		SciaRegs.SCIFFTX.bit.TXFFINTCLR=1;	      // Clear SCI Interrupt flag
+    		PieCtrlRegs.PIEACK.all |= 0x100;          // Issue PIE ACK
+    	    //SCI_clearTxFifoInt(mySci);              // Clear SCI Interrupt flag
+    	    //PIE_clearInt(myPie, PIE_GroupNumber_9); // Issue PIE ACK
+    	    SCI_disableTxInt(mySci);
+    	break;
+    }
+#endif //USE_UART_IRQ_2
 }
 /* ========================================================================== */
 
@@ -898,30 +935,40 @@ interrupt void sciaRxFifoIsr (void) {
 
 #if (USE_UART_IRQ_2==1)
     static Uint16 i=0;
-	//for (i=0; i<RX_LEN; i++) {
-	//   rdataA[i]=SciaRegs.SCIRXBUF.all;	 // Read data
-	//}
-	//for(i=0;i<2;i++) {                  // Check received data
-	//   if(rdataA[i] != ( (rdata_pointA+i) & 0x00FF) ) error();
-	//}
-	//rdata_pointA = (rdata_pointA+1) & 0x00FF;
 
-    if (SciaRegs.SCIRXBUF.bit.RXDT==0) i=0;
+	if (SciaRegs.SCIRXBUF.bit.RXDT=='_') {
+		i=0;
+		sys_stat.sci.tx = SCI_TX_READY;
+	}
 
-    if (i<8) {
-    	rdataA[i++]=SciaRegs.SCIRXBUF.all;	 // Read data
+    switch (sys_stat.sci.tx){
+    	case SCI_TX_READY:
+     	    if ( i < RX_LEN ) {
+    	    	rdataA[i++]=SciaRegs.SCIRXBUF.all;	 // Read data
 
-    	SciaRegs.SCIFFRX.bit.RXFFOVRCLR=1;   // Clear Overflow flag
-    	SciaRegs.SCIFFRX.bit.RXFFINTCLR=1;   // Clear Interrupt flag
-    	PieCtrlRegs.PIEACK.all |= 0x100;     // Issue PIE ack
-    } else {
-    	i=0;
+    	    	SciaRegs.SCIFFRX.bit.RXFFOVRCLR=1;   // Clear Overflow flag
+    	    	SciaRegs.SCIFFRX.bit.RXFFINTCLR=1;   // Clear Interrupt flag
+    	    	PieCtrlRegs.PIEACK.all |= 0x100;     // Issue PIE ack
+    	    } else {
+    	    	i=0;
 
-    	RxTx='x';
-        SciaRegs.SCITXBUF=RxTx;              // Send data
-    	PieCtrlRegs.PIEACK.all |= 0x100;     // Issue PIE ack
+    			sys_stat.sci.tx = SCI_TX_SENDING;
+    			i_tx=0;
+    	        SCI_enableTxInt(mySci);
+    	    	RxTx='>';
+    	        SciaRegs.SCITXBUF=RxTx;              // Send data
+
+        		SciaRegs.SCIFFTX.bit.TXFFINTCLR=1;   // Clear SCI Interrupt flag
+        		PieCtrlRegs.PIEACK.all |= 0x100;     // Issue PIE ACK
+    	    }
+    	break;
+
+    	case SCI_TX_SENDING:
+    	break;
+
+    	case SCI_TX_FINISH:
+    	break;
     }
-
 #endif //USE_UART_IRQ_2
 }
 /* ========================================================================== */
