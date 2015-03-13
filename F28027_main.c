@@ -445,6 +445,8 @@ t_error wrapper_Init_GPIO (void) {
 
 
 /* ==========================================================================
+
+    return E_OK;
  * NAME - init_EPwmTimer
  * IN   - void
  * OUT  - void
