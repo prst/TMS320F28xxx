@@ -39,17 +39,24 @@
 #define PWM3_TIMER_TBPRD  0x1FFF
 
 /* ========================================================================== */
-//#define CPU_FREQ          (40E6)   // Default = 40 MHz. Change to 50E6 for 50 MHz devices
-#define CPU_FREQ          CPU_FRQ_50MHZ // Default = 40 MHz. Change to 50E6 for 50 MHz devices
+#if (CPU_FRQ_40MHZ)
+#define CPU_FREQ          (40000000) // Default=40 MHz Change to 50E6 for 50 MHz devices
+#endif
+
+#if (CPU_FRQ_50MHZ)
+#define CPU_FREQ          (50000000) // Default=40 MHz Change to 50E6 for 50 MHz devices
+#endif
+
+#if (CPU_FRQ_60MHZ)
+#define CPU_FREQ          (60000000) // Default=40 MHz Change to 50E6 for 50 MHz devices
+#endif
+
 #define LSPCLK_FREQ       (CPU_FREQ/4)
 
-//#define CPU_FRQ_40MHZ
-//#define CPU_FRQ_50MHZ
-//#define CPU_FRQ_60MHZ
-
-#define SCI_FREQ          100E3
-#define SCI_PRD           (LSPCLK_FREQ/(SCI_FREQ*8))-1
-
+//#define SCI_FREQ          100E3
+#define SCI_FREQ          115200
+//#define SCI_PRD           (LSPCLK_FREQ/(SCI_FREQ*8))-1
+#define SCI_BRR           (LSPCLK_FREQ/(SCI_FREQ*8))-1
 /* ========================================================================== */
 
 #define  USE_UART_IRQ_1   (0)
@@ -130,10 +137,12 @@ char         *p_sci_msg;
 uint16_t     LoopCount;
 uint16_t     ErrorCount;
 uint16_t     ReceivedChar;
-uint16_t     sdataA[2];     // Send data for SCI-A
-uint16_t     rdataA[2];     // Received data for SCI-A
+#define      RX_LEN   (8)
+uint16_t     sdataA[RX_LEN];     // Send data for SCI-A
+uint16_t     rdataA[RX_LEN];     // Received data for SCI-A
 uint16_t     rdata_pointA;  // Used for checking the received data
 
+uint16_t     RxTx;
 
 /* ==========================================================================
  * MAIN
@@ -163,7 +172,6 @@ void main (void) {
     } else {
     	wrapper_Error_Handle (err);
     }
-    //sciaTxFifoIsr();
 
 	// Main code
     for(;;) {
@@ -181,8 +189,6 @@ void main (void) {
  * RET  - void
    ========================================================================== */
 void wrapper_Main ( void ) {
-	uint16_t  ui16_gpio_in;
-
     /* asm (" NOP");
     for ( i=1; i<=10; i++ ) {
         GPIO_setPortData (myGpio, GPIO_Port_A, i );
@@ -199,6 +205,8 @@ void wrapper_Main ( void ) {
 
 
 	// -- GPIO
+/*
+	uint16_t  ui16_gpio_in;
 	ui16_gpio_in = GPIO_getPortData (myGpio, GPIO_Port_A);
 	if ( ui16_gpio_in & (1<<12) ) {
 		//GPIO_setLow(myGpio, GPIO_Number_0 );
@@ -208,7 +216,8 @@ void wrapper_Main ( void ) {
 		//GPIO_setHigh(myGpio, GPIO_Number_0 );
 		GPIO_setPortData (myGpio, GPIO_Port_A, 0xE );
 	}
-
+*/
+	/*if (0)
     {
     	t_terminal_state  terminal_state;
 		static uint16_t   try = 0xffff;
@@ -254,7 +263,7 @@ void wrapper_Main ( void ) {
 	    		terminal_state = TERMINAL_PRINT;
     		break;
     	}
-    }
+    }*/
 }
  /* ========================================================================== */
 
@@ -421,11 +430,12 @@ t_error wrapper_Init_PWM_IRQs (void) {
  * RET  - t_error err
    ========================================================================== */
 t_error wrapper_Init_GPIO (void) {
-	uint16_t  dir=0x0000;
 
     // Initalize GPIO
-	dir |= 0x000F; // set outputs
-    GPIO_setDirection (myGpio, GPIO_Port_A, dir);
+    GPIO_setDirection (myGpio, GPIO_Number_0, GPIO_Direction_Output);
+    GPIO_setDirection (myGpio, GPIO_Number_1, GPIO_Direction_Output);
+    GPIO_setDirection (myGpio, GPIO_Number_2, GPIO_Direction_Output);
+    GPIO_setDirection (myGpio, GPIO_Number_3, GPIO_Direction_Output);
     GPIO_setPortData  (myGpio, GPIO_Port_A, 0x000F);
 
     return E_OK;
@@ -547,7 +557,7 @@ interrupt void epwm3_timer_isr (void) {
 
     // Acknowledge this interrupt to receive more interrupts from group 3
     PIE_clearInt(myPie, PIE_GroupNumber_3);
-#endif (1==PWM3_INT_ENABLE)
+#endif //(1==PWM3_INT_ENABLE)
 }
 /* ========================================================================== */
 
@@ -615,6 +625,8 @@ t_error wrapper_Init_UART_pooling (void) {
 
     p_sci_msg = "\r\nYou will enter a character, and the DSP will echo it back! \n\0";
     scia_msg(p_sci_msg);
+
+    return E_OK;
 }
 /* ========================================================================== */
 
@@ -638,18 +650,18 @@ t_error wrapper_Init_UART_IRQ (void) {
 	// Interrupts that are used in this example are re-mapped to
 	// ISR functions found within this file.
 	EALLOW;    // This is needed to write to EALLOW protected registers
-		//PieVectTable.SCIRXINTA = &sciaRxFifoIsr;
-		((PIE_Obj *)myPie)->SCIRXINTA = &sciaRxFifoIsr;
-		//PieVectTable.SCITXINTA = &sciaTxFifoIsr;
-		((PIE_Obj *)myPie)->SCITXINTA = &sciaTxFifoIsr;
+		PieVectTable.SCIRXINTA = &sciaRxFifoIsr;
+		//((PIE_Obj *)myPie)->SCIRXINTA = &sciaRxFifoIsr;
+		PieVectTable.SCITXINTA = &sciaTxFifoIsr;
+		//((PIE_Obj *)myPie)->SCITXINTA = &sciaTxFifoIsr;
 	EDIS;   // This is needed to disable write to EALLOW protected registers
-
+/*
 	// Register interrupt handlers in the PIE vector table
 	PIE_registerPieIntHandler(myPie,
 			PIE_GroupNumber_9, PIE_SubGroupNumber_1, (intVec_t)&sciaRxFifoIsr);
 	PIE_registerPieIntHandler(myPie,
 			PIE_GroupNumber_9, PIE_SubGroupNumber_2, (intVec_t)&sciaTxFifoIsr);
-
+*/
 	scia_init();            // Init SCI-A
 	scia_fifo_init();       // Init SCI-A Fifos
     SCI_enableTxInt(mySci);
@@ -668,11 +680,16 @@ t_error wrapper_Init_UART_IRQ (void) {
 
     CPU_enableInt(myCpu, CPU_IntNumber_9);
     CPU_enableGlobalInts(myCpu);
-
-    return E_OK;
 #endif //USE_UART_IRQ_1
 
 #if (USE_UART_IRQ_2==1)
+	// Initalize GPIO
+	GPIO_setPullUp(myGpio, GPIO_Number_28, GPIO_PullUp_Enable);
+	GPIO_setPullUp(myGpio, GPIO_Number_29, GPIO_PullUp_Disable);
+	GPIO_setQualification(myGpio, GPIO_Number_28, GPIO_Qual_ASync);
+	GPIO_setMode(myGpio, GPIO_Number_28, GPIO_28_Mode_SCIRXDA);
+	GPIO_setMode(myGpio, GPIO_Number_29, GPIO_29_Mode_SCITXDA);
+
     // Step ... Clear all interrupts and initialize PIE vector table:
     // Disable CPU interrupts
        DINT;
@@ -711,18 +728,89 @@ t_error wrapper_Init_UART_IRQ (void) {
 
     // Init send data.  After each transmission this data
     // will be updated for the next transmission
-       for(i = 0; i<2; i++)
-       {
-          sdataA[i] = i;
-       }
+       /*for(i = 0; i<2; i++) {  sdataA[i] = i;  }
+       rdata_pointA = sdataA[0];*/
 
-       rdata_pointA = sdataA[0];
     // Enable interrupts required for this example
        PieCtrlRegs.PIECTRL.bit.ENPIE = 1;   // Enable the PIE block
        PieCtrlRegs.PIEIER9.bit.INTx1=1;     // PIE Group 9, INT1
        PieCtrlRegs.PIEIER9.bit.INTx2=1;     // PIE Group 9, INT2
        IER = 0x100;	// Enable CPU INT
        EINT;
+#endif //USE_UART_IRQ_2
+
+    return E_OK;
+}
+/* ========================================================================== */
+
+
+
+/* ==========================================================================
+ * NAME - scia_fifo_init
+ * IN   - void
+ * OUT  - void
+ * RET  - void
+   ========================================================================== */
+void scia_fifo_init (void) {
+#if (USE_UART_IRQ_1==1)
+/*    SCI_enableFifoEnh(mySci);
+    SCI_resetTxFifo(mySci);
+    SCI_clearTxFifoInt(mySci);
+    SCI_resetChannels(mySci);
+    SCI_setTxFifoIntLevel(mySci, SCI_FifoLevel_2_Words);
+    SCI_enableTxFifoInt(mySci);
+
+    SCI_resetRxFifo(mySci);
+    SCI_clearRxFifoInt(mySci);
+    SCI_setRxFifoIntLevel(mySci, SCI_FifoLevel_2_Words);
+    SCI_enableRxFifoInt(mySci);
+*/
+    return;
+#endif //USE_UART_IRQ_1
+
+#if (USE_UART_IRQ_2==1)
+/*	SysCtrlRegs.PCLKCR0.bit.SCIAENCLK  = 1;  // SCI-A
+	SciaRegs.SCICCR.all =0x0007;  // 1-Stop bit, No loopback, No parity,
+                                  // 8-char bits, async mode, idle-line protocol
+	SciaRegs.SCICTL1.all =0x0003; // enable TX, RX, internal SCICLK,
+                                  // Disable RX ERR, SLEEP, TXWAKE
+	SciaRegs.SCICTL2.bit.TXINTENA   = 1;
+	SciaRegs.SCICTL2.bit.RXBKINTENA = 1;
+	SciaRegs.SCIHBAUD = 0x0000;
+	SciaRegs.SCILBAUD = 15; //15=115200 //SCI_BAUD;
+    //SciaRegs.SCICCR.bit.LOOPBKENA = 0; // Enable/Disable loop back
+	SciaRegs.SCIFFTX.all = 0xC022;
+	SciaRegs.SCIFFRX.all = 0x0022;
+	SciaRegs.SCIFFCT.all = 0x00;
+	SciaRegs.SCICTL1.all = 0x0023;     // Relinquish SCI from Reset
+	SciaRegs.SCIFFTX.bit.TXFIFOXRESET = 1;
+	SciaRegs.SCIFFRX.bit.RXFIFORESET = 1;  */
+
+    CLK_enableSciaClock (myClk);
+
+    // 1 stop bit, No loopback, No parity, 8 bits, Async-Mode, Idle-Line protocol
+    SCI_disableParity(mySci);
+    SCI_setNumStopBits(mySci, SCI_NumStopBits_One);
+    SCI_setCharLength(mySci, SCI_CharLength_8_Bits);
+
+    // enable TX, RX, internal SCICLK, Disable RX ERR, SLEEP, TXWAKE
+    SCI_enableTx(mySci);
+    SCI_enableRx(mySci);
+    SCI_enableTxInt(mySci);
+    SCI_enableRxInt(mySci);
+    //SCI_enableLoopBack(mySci);
+    SCI_setRxFifoIntLevel(mySci, SCI_FifoLevel_1_Word);
+    SCI_setTxFifoIntLevel(mySci, SCI_FifoLevel_Empty);
+
+    // SCI BRR = LSPCLK/(SCI BAUDx8) - 1
+#if (CPU_FRQ_50MHZ)
+    //SCI_setBaudRate(mySci, SCI_BaudRate_9_6_kBaud);
+    SCI_setBaudRate(mySci, /*SCI_BaudRate_115_2_kBaud*/ (SCI_BaudRate_e)13);
+#elif (CPU_FRQ_40MHZ)
+    SCI_setBaudRate(mySci, (SCI_BaudRate_e)129);
+#endif
+    SCI_enable(mySci);
+
 #endif //USE_UART_IRQ_2
 }
 /* ========================================================================== */
@@ -737,12 +825,12 @@ t_error wrapper_Init_UART_IRQ (void) {
    ========================================================================== */
 interrupt void sciaTxFifoIsr (void) {
 #if (USE_UART_IRQ_1==1)
-    uint16_t i;
+    uint16_t i=0;
     for(i=0; i< 2; i++) {
         // Send data
-        SCI_write(mySci, sdataA[i]);
+        //SCI_write(mySci, sdataA[i]);
+  	    SciaRegs.SCITXBUF=rdataA[i];     // Send data
     }
-
     for(i=0; i< 2; i++) {
         //Increment send data for next cycle
         sdataA[i] = (sdataA[i]+1) & 0x00FF;
@@ -753,25 +841,23 @@ interrupt void sciaTxFifoIsr (void) {
 
     // Issue PIE ACK
     PIE_clearInt(myPie, PIE_GroupNumber_9);
-
     return;
 #endif //USE_UART_IRQ_1
 
 #if (USE_UART_IRQ_2==1)
-    Uint16 i;
-    for(i=0; i< 2; i++)
-    {
- 	   SciaRegs.SCITXBUF=sdataA[i];     // Send data
-	}
-
-    for(i=0; i< 2; i++)                 //Increment send data for next cycle
-    {
- 	   sdataA[i] = (sdataA[i]+1) & 0x00FF;
-	}
+    //Uint16 i=0;
+    //for(i=0; i< 2; i++) {
+ 	//   SciaRegs.SCITXBUF=rdataA[i];   // Send data
+	//}
+    //SciaRegs.SCITXBUF=RxTx; //rdataA[0]; // Send data
+    //for(i=0; i< 2; i++)               //Increment send data for next cycle
+    //{
+ 	//   sdataA[i] = (sdataA[i]+1) & 0x00FF;
+	//}
 
 	SciaRegs.SCIFFTX.bit.TXFFINTCLR=1;	// Clear SCI Interrupt flag
-	PieCtrlRegs.PIEACK.all|=0x100;      // Issue PIE ACK
-#endif //USE_UART_IRQ_2
+	//PieCtrlRegs.PIEACK.all |= 0x100;    // Issue PIE ACK
+    #endif //USE_UART_IRQ_2
 }
 /* ========================================================================== */
 
@@ -785,9 +871,10 @@ interrupt void sciaTxFifoIsr (void) {
    ========================================================================== */
 interrupt void sciaRxFifoIsr (void) {
 #if (USE_UART_IRQ_1==1)
-    uint16_t  i;
+    uint16_t  i=0;
     for ( i=0; i<2; i++ ) {
-        rdataA[i] = SCI_read(mySci);  // Read data
+        //rdataA[i] = SCI_read(mySci);  // Read data
+ 	    rdataA[i]=SciaRegs.SCIRXBUF.all;	 // Read data
     }
     for ( i=0; i<2; i++ ) {
        if (rdataA[i] != ( (rdata_pointA+i) & 0x00FF) )  // Check received data
@@ -803,21 +890,31 @@ interrupt void sciaRxFifoIsr (void) {
 #endif //USE_UART_IRQ_1
 
 #if (USE_UART_IRQ_2==1)
-    Uint16 i;
-	for(i=0;i<2;i++)
-	{
-	   rdataA[i]=SciaRegs.SCIRXBUF.all;	 // Read data
-	}
-	for(i=0;i<2;i++)                     // Check received data
-	{
-	   if(rdataA[i] != ( (rdata_pointA+i) & 0x00FF) ) error();
-	}
-	rdata_pointA = (rdata_pointA+1) & 0x00FF;
+    static Uint16 i=0;
+	//for (i=0; i<RX_LEN; i++) {
+	//   rdataA[i]=SciaRegs.SCIRXBUF.all;	 // Read data
+	//}
+	//for(i=0;i<2;i++) {                  // Check received data
+	//   if(rdataA[i] != ( (rdata_pointA+i) & 0x00FF) ) error();
+	//}
+	//rdata_pointA = (rdata_pointA+1) & 0x00FF;
 
-	SciaRegs.SCIFFRX.bit.RXFFOVRCLR=1;   // Clear Overflow flag
-	SciaRegs.SCIFFRX.bit.RXFFINTCLR=1;   // Clear Interrupt flag
+    if (SciaRegs.SCIRXBUF.bit.RXDT==0) i=0;
 
-	PieCtrlRegs.PIEACK.all|=0x100;       // Issue PIE ack
+    if (i<8) {
+    	rdataA[i++]=SciaRegs.SCIRXBUF.all;	 // Read data
+
+    	SciaRegs.SCIFFRX.bit.RXFFOVRCLR=1;   // Clear Overflow flag
+    	SciaRegs.SCIFFRX.bit.RXFFINTCLR=1;   // Clear Interrupt flag
+    	PieCtrlRegs.PIEACK.all |= 0x100;     // Issue PIE ack
+    } else {
+    	i=0;
+
+    	RxTx='x';
+        SciaRegs.SCITXBUF=RxTx;              // Send data
+    	PieCtrlRegs.PIEACK.all |= 0x100;     // Issue PIE ack
+    }
+
 #endif //USE_UART_IRQ_2
 }
 /* ========================================================================== */
@@ -845,12 +942,12 @@ void scia_init (void) {
     SCI_enableTxInt(mySci);
     SCI_enableRxInt(mySci);
     //SCI_enableLoopBack(mySci);
-    SCI_disableLoopBack(mySci);
+    //SCI_disableLoopBack(mySci);
 
     // SCI BRR = LSPCLK/(SCI BAUDx8) - 1
 #if (CPU_FRQ_50MHZ)
     //SCI_setBaudRate(mySci, SCI_BaudRate_9_6_kBaud);
-    SCI_setBaudRate(mySci, SCI_BaudRate_115_2_kBaud);
+    SCI_setBaudRate(mySci, /*SCI_BaudRate_115_2_kBaud*/(SCI_BaudRate_e)13);
 #elif (CPU_FRQ_40MHZ)
     SCI_setBaudRate(mySci, (SCI_BaudRate_e)129);
 #endif
@@ -860,53 +957,6 @@ void scia_init (void) {
 #endif //USE_UART_IRQ_1
 
 #if (USE_UART_IRQ_2==1)
-#endif //USE_UART_IRQ_2
-}
-/* ========================================================================== */
-
-
-
-/* ==========================================================================
- * NAME - scia_fifo_init
- * IN   - void
- * OUT  - void
- * RET  - void
-   ========================================================================== */
-void scia_fifo_init (void) {
-#if (USE_UART_IRQ_1==1)
-    SCI_enableFifoEnh(mySci);
-    SCI_resetTxFifo(mySci);
-    SCI_clearTxFifoInt(mySci);
-    SCI_resetChannels(mySci);
-    SCI_setTxFifoIntLevel(mySci, SCI_FifoLevel_2_Words);
-    SCI_enableTxFifoInt(mySci);
-
-    SCI_resetRxFifo(mySci);
-    SCI_clearRxFifoInt(mySci);
-    SCI_setRxFifoIntLevel(mySci, SCI_FifoLevel_2_Words);
-    SCI_enableRxFifoInt(mySci);
-
-    return;
-#endif //USE_UART_IRQ_1
-
-#if (USE_UART_IRQ_2==1)
-    SciaRegs.SCICCR.all =0x0007;   // 1 stop bit,  No loopback
-                                   // No parity,8 char bits,
-                                   // async mode, idle-line protocol
-    SciaRegs.SCICTL1.all =0x0003;  // enable TX, RX, internal SCICLK,
-                                   // Disable RX ERR, SLEEP, TXWAKE
-    SciaRegs.SCICTL2.bit.TXINTENA =1;
-    SciaRegs.SCICTL2.bit.RXBKINTENA =1;
-    SciaRegs.SCIHBAUD = 0x0000;
-    SciaRegs.SCILBAUD = SCI_PRD;
-    SciaRegs.SCICCR.bit.LOOPBKENA =1; // Enable loop back
-    SciaRegs.SCIFFTX.all=0xC022;
-    SciaRegs.SCIFFRX.all=0x0022;
-    SciaRegs.SCIFFCT.all=0x00;
-
-    SciaRegs.SCICTL1.all =0x0023;     // Relinquish SCI from Reset
-    SciaRegs.SCIFFTX.bit.TXFIFOXRESET=1;
-    SciaRegs.SCIFFRX.bit.RXFIFORESET=1;
 #endif //USE_UART_IRQ_2
 }
 /* ========================================================================== */
@@ -938,7 +988,7 @@ void scia_echoback_init (void) {
     SCI_setBaudRate(mySci, (SCI_BaudRate_e)194);
 #elif (CPU_FRQ_50MHZ)
     //SCI_setBaudRate(mySci, (SCI_BaudRate_e)162);  // @ 9600
-    SCI_setBaudRate(mySci, /*(SCI_BaudRate_e)*/13);   // @ 115200
+    SCI_setBaudRate(mySci, (SCI_BaudRate_e)13);   // @ 115200
 #elif (CPU_FRQ_40MHZ)
     SCI_setBaudRate(mySci, (SCI_BaudRate_e)129);
 #endif
