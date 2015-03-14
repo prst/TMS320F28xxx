@@ -85,7 +85,7 @@ typedef enum {
 
 typedef struct {
 	struct {
-		t_sci_stat tx :2;
+		t_sci_stat tx :4;
 	} sci;
 } t_status;
 
@@ -815,8 +815,8 @@ void scia_fifo_init (void) {
     SCI_enableTxInt(mySci);
     SCI_enableRxInt(mySci);
     //SCI_enableLoopBack(mySci);
-    SCI_setTxFifoIntLevel(mySci, /*SCI_FifoLevel_Empty*/31);
-    SCI_setRxFifoIntLevel(mySci, /*SCI_FifoLevel_4_Words*/31);
+    SCI_setTxFifoIntLevel( mySci, SCI_FifoLevel_Empty );
+    SCI_setRxFifoIntLevel( mySci, SCI_FifoLevel_1_Word );
     //SCI_disableFifoEnh(mySci);
 
 	/*
@@ -880,25 +880,35 @@ interrupt void sciaTxFifoIsr (void) {
     	break;
 
     	case SCI_TX_SENDING:
+	        SCI_enableRxInt(mySci);
+	        SCI_enableTxInt(mySci);
     		if (i_tx < RX_LEN) {
     	        SciaRegs.SCITXBUF=rdataA[i_tx];     // Send data
-        		i_tx++;
-        		SciaRegs.SCICTL2.bit.TXINTENA=1;
-        		//SciaRegs.SCIFFTX.bit.TXFFINTCLR=1;  // Clear SCI Interrupt flag
+    	        //SciaRegs.SCITXBUF=RxTx;              // Send data
+        		//SciaRegs.SCICTL2.bit.TXINTENA=1;
+        		SciaRegs.SCIFFTX.bit.TXFFINTCLR=1;  // Clear SCI Interrupt flag
         		PieCtrlRegs.PIEACK.all |= 0x100;    // Issue PIE ACK
-    	        SCI_enableTxInt(mySci);
+    			sys_stat.sci.tx = SCI_TX_SENDING;
+    			i_tx++;
+    		    //EALLOW;	// This is needed to write to EALLOW protected registers
+    			//DINT;
+    			//IER = 0x100;	// Enable CPU INT
+    			//IFR = 0x100;
+    			//EINT;
+ 		        //EDIS;   // This is needed to disable write to EALLOW protected registers
     		} else {
     			sys_stat.sci.tx = SCI_TX_FINISH;
     			i_tx=0;
-    		}
+
+        		SciaRegs.SCIFFTX.bit.TXFFINTCLR=1;	      // Clear SCI Interrupt flag
+        		PieCtrlRegs.PIEACK.all |= 0x100;          // Issue PIE ACK
+        	    //SCI_clearTxFifoInt(mySci);              // Clear SCI Interrupt flag
+        	    //PIE_clearInt(myPie, PIE_GroupNumber_9); // Issue PIE ACK
+        	    SCI_disableTxInt(mySci);
+         		}
     	break;
 
     	case SCI_TX_FINISH:
-    		SciaRegs.SCIFFTX.bit.TXFFINTCLR=1;	      // Clear SCI Interrupt flag
-    		PieCtrlRegs.PIEACK.all |= 0x100;          // Issue PIE ACK
-    	    //SCI_clearTxFifoInt(mySci);              // Clear SCI Interrupt flag
-    	    //PIE_clearInt(myPie, PIE_GroupNumber_9); // Issue PIE ACK
-    	    SCI_disableTxInt(mySci);
     	break;
     }
 #endif //USE_UART_IRQ_2
