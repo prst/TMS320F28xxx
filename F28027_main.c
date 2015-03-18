@@ -59,8 +59,8 @@
 #define SCI_BRR           (LSPCLK_FREQ/(SCI_FREQ*8))-1
 /* ========================================================================== */
 
-#define  USE_UART_IRQ_1   (0)
-#define  USE_UART_IRQ_2   (1)
+//#define  USE_UART_IRQ_1   (0)
+//#define  USE_UART_IRQ_2   (1)
 
 typedef enum {
 	TERMINAL_PRINT=0,
@@ -110,20 +110,18 @@ void    error(void);
 // Prototype statements for functions found within this file.
 interrupt void  sciaTxFifoIsr (void);
 interrupt void  sciaRxFifoIsr (void);
-void  scia_init(void);
 void  scia_fifo_init(void);
-void  scia_echoback_init (void);
-void  scia_xmit (int a);
-void  scia_msg (char * msg);
-void  scia_echoback_fifo_init (void);
 
-t_error wrapper_Init_UART_pooling (void);
 t_error wrapper_Init_UART_IRQ (void);
+t_error wrapper_Init_TM1638 (void);
 
 
 /* ========================================================================== */
 /* Global variables */
 /* ========================================================================== */
+uint16_t RamfuncsLoadStart;
+uint16_t RamfuncsLoadSize;
+uint16_t RamfuncsRunStart;
 
 uint32_t     EPwm1TimerIntCount;
 uint32_t     EPwm2TimerIntCount;
@@ -183,6 +181,12 @@ void main (void) {
     if (E_OK==err) {
     	err = wrapper_Init_UART_IRQ ();   // Init UART IRQ
     	//err = wrapper_Init_UART_pooling ();   // Init UART without IRQ
+    } else {
+    	wrapper_Error_Handle (err);
+    }
+
+    if (E_OK==err) {
+    	err = wrapper_Init_TM1638 ();   // Init TM1638
     } else {
     	wrapper_Error_Handle (err);
     }
@@ -309,19 +313,52 @@ void wrapper_Error_Handle (t_error err) {
    ========================================================================== */
 t_error wrapper_Init_Sys (void) {
     // Initialize all the handles needed for this application
+#if (1==USE_F28027_CLK)
     myClk   = CLK_init  ((void *)CLK_BASE_ADDR, sizeof(CLK_Obj));
+#endif //(1==USE_F28027_CLK)
+
+#if (1==USE_F28027_CPU)
     myCpu   = CPU_init  ((void *)NULL, sizeof(CPU_Obj));
+#endif //(1==USE_F28027_CPU)
+
+#if (1==USE_F28027_FLASH)
     myFlash = FLASH_init((void *)FLASH_BASE_ADDR, sizeof(FLASH_Obj));
+#endif //(1==USE_F28027_FLASH)
+
+#if (1==USE_F28027_GPIO)
     myGpio  = GPIO_init ((void *)GPIO_BASE_ADDR, sizeof(GPIO_Obj));
+#endif //(1==USE_F28027_GPIO)
+
+#if (1==USE_F28027_PIE)
     myPie   = PIE_init  ((void *)PIE_BASE_ADDR, sizeof(PIE_Obj));
+#endif //(1==USE_F28027_PIE)
+
+#if (1==USE_F28027_PLL)
     myPll   = PLL_init  ((void *)PLL_BASE_ADDR, sizeof(PLL_Obj));
+#endif //(1==USE_F28027_PLL)
+
+#if (1==USE_F28027_PWM)
     myPwm1  = PWM_init  ((void *)PWM_ePWM1_BASE_ADDR, sizeof(PWM_Obj));
     myPwm2  = PWM_init  ((void *)PWM_ePWM2_BASE_ADDR, sizeof(PWM_Obj));
     myPwm3  = PWM_init  ((void *)PWM_ePWM3_BASE_ADDR, sizeof(PWM_Obj));
+#endif //(1==USE_F28027_PWM)
+
+#if (1==USE_F28027_WDOG)
     myWDog  = WDOG_init ((void *)WDOG_BASE_ADDR, sizeof(WDOG_Obj));
+#endif //(1==USE_F28027_WDOG)
+
+#if (1==USE_F28027_TIMER)
     myTimer = TIMER_init((void *)TIMER0_BASE_ADDR, sizeof(TIMER_Obj));
+#endif //(1==USE_F28027_TIMER)
+
+#if (1==USE_F28027_ADC)
     myAdc   = ADC_init  ((void *)ADC_BASE_ADDR, sizeof(ADC_Obj));
+#endif //(1==USE_F28027_ADC)
+
+#if (1==USE_F28027_SCI)
     mySci   = SCI_init  ((void *)SCIA_BASE_ADDR, sizeof(SCI_Obj));
+#endif //(1==USE_F28027_SCI)
+
 
 	// PERIPHERAL CLOCK ENABLES
 	//---------------------------------------------------
@@ -363,9 +400,9 @@ t_error wrapper_Init_Sys (void) {
     CPU_clearIntFlags (myCpu);
 
     // If running from flash copy RAM only functions to RAM
-#ifdef _FLASH
+//#ifdef _FLASH
     memcpy (&RamfuncsRunStart, &RamfuncsLoadStart, (size_t)&RamfuncsLoadSize);
-#endif
+//#endif
 
     return E_OK;
 }
@@ -380,6 +417,7 @@ t_error wrapper_Init_Sys (void) {
  * RET  - t_error err
    ========================================================================== */
 t_error wrapper_Init_PWM_IRQs (void) {
+#if (1==USE_F28027_PWM)
     // Setup a debug vector table and enable the PIE
     PIE_setDebugIntVectorTable (myPie);
     PIE_enable (myPie);
@@ -431,6 +469,7 @@ t_error wrapper_Init_PWM_IRQs (void) {
     CPU_enableGlobalInts (myCpu);
     CPU_enableDebugInt (myCpu);
 
+#endif //(1==USE_F28027_PWM)
     return E_OK;
 }
 /* ========================================================================== */
@@ -444,14 +483,14 @@ t_error wrapper_Init_PWM_IRQs (void) {
  * RET  - t_error err
    ========================================================================== */
 t_error wrapper_Init_GPIO (void) {
-
+#if (1==USE_F28027_GPIO)
     // Initalize GPIO
     GPIO_setDirection (myGpio, GPIO_Number_0, GPIO_Direction_Output);
     GPIO_setDirection (myGpio, GPIO_Number_1, GPIO_Direction_Output);
     GPIO_setDirection (myGpio, GPIO_Number_2, GPIO_Direction_Output);
     GPIO_setDirection (myGpio, GPIO_Number_3, GPIO_Direction_Output);
     GPIO_setPortData  (myGpio, GPIO_Port_A, 0x000F);
-
+#endif //(1==USE_F28027_GPIO)
     return E_OK;
 }
 /* ========================================================================== */
@@ -467,6 +506,7 @@ t_error wrapper_Init_GPIO (void) {
  * RET  - void
    ========================================================================== */
 void init_EPwmTimer (void) {
+#if (1==USE_F28027_TIMER)
     // Stop all the TB clocks
     CLK_disableTbClockSync(myClk);
     
@@ -508,6 +548,7 @@ void init_EPwmTimer (void) {
 
     // Start all the timers synced
     CLK_enableTbClockSync(myClk);
+#endif //(1==USE_F28027_TIMER)
 }
 /* ========================================================================== */
 
@@ -521,6 +562,7 @@ void init_EPwmTimer (void) {
    ========================================================================== */
 // Interrupt routines uses in this example:
 interrupt void epwm1_timer_isr (void) {
+#if (1==USE_F28027_PWM)
 #if (1==PWM1_INT_ENABLE)
     EPwm1TimerIntCount++;
 
@@ -532,6 +574,7 @@ interrupt void epwm1_timer_isr (void) {
 
     GPIO_setPortData (myGpio, GPIO_Port_A, ++i_pwm0&0x1 ? 0xE : 0xF );
 #endif //(1==PWM1_INT_ENABLE)
+#endif //(1==USE_F28027_PWM)
 }
 /* ========================================================================== */
 
@@ -544,6 +587,7 @@ interrupt void epwm1_timer_isr (void) {
  * RET  - void
    ========================================================================== */
 interrupt void epwm2_timer_isr (void) {
+#if (1==USE_F28027_PWM)
 #if (1==PWM2_INT_ENABLE)
     EPwm2TimerIntCount++;
 
@@ -553,6 +597,7 @@ interrupt void epwm2_timer_isr (void) {
     // Acknowledge this interrupt to receive more interrupts from group 3
     PIE_clearInt(myPie, PIE_GroupNumber_3);
 #endif //(1==PWM2_INT_ENABLE)
+#endif //(1==USE_F28027_PWM)
 }
 /* ========================================================================== */
 
@@ -565,6 +610,7 @@ interrupt void epwm2_timer_isr (void) {
  * RET  - void
    ========================================================================== */
 interrupt void epwm3_timer_isr (void) {
+#if (1==USE_F28027_PWM)
 #if (1==PWM3_INT_ENABLE)
     EPwm3TimerIntCount++;
 
@@ -574,6 +620,7 @@ interrupt void epwm3_timer_isr (void) {
     // Acknowledge this interrupt to receive more interrupts from group 3
     PIE_clearInt(myPie, PIE_GroupNumber_3);
 #endif //(1==PWM3_INT_ENABLE)
+#endif //(1==USE_F28027_PWM)
 }
 /* ========================================================================== */
 
@@ -586,6 +633,7 @@ interrupt void epwm3_timer_isr (void) {
  * RET  - void
    ========================================================================== */
 interrupt void timer0_isr (void) {
+#if (1==USE_F28027_TIMER)
     Timer0IntCount++;
 
     // Clear INT flag for this timer
@@ -593,6 +641,7 @@ interrupt void timer0_isr (void) {
 
     // Acknowledge this interrupt to receive more interrupts from group 3
     //TIMER_clearIntFlag(myTimer);
+#endif //(1==USE_F28027_TIMER)
 }
 /* ========================================================================== */
 
@@ -613,92 +662,14 @@ void error(void) {
 
 
 /* ==========================================================================
- * NAME - wrapper_Init_UART_pooling
- * IN   - void
- * OUT  - void
- * RET  - t_error err
-   ========================================================================== */
-t_error wrapper_Init_UART_pooling (void) {
-    // Initalize GPIO
-    GPIO_setPullUp(myGpio, GPIO_Number_28, GPIO_PullUp_Enable);
-    GPIO_setPullUp(myGpio, GPIO_Number_29, GPIO_PullUp_Disable);
-    GPIO_setQualification(myGpio, GPIO_Number_28, GPIO_Qual_ASync);
-    GPIO_setMode(myGpio, GPIO_Number_28, GPIO_28_Mode_SCIRXDA);
-    GPIO_setMode(myGpio, GPIO_Number_29, GPIO_29_Mode_SCITXDA);
-
-    // Setup a debug vector table and enable the PIE
-    PIE_setDebugIntVectorTable(myPie);
-    PIE_enable(myPie);
-
-    LoopCount = 0;
-    ErrorCount = 0;
-
-    scia_echoback_init();           // Initalize SCI for echoback
-    scia_echoback_fifo_init();      // Initialize the SCI FIFO
-
-    p_sci_msg = "\r\n\n\nHello World!\0";
-    scia_msg(p_sci_msg);
-
-    p_sci_msg = "\r\nYou will enter a character, and the DSP will echo it back! \n\0";
-    scia_msg(p_sci_msg);
-
-    return E_OK;
-}
-/* ========================================================================== */
-
-
-
-/* ==========================================================================
  * NAME - wrapper_Init_UART_IRQ
  * IN   - void
  * OUT  - void
  * RET  - t_error err
    ========================================================================== */
 t_error wrapper_Init_UART_IRQ (void) {
-#if (USE_UART_IRQ_1==1)
-	// Initalize GPIO
-	GPIO_setPullUp(myGpio, GPIO_Number_28, GPIO_PullUp_Enable);
-	GPIO_setPullUp(myGpio, GPIO_Number_29, GPIO_PullUp_Disable);
-	GPIO_setQualification(myGpio, GPIO_Number_28, GPIO_Qual_ASync);
-	GPIO_setMode(myGpio, GPIO_Number_28, GPIO_28_Mode_SCIRXDA);
-	GPIO_setMode(myGpio, GPIO_Number_29, GPIO_29_Mode_SCITXDA);
 
-	// Interrupts that are used in this example are re-mapped to
-	// ISR functions found within this file.
-	EALLOW;    // This is needed to write to EALLOW protected registers
-		PieVectTable.SCIRXINTA = &sciaRxFifoIsr;
-		//((PIE_Obj *)myPie)->SCIRXINTA = &sciaRxFifoIsr;
-		PieVectTable.SCITXINTA = &sciaTxFifoIsr;
-		//((PIE_Obj *)myPie)->SCITXINTA = &sciaTxFifoIsr;
-	EDIS;   // This is needed to disable write to EALLOW protected registers
-/*
-	// Register interrupt handlers in the PIE vector table
-	PIE_registerPieIntHandler(myPie,
-			PIE_GroupNumber_9, PIE_SubGroupNumber_1, (intVec_t)&sciaRxFifoIsr);
-	PIE_registerPieIntHandler(myPie,
-			PIE_GroupNumber_9, PIE_SubGroupNumber_2, (intVec_t)&sciaTxFifoIsr);
-*/
-	scia_init();            // Init SCI-A
-	scia_fifo_init();       // Init SCI-A Fifos
-    SCI_enableTxInt(mySci);
-    SCI_enableRxInt(mySci);
-
-    // Init send data.  After each transmission this data
-    // will be updated for the next transmission
-    for (i=0; i<2; i++) {
-        sdataA[i]=i;
-    }
-    rdata_pointA = sdataA[0];
-
-    // Enable interrupts required for this example
-    PIE_enableInt(myPie, PIE_GroupNumber_9, PIE_InterruptSource_SCIARX);
-    PIE_enableInt(myPie, PIE_GroupNumber_9, PIE_InterruptSource_SCIATX);
-
-    CPU_enableInt(myCpu, CPU_IntNumber_9);
-    CPU_enableGlobalInts(myCpu);
-#endif //USE_UART_IRQ_1
-
-#if (USE_UART_IRQ_2==1)
+#if (1==USE_F28027_SCI)
 	// Initalize GPIO
 	GPIO_setPullUp(myGpio, GPIO_Number_28, GPIO_PullUp_Enable);
 	GPIO_setPullUp(myGpio, GPIO_Number_29, GPIO_PullUp_Disable);
@@ -753,7 +724,25 @@ t_error wrapper_Init_UART_IRQ (void) {
        PieCtrlRegs.PIEIER9.bit.INTx2=1;     // PIE Group 9, INT2
        IER = 0x100;	// Enable CPU INT
        EINT;
-#endif //USE_UART_IRQ_2
+#endif //(1==USE_F28027_SCI)
+
+    return E_OK;
+}
+/* ========================================================================== */
+
+
+
+/* ==========================================================================
+ * NAME - wrapper_Init_TM1638
+ * IN   - void
+ * OUT  - void
+ * RET  - t_error err
+   ========================================================================== */
+t_error wrapper_Init_TM1638 (void) {
+
+#if (1==__USE__TM1638__)
+	//tm1638_init();
+#endif //(1==__USE__TM1638__)
 
     return E_OK;
 }
@@ -768,23 +757,8 @@ t_error wrapper_Init_UART_IRQ (void) {
  * RET  - void
    ========================================================================== */
 void scia_fifo_init (void) {
-#if (USE_UART_IRQ_1==1)
-/*    SCI_enableFifoEnh(mySci);
-    SCI_resetTxFifo(mySci);
-    SCI_clearTxFifoInt(mySci);
-    SCI_resetChannels(mySci);
-    SCI_setTxFifoIntLevel(mySci, SCI_FifoLevel_2_Words);
-    SCI_enableTxFifoInt(mySci);
+#if (1==USE_F28027_SCI)
 
-    SCI_resetRxFifo(mySci);
-    SCI_clearRxFifoInt(mySci);
-    SCI_setRxFifoIntLevel(mySci, SCI_FifoLevel_2_Words);
-    SCI_enableRxFifoInt(mySci);
-*/
-    return;
-#endif //USE_UART_IRQ_1
-
-#if (USE_UART_IRQ_2==1)
 /*	SysCtrlRegs.PCLKCR0.bit.SCIAENCLK  = 1;  // SCI-A
 	SciaRegs.SCICCR.all =0x0007;  // 1-Stop bit, No loopback, No parity,
                                   // 8-char bits, async mode, idle-line protocol
@@ -819,19 +793,6 @@ void scia_fifo_init (void) {
     SCI_setRxFifoIntLevel( mySci, SCI_FifoLevel_1_Word );
     //SCI_disableFifoEnh(mySci);
 
-	/*
-	SCI_enableFifoEnh(mySci);
-	SCI_resetTxFifo(mySci);
-	SCI_clearTxFifoInt(mySci);
-	SCI_resetChannels(mySci);
-	SCI_setTxFifoIntLevel(mySci, SCI_FifoLevel_Empty);
-	SCI_enableTxFifoInt(mySci);
-
-	SCI_resetRxFifo(mySci);
-	SCI_clearRxFifoInt(mySci);
-	SCI_setRxFifoIntLevel(mySci, SCI_FifoLevel_1_Word);
-	SCI_enableRxFifoInt(mySci);
-	*/
     // SCI BRR = LSPCLK/(SCI BAUDx8) - 1
 #if (CPU_FRQ_50MHZ)
     //SCI_setBaudRate(mySci, SCI_BaudRate_9_6_kBaud);
@@ -841,7 +802,7 @@ void scia_fifo_init (void) {
 #endif
     SCI_enable(mySci);
 
-#endif //USE_UART_IRQ_2
+#endif //(1==USE_F28027_SCI)
 }
 /* ========================================================================== */
 
@@ -854,27 +815,7 @@ void scia_fifo_init (void) {
  * RET  - void
    ========================================================================== */
 interrupt void sciaTxFifoIsr (void) {
-#if (USE_UART_IRQ_1==1)
-    uint16_t i=0;
-    for(i=0; i< 2; i++) {
-        // Send data
-        //SCI_write(mySci, sdataA[i]);
-  	    SciaRegs.SCITXBUF=rdataA[i];     // Send data
-    }
-    for(i=0; i< 2; i++) {
-        //Increment send data for next cycle
-        sdataA[i] = (sdataA[i]+1) & 0x00FF;
-    }
-
-    // Clear SCI Interrupt flag
-    SCI_clearTxFifoInt(mySci);
-
-    // Issue PIE ACK
-    PIE_clearInt(myPie, PIE_GroupNumber_9);
-    return;
-#endif //USE_UART_IRQ_1
-
-#if (USE_UART_IRQ_2==1)
+#if (1==USE_F28027_SCI)
     switch (sys_stat.sci.tx){
     	case SCI_TX_READY:
     	break;
@@ -911,7 +852,7 @@ interrupt void sciaTxFifoIsr (void) {
     	case SCI_TX_FINISH:
     	break;
     }
-#endif //USE_UART_IRQ_2
+#endif //(1==USE_F28027_SCI)
 }
 /* ========================================================================== */
 
@@ -924,26 +865,7 @@ interrupt void sciaTxFifoIsr (void) {
  * RET  - void
    ========================================================================== */
 interrupt void sciaRxFifoIsr (void) {
-#if (USE_UART_IRQ_1==1)
-    uint16_t  i=0;
-    for ( i=0; i<2; i++ ) {
-        //rdataA[i] = SCI_read(mySci);  // Read data
- 	    rdataA[i]=SciaRegs.SCIRXBUF.all;	 // Read data
-    }
-    for ( i=0; i<2; i++ ) {
-       if (rdataA[i] != ( (rdata_pointA+i) & 0x00FF) )  // Check received data
-       error();
-    }
-    rdata_pointA = (rdata_pointA+1) & 0x00FF;
-
-    SCI_clearRxFifoOvf(mySci);     // Clear Overflow  flag
-    SCI_clearRxFifoInt(mySci);     // Clear Interrupt flag
-    PIE_clearInt(myPie, PIE_GroupNumber_9);   // Issue PIE ack
-
-    return;
-#endif //USE_UART_IRQ_1
-
-#if (USE_UART_IRQ_2==1)
+#if (1==USE_F28027_SCI)
     static Uint16 i=0;
 
 	if (SciaRegs.SCIRXBUF.bit.RXDT=='_') {
@@ -979,148 +901,10 @@ interrupt void sciaRxFifoIsr (void) {
     	case SCI_TX_FINISH:
     	break;
     }
-#endif //USE_UART_IRQ_2
+#endif //(1==USE_F28027_SCI)
 }
 /* ========================================================================== */
 
-
-
-/* ==========================================================================
- * NAME - scia_init
- * IN   - void
- * OUT  - void
- * RET  - void
-   ========================================================================== */
-void scia_init (void) {
-#if (USE_UART_IRQ_1==1)
-    CLK_enableSciaClock (myClk);
-
-    // 1 stop bit, No loopback, No parity, 8 bits, Async-Mode, Idle-Line protocol
-    SCI_disableParity(mySci);
-    SCI_setNumStopBits(mySci, SCI_NumStopBits_One);
-    SCI_setCharLength(mySci, SCI_CharLength_8_Bits);
-
-    // enable TX, RX, internal SCICLK, Disable RX ERR, SLEEP, TXWAKE
-    SCI_enableTx(mySci);
-    SCI_enableRx(mySci);
-    SCI_enableTxInt(mySci);
-    SCI_enableRxInt(mySci);
-    //SCI_enableLoopBack(mySci);
-    //SCI_disableLoopBack(mySci);
-
-    // SCI BRR = LSPCLK/(SCI BAUDx8) - 1
-#if (CPU_FRQ_50MHZ)
-    //SCI_setBaudRate(mySci, SCI_BaudRate_9_6_kBaud);
-    SCI_setBaudRate(mySci, /*SCI_BaudRate_115_2_kBaud*/(SCI_BaudRate_e)13);
-#elif (CPU_FRQ_40MHZ)
-    SCI_setBaudRate(mySci, (SCI_BaudRate_e)129);
-#endif
-    SCI_enable(mySci);
-
-    return;
-#endif //USE_UART_IRQ_1
-
-#if (USE_UART_IRQ_2==1)
-#endif //USE_UART_IRQ_2
-}
-/* ========================================================================== */
-
-
-
-/* ==========================================================================
- * NAME - scia_echoback_init
- * IN   - void
- * OUT  - void
- * RET  - void
-   ========================================================================== */
-// Test 1,SCIA  DLB, 8-bit word, baud rate 0x000F, default, 1 STOP bit, no parity
-void scia_echoback_init (void) {
-    CLK_enableSciaClock(myClk);
-
-    // 1 stop bit, No loopback, No parity,8 char bits, async mode, idle-line protocol
-    SCI_disableParity(mySci);
-    SCI_setNumStopBits(mySci, SCI_NumStopBits_One);
-    SCI_setCharLength(mySci, SCI_CharLength_8_Bits);
-
-    SCI_enableTx(mySci);
-    SCI_enableRx(mySci);
-    SCI_enableTxInt(mySci);
-    SCI_enableRxInt(mySci);
-
-    // SCI BRR = LSPCLK/(SCI BAUDx8) - 1
-#if (CPU_FRQ_60MHZ)
-    SCI_setBaudRate(mySci, (SCI_BaudRate_e)194);
-#elif (CPU_FRQ_50MHZ)
-    //SCI_setBaudRate(mySci, (SCI_BaudRate_e)162);  // @ 9600
-    SCI_setBaudRate(mySci, (SCI_BaudRate_e)13);   // @ 115200
-#elif (CPU_FRQ_40MHZ)
-    SCI_setBaudRate(mySci, (SCI_BaudRate_e)129);
-#endif
-    SCI_enable(mySci);
-
-    return;
-}
-/* ========================================================================== */
-
-
-
-/* ==========================================================================
- * NAME - scia_xmit
- * IN   - int
- * OUT  - void
- * RET  - void
-   ========================================================================== */
-// Transmit a character from the SCI
-void scia_xmit (int a) {
-//    while (SciaRegs.SCIFFTX.bit.TXFFST != 0) {}
-    while(SCI_getTxFifoStatus(mySci) != SCI_FifoStatus_Empty){
-    }
-//    SciaRegs.SCITXBUF=a;
-    SCI_putDataBlocking(mySci, a);
-}
-/* ========================================================================== */
-
-
-
-/* ==========================================================================
- * NAME - scia_msg
- * IN   - char *
- * OUT  - void
- * RET  - void
-   ========================================================================== */
-void scia_msg (char * msg) {
-    int i;
-    i = 0;
-    while(msg[i] != '\0')     {
-        scia_xmit(msg[i]);
-        i++;
-    }
-}
-/* ========================================================================== */
-
-
-
-/* ==========================================================================
- * NAME - scia_echoback_fifo_init
- * IN   - void
- * OUT  - void
- * RET  - void
-   ========================================================================== */
-// Initalize the SCI FIFO
-void scia_echoback_fifo_init (void) {
-    SCI_enableFifoEnh(mySci);
-    SCI_resetTxFifo(mySci);
-    SCI_clearTxFifoInt(mySci);
-    SCI_resetChannels(mySci);
-    SCI_setTxFifoIntLevel(mySci, SCI_FifoLevel_Empty);
-
-    SCI_resetRxFifo(mySci);
-    SCI_clearRxFifoInt(mySci);
-    SCI_setRxFifoIntLevel(mySci, SCI_FifoLevel_4_Words);
-
-    return;
-}
-/* ========================================================================== */
 
 
 //===========================================================================
