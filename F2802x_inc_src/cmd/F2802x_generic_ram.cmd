@@ -91,7 +91,7 @@ PAGE 0 :
    IQTABLES3  : origin = 0x3FEBDC, length = 0x0000AA     /* IQ Math Tables in Boot ROM */
    RESET      : origin = 0x3FFFC0, length = 0x000002
 
-#if 0
+#if 1
    DEV_EMU     : origin = 0x000880, length = 0x000105     /* device emulation registers */
    SYS_PWR_CTL : origin = 0x000985, length = 0x000003     /* System power control registers */
    FLASH_REGS  : origin = 0x000A80, length = 0x000060     /* FLASH registers */
@@ -145,6 +145,9 @@ SECTIONS {
    .econst          : > RAML0,            PAGE = 0
    .esysmem         : > RAML0,            PAGE = 0
 
+   //csmpasswds       : > CSM_PWL_P0,   PAGE = 0
+   //csm_rsvd         : > CSM_RSVD,     PAGE = 0
+
    IQmath           : > RAML0,            PAGE = 0
    IQmathTables     : > IQTABLES,         PAGE = 0, TYPE = NOLOAD
 
@@ -162,10 +165,10 @@ SECTIONS {
       will be loaded into other memory (SARAM, Flash, etc.) and will take
       up space, but 0 wait-state is possible.
    */
-   IQmathTables2    : > IQTABLES2, PAGE = 0, TYPE = NOLOAD
+   /*IQmathTables2    : > IQTABLES2, PAGE = 0, TYPE = NOLOAD
    {
               IQmath.lib<IQNexpTable.obj> (IQmathTablesRam)
-   }
+   }*/
 
    /* Uncomment the section below if calling the IQNasin() or IQasin()
       functions from the IQMath.lib library in order to utilize the
@@ -174,16 +177,16 @@ SECTIONS {
       will be loaded into other memory (SARAM, Flash, etc.) and will take
       up space, but 0 wait-state is possible.
    */
-   IQmathTables3    : > IQTABLES3, PAGE = 0, TYPE = NOLOAD
+   /*IQmathTables3    : > IQTABLES3, PAGE = 0, TYPE = NOLOAD
    {
               IQmath.lib<IQNasinTable.obj> (IQmathTablesRam)
-   }
+   }*/
 
 
 /*** PIE Vect Table and Boot ROM Variables Structures ***/
 /*** The PIE Vector table is called PIEVECT by DSP/BIOS ***/
 
-#if 0
+#if 1
   /*UNION run = PIEVECT,   PAGE = 1
    {
       PieVectTableFile     : TYPE=DSECT
