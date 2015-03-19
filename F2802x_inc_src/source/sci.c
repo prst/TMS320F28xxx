@@ -8,17 +8,16 @@
 //  Group:          C2000
 //  Target Device:  TMS320F2802x
 //
+//  (C) Copyright 2012, Texas Instruments, Inc.
 //#############################################################################
-// $TI Release: F2802x Support Library v222 $
-// $Release Date: Thu Jan 15 13:56:57 CST 2015 $
-// $Copyright: Copyright (C) 2008-2015 Texas Instruments Incorporated -
-//             http://www.ti.com/ ALL RIGHTS RESERVED $
+// $TI Release: LaunchPad f2802x Support Library v100 $
+// $Release Date: Wed Jul 25 10:45:39 CDT 2012 $
 //#############################################################################
 
 // **************************************************************************
 // the includes
-#include "./include/DSP28x_Project.h"
-#include "./include/sci.h"
+#include "../../include/DSP28x_Project.h"
+#include "../../include/sci.h"
 
 
 // **************************************************************************
@@ -28,10 +27,10 @@
 // **************************************************************************
 // the globals
 
+#if (1==USE_F28027_SCI)
 
 // **************************************************************************
 // the functions
-
 
 void SCI_clearAutoBaudDetect(SCI_Handle sciHandle)
 {
@@ -485,7 +484,8 @@ void SCI_putDataBlocking(SCI_Handle sciHandle, uint16_t data)
 {
     SCI_Obj *sci = (SCI_Obj *)sciHandle;
 
-    while(SCI_isTxReady(sciHandle) != true){ }
+    while(SCI_isTxReady(sciHandle) != true){
+    }
     
     // write the data
     sci->SCITXBUF = data;
@@ -667,7 +667,7 @@ void SCI_setRxFifoIntLevel(SCI_Handle sciHandle, const SCI_FifoLevel_e fifoLevel
 
 
     // clear the value
-    sci->SCIFFRX &= (~SCI_SCIFFRX_IL_BITS);
+    sci->SCIFFTX &= (~SCI_SCIFFRX_IL_BITS);
 
     // set the bits
     sci->SCIFFRX |= fifoLevel;
@@ -689,5 +689,6 @@ void SCI_setTxFifoIntLevel(SCI_Handle sciHandle, const SCI_FifoLevel_e fifoLevel
     return;
 } // end of SCI_setTxFifoIntLevel() function
 
+#endif //(1==USE_F28027_SCI)
 
 // end of file

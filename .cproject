@@ -18,7 +18,7 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactExtension="out" artifactName="Example_F2802xEPwmTimerInt" buildProperties="" description="" id="com.ti.ccstudio.buildDefinitions.C2000.Debug.750388" name="RAM" parent="com.ti.ccstudio.buildDefinitions.C2000.Debug">
+				<configuration artifactExtension="out" artifactName="F28027" buildProperties="" description="" id="com.ti.ccstudio.buildDefinitions.C2000.Debug.750388" name="RAM" parent="com.ti.ccstudio.buildDefinitions.C2000.Debug">
 					<folderInfo id="com.ti.ccstudio.buildDefinitions.C2000.Debug.750388.961624124" name="/" resourcePath="">
 						<toolChain id="com.ti.ccstudio.buildDefinitions.C2000_6.2.exe.DebugToolchain.1166196934" name="TI Build Tools" secondaryOutputs="com.ti.ccstudio.buildDefinitions.C2000_6.2.hex.outputType__BIN" superClass="com.ti.ccstudio.buildDefinitions.C2000_6.2.exe.DebugToolchain" targetTool="com.ti.ccstudio.buildDefinitions.C2000_6.2.exe.linkerDebug.321477050">
 							<option id="com.ti.ccstudio.buildDefinitions.core.OPT_TAGS.34343760" superClass="com.ti.ccstudio.buildDefinitions.core.OPT_TAGS" valueType="stringList">
@@ -36,7 +36,7 @@
 							</option>
 							<option id="com.ti.ccstudio.buildDefinitions.core.OPT_CODEGEN_VERSION.999340653" name="Compiler version" superClass="com.ti.ccstudio.buildDefinitions.core.OPT_CODEGEN_VERSION" value="6.2.8" valueType="string"/>
 							<targetPlatform id="com.ti.ccstudio.buildDefinitions.C2000_6.2.exe.targetPlatformDebug.1969078754" name="Platform" superClass="com.ti.ccstudio.buildDefinitions.C2000_6.2.exe.targetPlatformDebug"/>
-							<builder buildPath="${BuildDirectory}" id="com.ti.ccstudio.buildDefinitions.C2000_6.2.exe.builderDebug.1072028590" keepEnvironmentInBuildfile="false" name="GNU Make" parallelBuildOn="true" parallelizationNumber="optimal" stopOnErr="true" superClass="com.ti.ccstudio.buildDefinitions.C2000_6.2.exe.builderDebug"/>
+							<builder buildPath="${BuildDirectory}" id="com.ti.ccstudio.buildDefinitions.C2000_6.2.exe.builderDebug.1072028590" keepEnvironmentInBuildfile="false" name="GNU Make" parallelBuildOn="false" stopOnErr="true" superClass="com.ti.ccstudio.buildDefinitions.C2000_6.2.exe.builderDebug"/>
 							<tool id="com.ti.ccstudio.buildDefinitions.C2000_6.2.exe.compilerDebug.1281957636" name="C2000 Compiler" superClass="com.ti.ccstudio.buildDefinitions.C2000_6.2.exe.compilerDebug">
 								<option id="com.ti.ccstudio.buildDefinitions.C2000_6.2.compilerID.LARGE_MEMORY_MODEL.1547926084" name="Use large memory model (--large_memory_model, -ml)" superClass="com.ti.ccstudio.buildDefinitions.C2000_6.2.compilerID.LARGE_MEMORY_MODEL" value="true" valueType="boolean"/>
 								<option id="com.ti.ccstudio.buildDefinitions.C2000_6.2.compilerID.UNIFIED_MEMORY.1258197167" name="Unified memory (--unified_memory, -mt)" superClass="com.ti.ccstudio.buildDefinitions.C2000_6.2.compilerID.UNIFIED_MEMORY" value="true" valueType="boolean"/>
@@ -60,19 +60,26 @@
 								</option>
 								<option id="com.ti.ccstudio.buildDefinitions.C2000_6.2.compilerID.OUTPUT_ALL_SYMS.1728641424" name="Keep local symbols in output file (--output_all_syms, -as)" superClass="com.ti.ccstudio.buildDefinitions.C2000_6.2.compilerID.OUTPUT_ALL_SYMS" value="true" valueType="boolean"/>
 								<option id="com.ti.ccstudio.buildDefinitions.C2000_6.2.compilerID.CDEBUG_ASM_DATA.1301867238" name="Generate asm debug directive (--cdebug_asm_data, -mg)" superClass="com.ti.ccstudio.buildDefinitions.C2000_6.2.compilerID.CDEBUG_ASM_DATA" value="true" valueType="boolean"/>
+								<option id="com.ti.ccstudio.buildDefinitions.C2000_6.2.compilerID.RTTI.1964761861" name="Support C++ run-time type information (--rtti, -rtti)" superClass="com.ti.ccstudio.buildDefinitions.C2000_6.2.compilerID.RTTI" value="false" valueType="boolean"/>
+								<option id="com.ti.ccstudio.buildDefinitions.C2000_6.2.compilerID.EXCEPTIONS.401210169" name="Enable C++ exception handling (--exceptions)" superClass="com.ti.ccstudio.buildDefinitions.C2000_6.2.compilerID.EXCEPTIONS" value="false" valueType="boolean"/>
+								<option id="com.ti.ccstudio.buildDefinitions.C2000_6.2.compilerID.LANGUAGE_MODE.1508893926" name="Language mode" superClass="com.ti.ccstudio.buildDefinitions.C2000_6.2.compilerID.LANGUAGE_MODE" value="com.ti.ccstudio.buildDefinitions.C2000_6.2.compilerID.LANGUAGE_MODE._none" valueType="enumerated"/>
+								<option id="com.ti.ccstudio.buildDefinitions.C2000_6.2.compilerID.C_C_PLUS_PLUS_DIALECT.1036286112" name="C/C++ Dialect" superClass="com.ti.ccstudio.buildDefinitions.C2000_6.2.compilerID.C_C_PLUS_PLUS_DIALECT" value="com.ti.ccstudio.buildDefinitions.C2000_6.2.compilerID.C_C_PLUS_PLUS_DIALECT._none" valueType="enumerated"/>
+								<option id="com.ti.ccstudio.buildDefinitions.C2000_6.2.compilerID.MULTIBYTE_CHARS.1652822676" name="Multibyte character support (--multibyte_chars, -pc)" superClass="com.ti.ccstudio.buildDefinitions.C2000_6.2.compilerID.MULTIBYTE_CHARS" value="false" valueType="boolean"/>
+								<option id="com.ti.ccstudio.buildDefinitions.C2000_6.2.compilerID.CPP_DEFAULT.848660774" name="Treat C files as C++ files (--cpp_default, -fg)" superClass="com.ti.ccstudio.buildDefinitions.C2000_6.2.compilerID.CPP_DEFAULT" value="false" valueType="boolean"/>
+								<option id="com.ti.ccstudio.buildDefinitions.C2000_6.2.compilerID.OPT_FOR_SPEED.1833794071" name="Speed vs. size trade-offs (--opt_for_speed, -mf)" superClass="com.ti.ccstudio.buildDefinitions.C2000_6.2.compilerID.OPT_FOR_SPEED" value="com.ti.ccstudio.buildDefinitions.C2000_6.2.compilerID.OPT_FOR_SPEED._none" valueType="enumerated"/>
+								<option id="com.ti.ccstudio.buildDefinitions.C2000_6.2.compilerID.OPT_LEVEL.401047452" name="Optimization level (--opt_level, -O)" superClass="com.ti.ccstudio.buildDefinitions.C2000_6.2.compilerID.OPT_LEVEL" value="com.ti.ccstudio.buildDefinitions.C2000_6.2.compilerID.OPT_LEVEL.off" valueType="enumerated"/>
+								<option id="com.ti.ccstudio.buildDefinitions.C2000_6.2.compilerID.FP_REASSOC.3263759" name="Allow reassociation of FP arithmetic (--fp_reassoc)" superClass="com.ti.ccstudio.buildDefinitions.C2000_6.2.compilerID.FP_REASSOC" value="com.ti.ccstudio.buildDefinitions.C2000_6.2.compilerID.FP_REASSOC.on" valueType="enumerated"/>
 								<inputType id="com.ti.ccstudio.buildDefinitions.C2000_6.2.compiler.inputType__C_SRCS.1016801158" name="C Sources" superClass="com.ti.ccstudio.buildDefinitions.C2000_6.2.compiler.inputType__C_SRCS"/>
 								<inputType id="com.ti.ccstudio.buildDefinitions.C2000_6.2.compiler.inputType__CPP_SRCS.856145287" name="C++ Sources" superClass="com.ti.ccstudio.buildDefinitions.C2000_6.2.compiler.inputType__CPP_SRCS"/>
 								<inputType id="com.ti.ccstudio.buildDefinitions.C2000_6.2.compiler.inputType__ASM_SRCS.1303310241" name="Assembly Sources" superClass="com.ti.ccstudio.buildDefinitions.C2000_6.2.compiler.inputType__ASM_SRCS"/>
 								<inputType id="com.ti.ccstudio.buildDefinitions.C2000_6.2.compiler.inputType__ASM2_SRCS.2115649893" name="Assembly Sources" superClass="com.ti.ccstudio.buildDefinitions.C2000_6.2.compiler.inputType__ASM2_SRCS"/>
 							</tool>
 							<tool id="com.ti.ccstudio.buildDefinitions.C2000_6.2.exe.linkerDebug.321477050" name="C2000 Linker" superClass="com.ti.ccstudio.buildDefinitions.C2000_6.2.exe.linkerDebug">
-								<option id="com.ti.ccstudio.buildDefinitions.C2000_6.2.linkerID.STACK_SIZE.1674097104" name="Set C system stack size (--stack_size, -stack)" superClass="com.ti.ccstudio.buildDefinitions.C2000_6.2.linkerID.STACK_SIZE" value="0x200" valueType="string"/>
-								<option id="com.ti.ccstudio.buildDefinitions.C2000_6.2.linkerID.OUTPUT_FILE.1477081677" name="Specify output file name (--output_file, -o)" superClass="com.ti.ccstudio.buildDefinitions.C2000_6.2.linkerID.OUTPUT_FILE" value="&quot;Example_F2802xEPwmTimerInt.out&quot;" valueType="string"/>
-								<option id="com.ti.ccstudio.buildDefinitions.C2000_6.2.linkerID.MAP_FILE.1171199633" name="Input and output sections listed into &lt;file&gt; (--map_file, -m)" superClass="com.ti.ccstudio.buildDefinitions.C2000_6.2.linkerID.MAP_FILE" value="&quot;Example_F2802xEPwmTimerInt.map&quot;" valueType="string"/>
+								<option id="com.ti.ccstudio.buildDefinitions.C2000_6.2.linkerID.STACK_SIZE.1674097104" name="Set C system stack size (--stack_size, -stack)" superClass="com.ti.ccstudio.buildDefinitions.C2000_6.2.linkerID.STACK_SIZE" value="0x100" valueType="string"/>
+								<option id="com.ti.ccstudio.buildDefinitions.C2000_6.2.linkerID.OUTPUT_FILE.1477081677" name="Specify output file name (--output_file, -o)" superClass="com.ti.ccstudio.buildDefinitions.C2000_6.2.linkerID.OUTPUT_FILE" value="&quot;F28027.out&quot;" valueType="string"/>
+								<option id="com.ti.ccstudio.buildDefinitions.C2000_6.2.linkerID.MAP_FILE.1171199633" name="Input and output sections listed into &lt;file&gt; (--map_file, -m)" superClass="com.ti.ccstudio.buildDefinitions.C2000_6.2.linkerID.MAP_FILE" value="&quot;F28027.map&quot;" valueType="string"/>
 								<option id="com.ti.ccstudio.buildDefinitions.C2000_6.2.linkerID.LIBRARY.310325721" name="Include library file or command file as input (--library, -l)" superClass="com.ti.ccstudio.buildDefinitions.C2000_6.2.linkerID.LIBRARY" valueType="libs">
-									<listOptionValue builtIn="false" value="&quot;D:\_PROJECTS\PryStan\2015\LauncPad_F28027F\epwm_timer_interrupts\F2802x_generic_ram.cmd&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;C:\ti\ccsv6\tools\compiler\c2000_6.2.8\lib\rts2800_ml.lib&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;D:\_PROJECTS\PryStan\2015\LauncPad_F28027F\epwm_timer_interrupts\lib\IQmath.lib&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;C:\ti\ccsv6\tools\compiler\c2000_6.2.8\lib\libc.a&quot;"/>
 								</option>
 								<option id="com.ti.ccstudio.buildDefinitions.C2000_6.2.linkerID.SEARCH_PATH.2044098099" name="Add &lt;dir&gt; to library search path (--search_path, -i)" superClass="com.ti.ccstudio.buildDefinitions.C2000_6.2.linkerID.SEARCH_PATH" valueType="libPaths">
 									<listOptionValue builtIn="false" value="&quot;${CG_TOOL_ROOT}/lib&quot;"/>
@@ -85,6 +92,7 @@
 								<option id="com.ti.ccstudio.buildDefinitions.C2000_6.2.linkerID.ISSUE_REMARKS.1320654695" name="Issue remarks (--issue_remarks)" superClass="com.ti.ccstudio.buildDefinitions.C2000_6.2.linkerID.ISSUE_REMARKS" value="true" valueType="boolean"/>
 								<option id="com.ti.ccstudio.buildDefinitions.C2000_6.2.linkerID.XML_LINK_INFO.1728071127" name="Detailed link information data-base into &lt;file&gt; (--xml_link_info, -xml_link_info)" superClass="com.ti.ccstudio.buildDefinitions.C2000_6.2.linkerID.XML_LINK_INFO" value="&quot;Example_F2802xEPwmTimerInt_linkInfo.xml&quot;" valueType="string"/>
 								<option id="com.ti.ccstudio.buildDefinitions.C2000_6.2.linkerID.ENTRY_POINT.1115072263" name="Specify program entry point for the output module (--entry_point, -e)" superClass="com.ti.ccstudio.buildDefinitions.C2000_6.2.linkerID.ENTRY_POINT" value="code_start" valueType="string"/>
+								<option id="com.ti.ccstudio.buildDefinitions.C2000_6.2.linkerID.DISABLE_AUTO_RTS.1602848234" name="Disable automatic RTS selection (--disable_auto_rts)" superClass="com.ti.ccstudio.buildDefinitions.C2000_6.2.linkerID.DISABLE_AUTO_RTS" value="false" valueType="boolean"/>
 								<inputType id="com.ti.ccstudio.buildDefinitions.C2000_6.2.exeLinker.inputType__CMD_SRCS.283489328" name="Linker Command Files" superClass="com.ti.ccstudio.buildDefinitions.C2000_6.2.exeLinker.inputType__CMD_SRCS"/>
 								<inputType id="com.ti.ccstudio.buildDefinitions.C2000_6.2.exeLinker.inputType__CMD2_SRCS.930408699" name="Linker Command Files" superClass="com.ti.ccstudio.buildDefinitions.C2000_6.2.exeLinker.inputType__CMD2_SRCS"/>
 								<inputType id="com.ti.ccstudio.buildDefinitions.C2000_6.2.exeLinker.inputType__GEN_CMDS.846098044" name="Generated Linker Command Files" superClass="com.ti.ccstudio.buildDefinitions.C2000_6.2.exeLinker.inputType__GEN_CMDS"/>
@@ -95,7 +103,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="28027_RAM_lnk.cmd|F2802x_generic_ram.cmd|F28027.cmd|F2802x_generic_flash.cmd|F2802x_Headers_BIOS.cmd" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="F2802x_inc_src/cmd/F2802x_Headers_nonBIOS.cmd|F2802x_inc_src/cmd/F2802x_Headers_BIOS.cmd|F2802x_inc_src/cmd/F2802x_generic_ram.cmd|F2802x_inc_src/cmd/F2802x_generic_flash.cmd|F2802x_inc_src/cmd/F28027.cmd|F2802x_generic_ram.cmd|F2802x_Headers_nonBIOS.cmd|28027_RAM_lnk.cmd|F28027.cmd|F2802x_generic_flash.cmd|F2802x_Headers_BIOS.cmd" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -190,7 +198,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="28027_RAM_lnk.cmd" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="F2802x_inc_src/cmd/F2802x_Headers_nonBIOS.cmd|F2802x_inc_src/cmd/F2802x_Headers_BIOS.cmd|F2802x_inc_src/cmd/F2802x_generic_ram.cmd|F2802x_inc_src/cmd/F2802x_generic_flash.cmd|F2802x_inc_src/cmd/F28027.cmd|F2802x_inc_src/cmd/28027_RAM_lnk.cmd|28027_RAM_lnk.cmd" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

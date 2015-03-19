@@ -108,6 +108,7 @@ extern cregister volatile unsigned int IER;
 // C99 defines boolean type to be _Bool, but this doesn't match the format of
 // the other standard integer types.  bool_t has been defined to fill this gap.
 typedef _Bool bool_t;
+//typedef enum {FALSE=0, TRUE=1} bool_t;
 
 // Work around for code that might accidently use uint8_t
 typedef unsigned char uint8_t;
@@ -133,22 +134,22 @@ typedef long double     float64;
 // Include All Peripheral Header Files:
 //
 
-#include "../f2802x_headers/include/F2802x_Adc.h"                // ADC Registers
-#include "../f2802x_headers/include/F2802x_BootVars.h"           // Boot ROM Variables
-#include "../f2802x_headers/include/F2802x_DevEmu.h"             // Device Emulation Registers
-#include "../f2802x_headers/include/F2802x_Comp.h"               // Comparator Registers
-#include "../f2802x_headers/include/F2802x_CpuTimers.h"          // 32-bit CPU Timers
-#include "../f2802x_headers/include/F2802x_ECap.h"               // Enhanced Capture
-#include "../f2802x_headers/include/F2802x_EPwm.h"               // Enhanced PWM
-#include "../f2802x_headers/include/F2802x_Gpio.h"               // General Purpose I/O Registers
-#include "../f2802x_headers/include/F2802x_I2c.h"                // I2C Registers
-#include "../f2802x_headers/include/F2802x_NmiIntrupt.h"         // NMI Interrupt Registers
-#include "../f2802x_headers/include/F2802x_PieCtrl.h"            // PIE Control Registers
-#include "../f2802x_headers/include/F2802x_PieVect.h"            // PIE Vector Table
-#include "../f2802x_headers/include/F2802x_Spi.h"                // SPI Registers
-#include "../f2802x_headers/include/F2802x_Sci.h"                // SCI Registers
-#include "../f2802x_headers/include/F2802x_SysCtrl.h"            // System Control/Power Modes
-#include "../f2802x_headers/include/F2802x_XIntrupt.h"           // External Interrupts
+#include "../F2802x_inc_src/include/F2802x_Adc.h"                // ADC Registers
+#include "../F2802x_inc_src/include/F2802x_BootVars.h"           // Boot ROM Variables
+#include "../F2802x_inc_src/include/F2802x_DevEmu.h"             // Device Emulation Registers
+#include "../F2802x_inc_src/include/F2802x_Comp.h"               // Comparator Registers
+#include "../F2802x_inc_src/include/F2802x_CpuTimers.h"          // 32-bit CPU Timers
+#include "../F2802x_inc_src/include/F2802x_ECap.h"               // Enhanced Capture
+#include "../F2802x_inc_src/include/F2802x_EPwm.h"               // Enhanced PWM
+#include "../F2802x_inc_src/include/F2802x_Gpio.h"               // General Purpose I/O Registers
+#include "../F2802x_inc_src/include/F2802x_I2c.h"                // I2C Registers
+#include "../F2802x_inc_src/include/F2802x_NmiIntrupt.h"         // NMI Interrupt Registers
+#include "../F2802x_inc_src/include/F2802x_PieCtrl.h"            // PIE Control Registers
+#include "../F2802x_inc_src/include/F2802x_PieVect.h"            // PIE Vector Table
+#include "../F2802x_inc_src/include/F2802x_Spi.h"                // SPI Registers
+#include "../F2802x_inc_src/include/F2802x_Sci.h"                // SCI Registers
+#include "../F2802x_inc_src/include/F2802x_SysCtrl.h"            // System Control/Power Modes
+#include "../F2802x_inc_src/include/F2802x_XIntrupt.h"           // External Interrupts
 
 #if (DSP28_28020PT||DSP28_28021PT||DSP28_28022PT||DSP28_28023PT||DSP28_28026PT||DSP28_28027PT)
 #define DSP28_COMP1    1

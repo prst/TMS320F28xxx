@@ -20,14 +20,15 @@
 #include <stdio.h>
 #include <file.h>
 
-#include "./include/DSP28x_Project.h"
-#include "./include/sci.h"
-#include "./include/sci_io.h"
+#include "../../include/DSP28x_Project.h"
+#include "../../include/sci.h"
+#include "../../include/sci_io.h"
 
 
 // **************************************************************************
 // the defines
 
+#if (1==USE_F28027_SCI_IO)
 
 // **************************************************************************
 // the globals
@@ -118,6 +119,6 @@ int SCI_rename(const char * old_name, const char * new_name)
     return (0);    
 }
 
-
+#endif //(1==USE_F28027_SCI_IO)
 
 // end of file
