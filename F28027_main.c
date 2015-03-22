@@ -5,6 +5,8 @@
 /* ========================================================================== */
 /* ========================================================================== */
 
+#include "stddef.h"
+
 #include "./include/DSP28x_Project.h"
 #include "./include/F2802x_Examples.h"
 #include "./include/F2802x_GlobalPrototypes.h"
@@ -23,7 +25,10 @@
 #include "./include/sci.h"
 
 //#include "./F28027_SCI.h"
-#include "TM1638.h"
+//#include "TM1638.h"
+
+#include "init.h"
+#include "n5110.h"
 
 #include "init.h"
 #include "n5110.h"
@@ -160,6 +165,17 @@ uint16_t     rdata_pointA;  // Used for checking the received data
 
 uint16_t     RxTx;
 
+void InitGpio (void) {
+	EALLOW;
+
+	GpioCtrlRegs.GPAMUX1.all=gpio_mux;
+	// ÔÚÕâÀï²åÈë³õÊ¼»¯º¯ÊýµÄ´úÂë
+	GpioCtrlRegs.GPADIR.all=gpio_dir;
+
+	//	GpioDataRegs.GPASET.all=0xff;
+	EDIS;
+}
+
 /* ==========================================================================
  * MAIN
  * ========================================================================== */
@@ -177,12 +193,13 @@ void main (void) {
     }*/
 
     if (E_OK==err) {
-    	err = wrapper_Init_GPIO ();   // Init GPIO system
+    	InitGpio();
+    	//err = wrapper_Init_GPIO ();   // Init GPIO system
     } else {
     	wrapper_Error_Handle (err);
     }
 
-    if (E_OK==err) {
+    /*if (E_OK==err) {
     	err = wrapper_Init_UART_IRQ ();   // Init UART IRQ
     	//err = wrapper_Init_UART_pooling ();   // Init UART without IRQ
     } else {
@@ -193,7 +210,7 @@ void main (void) {
     	err = wrapper_Init_TM1638 ();   // Init TM1638
     } else {
     	wrapper_Error_Handle (err);
-    }
+    }*/
 
 
 	Lcd_clear();
@@ -207,7 +224,8 @@ void main (void) {
 	Lcd_prints(1, 4, FONT_1X, "Ïðèõîäüêî" );
 	Lcd_prints(1, 5, FONT_1X, "TMS320F28027_" );
 
-	Lcd_rect/*_empty*/ ( 0, 8, 8, LCD_X_RES-1, PIXEL_XOR);
+	//Lcd_rect_empty ( 0, 8, 8, LCD_X_RES-1, PIXEL_XOR);
+	Lcd_rect ( 0, 8, 8, LCD_X_RES-1, PIXEL_XOR);
 
 	//Lcd_line( 20, 8, 30, 16, PIXEL_ON );
 	//Lcd_circle ( 3, 4, 1, PIXEL_ON );
@@ -219,6 +237,7 @@ void main (void) {
     	//wrapper_Main();
     	//tm1638_prints("123456789");
     	//tm1638_printx("1", 1);
+    	Lcd_update();
     }
 }
 /* ========================================================================== */
@@ -392,7 +411,7 @@ t_error wrapper_Init_Sys (void) {
 	// Note: not all peripherals are available on all 280x derivates.
 	// Refer to the datasheet for your particular device.
 	//------------------------------------------------
-	SysCtrlRegs.PCLKCR0.bit.ADCENCLK   = 0;  // ADC
+	SysCtrlRegs.PCLKCR0.bit.ADCENCLK   = 1;  // ADC
 	SysCtrlRegs.PCLKCR3.bit.COMP1ENCLK = 0;	 // COMP1
 	SysCtrlRegs.PCLKCR3.bit.COMP2ENCLK = 0;	 // COMP2
 	SysCtrlRegs.PCLKCR0.bit.I2CAENCLK  = 0;  // I2C
@@ -403,15 +422,15 @@ t_error wrapper_Init_Sys (void) {
 	SysCtrlRegs.PCLKCR1.bit.EPWM2ENCLK = 0;  // ePWM2
 	SysCtrlRegs.PCLKCR1.bit.EPWM3ENCLK = 0;  // ePWM3
 	SysCtrlRegs.PCLKCR1.bit.EPWM4ENCLK = 0;  // ePWM4
-	SysCtrlRegs.PCLKCR0.bit.TBCLKSYNC  = 0;  // Enable TBCLK
+	SysCtrlRegs.PCLKCR0.bit.TBCLKSYNC  = 1;  // Enable TBCLK
 	//------------------------------------------------
 
     // Perform basic system initialization
     WDOG_disable (myWDog);
-    CLK_enableAdcClock (myClk);
+/*    CLK_enableAdcClock (myClk);
     (*Device_cal)();
     CLK_disableAdcClock (myClk);
-
+*/
     //Select the internal oscillator 1 as the clock source
     CLK_setOscSrc (myClk, CLK_OscSrc_Internal);
 
@@ -425,11 +444,11 @@ t_error wrapper_Init_Sys (void) {
     CPU_clearIntFlags (myCpu);
 
     // If running from flash copy RAM only functions to RAM
-//#ifdef _FLASH
+#ifdef _FLASH
     memcpy (&RamfuncsRunStart, &RamfuncsLoadStart, (size_t)&RamfuncsLoadSize);
-//#endif
+#endif
 
-    return E_OK;
+    return (t_error) E_OK;
 }
 /* ========================================================================== */
 
@@ -514,6 +533,8 @@ t_error wrapper_Init_GPIO (void) {
     GPIO_setDirection (myGpio, GPIO_Number_1, GPIO_Direction_Output);
     GPIO_setDirection (myGpio, GPIO_Number_2, GPIO_Direction_Output);
     GPIO_setDirection (myGpio, GPIO_Number_3, GPIO_Direction_Output);
+    GPIO_setDirection (myGpio, GPIO_Number_4, GPIO_Direction_Output);
+    GPIO_setDirection (myGpio, GPIO_Number_5, GPIO_Direction_Output);
     GPIO_setPortData  (myGpio, GPIO_Port_A, 0x000F);
 #endif //(1==USE_F28027_GPIO)
     return E_OK;

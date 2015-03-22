@@ -275,22 +275,22 @@ void PLL_setDivider(PLL_Handle pllHandle, const PLL_DivideSelect_e divSelect)
 void PLL_setup(PLL_Handle pllHandle, const PLL_Multiplier_e clkMult, const PLL_DivideSelect_e divSelect)
 {
 
-    if(PLL_getClkStatus(pllHandle) == PLL_ClkStatus_Missing)
+    if ( PLL_getClkStatus(pllHandle) == PLL_ClkStatus_Missing )
     {
         // The clock is missing so we cannot setup the PLL correctly
         asm(" ESTOP0");
     }
     
     // Set divider to max value (/4) for safety
-    PLL_setDivider(pllHandle, PLL_DivideSelect_ClkIn_by_4);
+    PLL_setDivider (pllHandle, PLL_DivideSelect_ClkIn_by_4);
     
     // Set the desired multiplier
-    PLL_setMultiplier(pllHandle, clkMult);
+    PLL_setMultiplier (pllHandle, clkMult);
     
-    while(PLL_getLockStatus(pllHandle) != PLL_LockStatus_Done)
-    {
-    }
+    while (PLL_getLockStatus(pllHandle) != PLL_LockStatus_Done)
+    { }
     
+
     // Set the desired divider
     PLL_setDivider(pllHandle, divSelect);
     

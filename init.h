@@ -14,6 +14,9 @@ typedef unsigned char   byte;
 #define gpio_mux  0x0000
 #define gpio_dir  0x003f
 
+
+void DELAY(char s);
+
 /* ************************************************************************** */
 
 #endif //__INIT_H__
