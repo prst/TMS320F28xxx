@@ -23,7 +23,10 @@
 #include "./include/sci.h"
 
 //#include "./F28027_SCI.h"
-#include "TM1638.h"
+//#include "TM1638.h"
+
+#include "init.h"
+#include "n5110.h"
 
 
 /* ========================================================================== */
@@ -157,6 +160,17 @@ uint16_t     rdata_pointA;  // Used for checking the received data
 
 uint16_t     RxTx;
 
+void InitGpio (void) {
+	EALLOW;
+
+	GpioCtrlRegs.GPAMUX1.all=gpio_mux;
+	// ‘⁄’‚¿Ô≤Â»Î≥ı ºªØ∫Ø ˝µƒ¥˙¬Î
+	GpioCtrlRegs.GPADIR.all=gpio_dir;
+
+	//	GpioDataRegs.GPASET.all=0xff;
+	EDIS;
+}
+
 /* ==========================================================================
  * MAIN
  * ========================================================================== */
@@ -174,12 +188,13 @@ void main (void) {
     }*/
 
     if (E_OK==err) {
-    	err = wrapper_Init_GPIO ();   // Init GPIO system
+    	InitGpio();
+    	//err = wrapper_Init_GPIO ();   // Init GPIO system
     } else {
     	wrapper_Error_Handle (err);
     }
 
-    if (E_OK==err) {
+    /*if (E_OK==err) {
     	err = wrapper_Init_UART_IRQ ();   // Init UART IRQ
     	//err = wrapper_Init_UART_pooling ();   // Init UART without IRQ
     } else {
@@ -190,13 +205,33 @@ void main (void) {
     	err = wrapper_Init_TM1638 ();   // Init TM1638
     } else {
     	wrapper_Error_Handle (err);
-    }
+    }*/
+
+
+	Lcd_clear();
+	Lcd_init();
+
+	Lcd_prints(0, 0, FONT_1X, "~" );
+	Lcd_prints(1, 0, FONT_1X, "Hello world!" );
+	Lcd_prints(1, 1, FONT_1X, "It's working." );
+	Lcd_prints(1, 2, FONT_1X, "uschema.com" );
+	Lcd_prints(1, 3, FONT_1X, "—Ú‡ÌËÒÎ‡‚" );
+	Lcd_prints(1, 4, FONT_1X, "œËıÓ‰¸ÍÓ" );
+	Lcd_prints(1, 5, FONT_1X, "TMS320F28027_" );
+
+	//Lcd_rect_empty ( 0, 8, 8, LCD_X_RES-1, PIXEL_XOR);
+	Lcd_rect ( 0, 8, 8, LCD_X_RES-1, PIXEL_XOR);
+
+	//Lcd_line( 20, 8, 30, 16, PIXEL_ON );
+	//Lcd_circle ( 3, 4, 1, PIXEL_ON );
+
+	Lcd_update();
 
 	// Main code
     for(;;) {
     	//wrapper_Main();
     	//tm1638_prints("123456789");
-    	tm1638_printx("1", 1);
+    	//tm1638_printx("1", 1);
     }
 }
 /* ========================================================================== */
@@ -381,7 +416,7 @@ t_error wrapper_Init_Sys (void) {
 	SysCtrlRegs.PCLKCR1.bit.EPWM2ENCLK = 0;  // ePWM2
 	SysCtrlRegs.PCLKCR1.bit.EPWM3ENCLK = 0;  // ePWM3
 	SysCtrlRegs.PCLKCR1.bit.EPWM4ENCLK = 0;  // ePWM4
-	SysCtrlRegs.PCLKCR0.bit.TBCLKSYNC  = 0;  // Enable TBCLK
+	SysCtrlRegs.PCLKCR0.bit.TBCLKSYNC  = 1;  // Enable TBCLK
 	//------------------------------------------------
 
     // Perform basic system initialization
@@ -492,6 +527,8 @@ t_error wrapper_Init_GPIO (void) {
     GPIO_setDirection (myGpio, GPIO_Number_1, GPIO_Direction_Output);
     GPIO_setDirection (myGpio, GPIO_Number_2, GPIO_Direction_Output);
     GPIO_setDirection (myGpio, GPIO_Number_3, GPIO_Direction_Output);
+    GPIO_setDirection (myGpio, GPIO_Number_4, GPIO_Direction_Output);
+    GPIO_setDirection (myGpio, GPIO_Number_5, GPIO_Direction_Output);
     GPIO_setPortData  (myGpio, GPIO_Port_A, 0x000F);
 #endif //(1==USE_F28027_GPIO)
     return E_OK;
@@ -743,9 +780,9 @@ t_error wrapper_Init_UART_IRQ (void) {
    ========================================================================== */
 t_error wrapper_Init_TM1638 (void) {
 
-//#if (1==__USE__TM1638__)
+#if (1==__USE__TM1638__)
 	tm1638_init();
-//#endif //(1==__USE__TM1638__)
+#endif //(1==__USE__TM1638__)
 
     return E_OK;
 }

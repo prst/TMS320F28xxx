@@ -31,17 +31,17 @@
 #define   USE_F28027_PIE      1
 #define   USE_F28027_PLL      1
 #define   USE_F28027_PWM      0
-#define   USE_F28027_PWR      0
+#define   USE_F28027_PWR      1
 #define   USE_F28027_SCI_IO   1
 #define   USE_F28027_SCI      0
 #define   USE_F28027_SPI      0
 #define   USE_F28027_TIMER    0
 #define   USE_F28027_WDOG     1
-#define   USE_F28027_NMI      0
-#define   USE_F28027_PARTID   0
+#define   USE_F28027_NMI      1
+#define   USE_F28027_PARTID   1
 #define   USE_F28027_SYSCTRL  1
-#define   USE_F28027_XINTS    0
-#define   USE_F28027_DEVEMU   0
+#define   USE_F28027_XINTS    1
+#define   USE_F28027_DEVEMU   1
 
 
 //! \brief External reference to the interrupt flag register (IFR) register
