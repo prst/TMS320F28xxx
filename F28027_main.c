@@ -405,7 +405,7 @@ t_error wrapper_Init_Sys (void) {
 	// Note: not all peripherals are available on all 280x derivates.
 	// Refer to the datasheet for your particular device.
 	//------------------------------------------------
-	SysCtrlRegs.PCLKCR0.bit.ADCENCLK   = 0;  // ADC
+	SysCtrlRegs.PCLKCR0.bit.ADCENCLK   = 1;  // ADC
 	SysCtrlRegs.PCLKCR3.bit.COMP1ENCLK = 0;	 // COMP1
 	SysCtrlRegs.PCLKCR3.bit.COMP2ENCLK = 0;	 // COMP2
 	SysCtrlRegs.PCLKCR0.bit.I2CAENCLK  = 0;  // I2C
@@ -421,10 +421,10 @@ t_error wrapper_Init_Sys (void) {
 
     // Perform basic system initialization
     WDOG_disable (myWDog);
-    CLK_enableAdcClock (myClk);
+/*    CLK_enableAdcClock (myClk);
     (*Device_cal)();
     CLK_disableAdcClock (myClk);
-
+*/
     //Select the internal oscillator 1 as the clock source
     CLK_setOscSrc (myClk, CLK_OscSrc_Internal);
 
@@ -438,9 +438,9 @@ t_error wrapper_Init_Sys (void) {
     CPU_clearIntFlags (myCpu);
 
     // If running from flash copy RAM only functions to RAM
-//#ifdef _FLASH
+#ifdef _FLASH
     memcpy (&RamfuncsRunStart, &RamfuncsLoadStart, (size_t)&RamfuncsLoadSize);
-//#endif
+#endif
 
     return (t_error) E_OK;
 }
