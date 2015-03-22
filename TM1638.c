@@ -39,7 +39,7 @@
 //______________________________________________________________________________
 
 #if (1==__USE__TM1638__)
-#define MHZ 8
+#define MHZ 50
 
 /*#include "./include/DSP28x_Project.h"
 #include "./include/F2802x_Examples.h"
