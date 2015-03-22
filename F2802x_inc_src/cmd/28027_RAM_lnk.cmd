@@ -84,7 +84,7 @@ PAGE 0 :
    /* BEGIN is used for the "boot to SARAM" bootloader mode   */
    BEGIN      : origin = 0x000000, length = 0x000002
    //RAMM0      : origin = 0x000050, length = 0x0003B0
-   RAMM01     : origin = 0x000050, length = 0x0007B0
+   RAMM01     : origin = 0x000002, length = 0x0007B0
    //RAML0      : origin = 0x008000, length = 0x000800
    IQTABLES   : origin = 0x3FE000, length = 0x000B50     /* IQ Math Tables in Boot ROM */
    IQTABLES2  : origin = 0x3FEB50, length = 0x00008C     /* IQ Math Tables in Boot ROM */
@@ -92,8 +92,9 @@ PAGE 0 :
    RESET      : origin = 0x3FFFC0, length = 0x000002
    PRAML0     : origin = 0x008000, length = 0x000900
    BOOTROM    : origin = 0x3FF27C, length = 0x000D44
+   CSM_RSVD   : origin = 0x3F7F80, length = 0x000076     /* Part of FLASHA.  Program with all 0x0000 when CSM is in use. */
 
-#if 1
+//#if 1
    DEV_EMU     : origin = 0x000880, length = 0x000105     /* device emulation registers */
    SYS_PWR_CTL : origin = 0x000985, length = 0x000003     /* System power control registers */
    FLASH_REGS  : origin = 0x000A80, length = 0x000060     /* FLASH registers */
@@ -122,7 +123,7 @@ PAGE 0 :
    I2CA        : origin = 0x007900, length = 0x000040     /* I2C-A registers */
    CSM_PWL     : origin = 0x3F7FF8, length = 0x000008     /* Part of FLASHA.  CSM password locations. */
    PARTID      : origin = 0x3D7FFF, length = 0x000001     /* Part ID register location */
-#endif
+//#endif
 
 
 PAGE 1 :
@@ -131,6 +132,7 @@ PAGE 1 :
    BOOT_RSVD   : origin = 0x000002, length = 0x00004E     /* Part of M0, BOOT rom will use this for stack */
    //RAMM1       : origin = 0x000400, length = 0x000400     /* on-chip RAM block M1 */
    DRAML0      : origin = 0x008900, length = 0x000700
+
 }
 
 
@@ -139,21 +141,24 @@ SECTIONS
    /* Setup for "boot to SARAM" mode:
       The codestart section (found in DSP28_CodeStartBranch.asm)
       re-directs execution to the start of user code.  */
-   codestart        : > BEGIN,     PAGE = 0
-   ramfuncs         : >> PRAML0 | RAMM01      PAGE = 0
-   .text            : >> PRAML0 | RAMM01,    PAGE = 0
-   .cinit           : > RAMM01,     PAGE = 0
-   .pinit           : >> PRAML0 | RAMM01,     PAGE = 0
-   .switch          : >> PRAML0 | RAMM01,     PAGE = 0
-   .reset           : > RESET,     PAGE = 0, TYPE = DSECT /* not used, */
+   csmpasswds       : > CSM_PWL, PAGE = 1
+   csm_rsvd         : > CSM_RSVD,   PAGE = 0
 
-   .stack           : > RAMM01,     PAGE = 0
+   codestart        : > BEGIN,     PAGE = 0
+   ramfuncs         : >> PRAML0 | RAMM01     PAGE = 0
+   .reset           : > RESET,     PAGE = 0, TYPE = DSECT /* not used, */
+   .cinit           : > RAMM01,    PAGE = 0
+   .pinit           : >> PRAML0 | RAMM01,    PAGE = 0
+   .switch          : >> PRAML0 | RAMM01,    PAGE = 0
+   .text            : >> PRAML0 | RAMM01,    PAGE = 0
+
+   .stack           : > RAMM01,    PAGE = 0
    .ebss            : > DRAML0,    PAGE = 1
    .econst          : > DRAML0,    PAGE = 1
-   .esysmem         : > RAMM01,     PAGE = 0
+   .esysmem         : > RAMM01,    PAGE = 0
 
    IQmath           : > PRAML0,    PAGE = 0
-   IQmathTables     : > IQTABLES,  PAGE = 0, TYPE = NOLOAD
+   IQmathTables     : > IQTABLES,  PAGE = 0,  TYPE = NOLOAD
 
   /* Uncomment the section below if calling the IQNexp() or IQexp()
       functions from the IQMath.lib library in order to utilize the
@@ -165,9 +170,7 @@ SECTIONS
    /*
    IQmathTables2    : > IQTABLES2, PAGE = 0, TYPE = NOLOAD
    {
-
               IQmath.lib<IQNexpTable.obj> (IQmathTablesRam)
-
    }
    */
    /* Uncomment the section below if calling the IQNasin() or IQasin()
@@ -180,13 +183,20 @@ SECTIONS
    /*
    IQmathTables3    : > IQTABLES3, PAGE = 0, TYPE = NOLOAD
    {
-
               IQmath.lib<IQNasinTable.obj> (IQmathTablesRam)
-
    }
    */
 
-#if 1
+   /* .reset is a standard section used by the compiler.  It contains the */
+   /* the address of the start of _c_int00 for C Code.   /*
+   /* When using the boot ROM this section and the CPU vector */
+   /* table is not needed.  Thus the default type is set here to  */
+   /* DSECT  */
+   .reset              : > RESET,      PAGE = 0, TYPE = DSECT
+   vectors             : > VECTORS     PAGE = 0, TYPE = DSECT
+
+
+#if 0
   /*UNION run = PIEVECT,   PAGE = 1
    {
       PieVectTableFile     : TYPE=DSECT

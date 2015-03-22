@@ -25,6 +25,9 @@
 //#include "./F28027_SCI.h"
 #include "TM1638.h"
 
+#include "init.h"
+#include "n5110.h"
+
 
 /* ========================================================================== */
 // Configure which ePWM timer interrupts are enabled at the PIE level:
@@ -192,11 +195,30 @@ void main (void) {
     	wrapper_Error_Handle (err);
     }
 
+
+	Lcd_clear();
+	Lcd_init();
+
+	Lcd_prints(0, 0, FONT_1X, "~" );
+	Lcd_prints(1, 0, FONT_1X, "Hello world!" );
+	Lcd_prints(1, 1, FONT_1X, "It's working." );
+	Lcd_prints(1, 2, FONT_1X, "uschema.com" );
+	Lcd_prints(1, 3, FONT_1X, "Станислав" );
+	Lcd_prints(1, 4, FONT_1X, "Приходько" );
+	Lcd_prints(1, 5, FONT_1X, "TMS320F28027_" );
+
+	Lcd_rect/*_empty*/ ( 0, 8, 8, LCD_X_RES-1, PIXEL_XOR);
+
+	//Lcd_line( 20, 8, 30, 16, PIXEL_ON );
+	//Lcd_circle ( 3, 4, 1, PIXEL_ON );
+
+	Lcd_update();
+
 	// Main code
     for(;;) {
     	//wrapper_Main();
     	//tm1638_prints("123456789");
-    	tm1638_printx("1", 1);
+    	//tm1638_printx("1", 1);
     }
 }
 /* ========================================================================== */
@@ -743,9 +765,9 @@ t_error wrapper_Init_UART_IRQ (void) {
    ========================================================================== */
 t_error wrapper_Init_TM1638 (void) {
 
-//#if (1==__USE__TM1638__)
+#if (1==__USE__TM1638__)
 	tm1638_init();
-//#endif //(1==__USE__TM1638__)
+#endif //(1==__USE__TM1638__)
 
     return E_OK;
 }
