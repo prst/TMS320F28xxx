@@ -33,7 +33,7 @@
 
 ***********************************************************************
 
-WD_DISABLE    .set    1        ;set to 1 to disable WD, else set to 0
+WD_DISABLE    .set    1    ;set to 1 to disable WD, else set to 0
 
     .ref _c_int00
     .global code_start

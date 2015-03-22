@@ -287,6 +287,7 @@ volatile struct XINTRUPT_REGS XIntruptRegs;
 #endif //(1==USE_F28027_XINTS)
 
 //----------------------------------------
+#if (1==USE_F28027_EMU)
 #ifdef __cplusplus
 #pragma DATA_SECTION("EmuKeyVar");
 #else
@@ -301,8 +302,10 @@ Uint16 EmuKey;
 #pragma DATA_SECTION(EmuBMode,"EmuBModeVar");
 #endif
 Uint16 EmuBMode;
+#endif //(1==USE_F28027_EMU)
 
 //----------------------------------------
+#if (1==USE_F28027_FLASH)
 #ifdef __cplusplus
 #pragma DATA_SECTION("FlashScalingVar");
 #else
@@ -311,7 +314,6 @@ Uint16 EmuBMode;
 Uint32 Flash_CPUScaleFactor;
 
 //----------------------------------------
-#if (1==USE_F28027_FLASH)
 #ifdef __cplusplus
 #pragma DATA_SECTION("FlashCallbackVar");
 #else

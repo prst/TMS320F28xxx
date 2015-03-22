@@ -87,7 +87,10 @@ int SCI_write(SCI_Handle sciHandle, uint16_t data)
 {
     uint16_t writeCount = 0;
     //uint16_t * bufPtr = (uint16_t *) buf;
-    uint16_t * bufPtr = data;
+    uint16_t *bufPtr;
+
+
+    bufPtr = &data;
     
     /*if(count == 0) {
         return (0);
