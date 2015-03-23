@@ -4,15 +4,20 @@
 #define __INIT_H__
 
 /* ************************************************************************** */
-#define __AVR__ (0)
-#define __TMS320__ (1)
+#define __AVR__           (0)
+#define __TMS320__        (1)
+
+#define __USE_TM1638__    (0)
+#define __USE_LCD_5110__  (1)
+#define __USE_DS1307__    (0)
+
 /* ************************************************************************** */
 
 typedef unsigned char   byte;
 
 /* ************************************************************************** */
 #define gpio_mux  0x0000
-#define gpio_dir  0x003f
+#define gpio_dir  0x001f
 
 
 void DELAY(char s);

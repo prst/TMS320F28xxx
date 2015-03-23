@@ -12,3 +12,5 @@ encoding//RAM/objects.mk=UTF-8
 encoding//RAM/sources.mk=UTF-8
 encoding//RAM/subdir_rules.mk=UTF-8
 encoding//RAM/subdir_vars.mk=UTF-8
+encoding/I2C_rtc_eeprom.c=UTF-8
+encoding/TM1638.c=UTF-8

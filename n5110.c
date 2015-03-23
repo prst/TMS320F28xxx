@@ -12,6 +12,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+
 #include "init.h"
 
 #if (1==__AVR__)
@@ -27,6 +28,8 @@
 #endif //(1==__TMS320__)
 
 /* ************************************************************************** */
+
+#if (1==__USE_LCD_5110__)
 
 
 /* ************************************************************************** */
@@ -148,12 +151,12 @@ void Lcd_init ( void ) {
     // 0b00000001 -
     // 0b00000010 -
     // 0b00000100 -
-    // 0b00001000 -
-    // 0b00010000 -
-    // 0b00100000 -
+    // 0b00001000 - Mirror Y
+    // 0b00010000 - Mirror X
+    // 0b00100000 - 1
     // 0b01000000 -
     // 0b10000000 -
-    write_com(0x21);
+    write_com(0x33);
 
     // Установка контрастности (LCD Vop)
     // 0xC8 = 11001000 - Normal
@@ -198,12 +201,12 @@ void Lcd_init ( void ) {
     // 0b00000001 -
     // 0b00000010 -
     // 0b00000100 -
-    // 0b00001000 -
-    // 0b00010000 -
+    // 0b00001000 - Mirror Y
+    // 0b00010000 - Mirror X
     // 0b00100000 -
     // 0b01000000 -
     // 0b10000000 -
-    write_com(0x20);
+    write_com(0x30);
 
     // Нормальный режим (LCD in normal mode)
     // Обычный режим 12 (0x0c) = 00001100
@@ -215,7 +218,7 @@ void Lcd_init ( void ) {
     // 0b00100000 -
     // 0b01000000 -
     // 0b10000000 -
-    write_com(0x0c);
+    write_com(0x0d);
     // ........................................................................
 
     lcd_clear();
@@ -580,7 +583,7 @@ byte Lcd_prints ( byte x, byte y, LcdFontSize size, const byte *dataPtr ) {
     {
         // Выводим символ
         response = LcdChr( size, c );
-        if ( response == OUT_OF_BORDER )   return OUT_OF_BORDER;
+        if ( response == OUT_OF_BORDER ) return OUT_OF_BORDER;
     }
 
     return OK;
@@ -920,4 +923,5 @@ char *gftoa ( float f, int dec ) {
 }
 /* ************************************************************************** */
 
+#endif //(1==__USE_LCD_5110__)
 

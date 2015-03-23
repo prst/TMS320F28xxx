@@ -16,6 +16,7 @@
 
 // **************************************************************************
 // the includes
+#include "stddef.h"
 #include "../../include/DSP28x_Project.h"
 #include "../../include/pwm.h"
 

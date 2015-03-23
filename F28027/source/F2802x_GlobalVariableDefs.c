@@ -80,7 +80,7 @@ volatile struct CPUTIMER_REGS CpuTimer2Regs;
 #endif //(1==USE_F28027_TIMER)
 
 //----------------------------------------
-#if (1==USE_F28027_FLASH)
+#if (1==USE_F28027_CSM)
 #ifdef __cplusplus
 #pragma DATA_SECTION("CsmPwlFile")
 #else
@@ -95,7 +95,7 @@ volatile struct CSM_PWL CsmPwl;
 #pragma DATA_SECTION(CsmRegs,"CsmRegsFile");
 #endif
 volatile struct CSM_REGS CsmRegs;
-#endif //(1==USE_F28027_FLASH)
+#endif //(1==USE_F28027_CSM)
 
 //----------------------------------------
 #if (1==USE_F28027_DEVEMU)

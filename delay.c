@@ -6,7 +6,10 @@
 
 void DELAY(char s) {
   int i;
-  i=s*100;
+
+  //i = s * 100;
+  i = s * 10;
+
   while(i--);
 }
 

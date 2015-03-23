@@ -41,7 +41,7 @@ extern void InitComp1Gpio(void);
 #if DSP28_COMP2
 extern void InitComp2Gpio(void);
 #endif // endif DSP28_COMP2
-extern void InitGpio(void);
+extern void InitGpio_Conf_HW(void);
 extern void InitI2CGpio(void);
 extern void InitPieCtrl(void);
 extern void InitPieVectTable(void);

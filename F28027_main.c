@@ -28,10 +28,9 @@
 //#include "TM1638.h"
 
 #include "init.h"
-#include "n5110.h"
 
-#include "init.h"
 #include "n5110.h"
+#include "5110.h"
 
 
 /* ========================================================================== */
@@ -44,8 +43,11 @@
 // Configure the period for each timer
 #define PWM1_TIMER_TBPRD  0xFFFF
 //#define PWM1_TIMER_TBPRD  0x1FFF
+
 #define PWM2_TIMER_TBPRD  0x1FFF
-#define PWM3_TIMER_TBPRD  0x1FFF
+
+//#define PWM3_TIMER_TBPRD  0x1FFF
+#define PWM3_TIMER_TBPRD  0xFFFF
 
 /* ========================================================================== */
 #if (CPU_FRQ_40MHZ)
@@ -100,12 +102,13 @@ typedef struct {
 
 t_status sys_stat;
 
+
 // Prototype statements for functions found within this file.
-interrupt void epwm1_timer_isr(void);
-interrupt void epwm2_timer_isr(void);
-interrupt void epwm3_timer_isr(void);
-interrupt void timer0_isr(void);
-void           init_EPwmTimer(void);
+interrupt void epwm1_timer_isr (void);
+interrupt void epwm2_timer_isr (void);
+interrupt void epwm3_timer_isr (void);
+interrupt void timer0_isr      (void);
+void           init_Cfg_EPwmTimers (void);
 
 t_error wrapper_Init_Sys (void);
 t_error wrapper_Init_PWM_IRQs (void);
@@ -117,20 +120,20 @@ void    wrapper_Error_Handle( t_error err );
 void    error(void);
 
 // Prototype statements for functions found within this file.
+void            scia_fifo_init(void);
 interrupt void  sciaTxFifoIsr (void);
 interrupt void  sciaRxFifoIsr (void);
-void  scia_fifo_init(void);
 
-t_error wrapper_Init_UART_IRQ (void);
-t_error wrapper_Init_TM1638 (void);
+t_error  wrapper_Init_UART_IRQ (void);
+t_error  wrapper_Init_TM1638 (void);
 
 
 /* ========================================================================== */
 /* Global variables */
 /* ========================================================================== */
-uint16_t RamfuncsLoadStart;
-uint16_t RamfuncsLoadSize;
-uint16_t RamfuncsRunStart;
+uint16_t     RamfuncsLoadStart;
+uint16_t     RamfuncsLoadSize;
+uint16_t     RamfuncsRunStart;
 
 uint32_t     EPwm1TimerIntCount;
 uint32_t     EPwm2TimerIntCount;
@@ -152,7 +155,7 @@ WDOG_Handle  myWDog;
 
 t_error      err=E_OK;
 int          i=0, i_tx=0, i_rx=0;
-int          i_pwm0=0;
+int          i_pwm3=0;
 
 char         *p_sci_msg;
 uint16_t     LoopCount;
@@ -165,41 +168,43 @@ uint16_t     rdata_pointA;  // Used for checking the received data
 
 uint16_t     RxTx;
 
-void InitGpio (void) {
+
+/* ========================================================================== */
+void InitGpio_Conf_HW (void) {
 	EALLOW;
-
-	GpioCtrlRegs.GPAMUX1.all=gpio_mux;
+	GpioCtrlRegs.GPAMUX1.all |= gpio_mux;
 	// ФЪХвАпІеИліхКј»ЇєЇКэµДґъВл
-	GpioCtrlRegs.GPADIR.all=gpio_dir;
-
-	//	GpioDataRegs.GPASET.all=0xff;
+	GpioCtrlRegs.GPADIR.all |= gpio_dir;
+	//	GpioDataRegs.GPASET.all |= 0xff;
 	EDIS;
 }
+/* ========================================================================== */
+
 
 /* ==========================================================================
  * MAIN
  * ========================================================================== */
-void main (void) {
+void main (void)
+{
 	if (E_OK==err) {
         err = wrapper_Init_Sys ();     	 // Init system and handles
     } else {
     	wrapper_Error_Handle (err);
     }
     
-    /*if (E_OK==err) {
-        err = wrapper_Init_PWM_IRQs ();  // Init IRQs
-    } else {
-    	wrapper_Error_Handle (err);
-    }*/
-
     if (E_OK==err) {
-    	InitGpio();
-    	//err = wrapper_Init_GPIO ();   // Init GPIO system
+    	err = wrapper_Init_GPIO ();   // Init GPIO system
     } else {
     	wrapper_Error_Handle (err);
     }
 
-    /*if (E_OK==err) {
+    if (E_OK==err) {
+        err = wrapper_Init_PWM_IRQs ();  // Init IRQs
+    } else {
+    	wrapper_Error_Handle (err);
+    }
+
+    if (E_OK==err) {
     	err = wrapper_Init_UART_IRQ ();   // Init UART IRQ
     	//err = wrapper_Init_UART_pooling ();   // Init UART without IRQ
     } else {
@@ -210,9 +215,9 @@ void main (void) {
     	err = wrapper_Init_TM1638 ();   // Init TM1638
     } else {
     	wrapper_Error_Handle (err);
-    }*/
+    }
 
-
+#if (1==__USE_LCD_5110__)
 	Lcd_clear();
 	Lcd_init();
 
@@ -222,7 +227,21 @@ void main (void) {
 	Lcd_prints(1, 2, FONT_1X, "uschema.com" );
 	Lcd_prints(1, 3, FONT_1X, "Станислав" );
 	Lcd_prints(1, 4, FONT_1X, "Приходько" );
-	Lcd_prints(1, 5, FONT_1X, "TMS320F28027_" );
+	Lcd_prints(1, 5, FONT_1X, "TMS320F28027." );
+
+    /*byte strings[6][14] = {
+    	"Hello world! ",
+    	"It's working.",
+    	"uschema.com  ",
+    	"Станислав    ",
+    	"Приходько    ",
+    	"TMS320F28027."
+    };
+	byte nn;
+
+	for (nn=0; nn<6; nn++) {
+		Lcd_prints(1, nn, FONT_1X, &strings[nn][0] );
+	}*/
 
 	//Lcd_rect_empty ( 0, 8, 8, LCD_X_RES-1, PIXEL_XOR);
 	Lcd_rect ( 0, 8, 8, LCD_X_RES-1, PIXEL_XOR);
@@ -231,13 +250,18 @@ void main (void) {
 	//Lcd_circle ( 3, 4, 1, PIXEL_ON );
 
 	Lcd_update();
+#endif //(1==__USE_LCD_5110__)
 
 	// Main code
     for(;;) {
     	//wrapper_Main();
     	//tm1638_prints("123456789");
     	//tm1638_printx("1", 1);
+
+#if (1==__USE_LCD_5110__)
     	Lcd_update();
+#endif //(1==__USE__LCD_5110__)
+
     }
 }
 /* ========================================================================== */
@@ -251,6 +275,7 @@ void main (void) {
  * RET  - void
    ========================================================================== */
 void wrapper_Main ( void ) {
+#if 0
     /* asm (" NOP");
     for ( i=1; i<=10; i++ ) {
         GPIO_setPortData (myGpio, GPIO_Port_A, i );
@@ -326,8 +351,9 @@ void wrapper_Main ( void ) {
     		break;
     	}
     }*/
+#endif //0
 }
- /* ========================================================================== */
+/* ========================================================================== */
 
 
 
@@ -356,6 +382,29 @@ void wrapper_Error_Handle (t_error err) {
  * RET  - t_error err
    ========================================================================== */
 t_error wrapper_Init_Sys (void) {
+
+	// PERIPHERAL CLOCK ENABLES
+	//---------------------------------------------------
+	// If you are not using a peripheral you may want to switch
+	// the clock off to save power, i.e. set to =0
+	// Note: not all peripherals are available on all 280x derivates.
+	// Refer to the datasheet for your particular device.
+	//------------------------------------------------
+	SysCtrlRegs.PCLKCR0.bit.ADCENCLK   = 0;  // ADC
+	SysCtrlRegs.PCLKCR3.bit.COMP1ENCLK = 0;	 // COMP1
+	SysCtrlRegs.PCLKCR3.bit.COMP2ENCLK = 0;	 // COMP2
+	SysCtrlRegs.PCLKCR0.bit.I2CAENCLK  = 1;  // I2C
+	SysCtrlRegs.PCLKCR0.bit.SPIAENCLK  = 0;	 // SPI-A
+	SysCtrlRegs.PCLKCR0.bit.SCIAENCLK  = 0;  // SCI-A
+	SysCtrlRegs.PCLKCR1.bit.ECAP1ENCLK = 0;	 // eCAP1
+	SysCtrlRegs.PCLKCR1.bit.EPWM1ENCLK = 1;  // ePWM1
+	SysCtrlRegs.PCLKCR1.bit.EPWM2ENCLK = 1;  // ePWM2
+	SysCtrlRegs.PCLKCR1.bit.EPWM3ENCLK = 1;  // ePWM3
+	SysCtrlRegs.PCLKCR1.bit.EPWM4ENCLK = 0;  // ePWM4
+	SysCtrlRegs.PCLKCR0.bit.TBCLKSYNC  = 1;  // Enable TBCLK
+	//------------------------------------------------
+
+
     // Initialize all the handles needed for this application
 #if (1==USE_F28027_CLK)
     myClk   = CLK_init  ((void *)CLK_BASE_ADDR, sizeof(CLK_Obj));
@@ -382,9 +431,17 @@ t_error wrapper_Init_Sys (void) {
 #endif //(1==USE_F28027_PLL)
 
 #if (1==USE_F28027_PWM)
+	#if (1==PWM1_INT_ENABLE)
     myPwm1  = PWM_init  ((void *)PWM_ePWM1_BASE_ADDR, sizeof(PWM_Obj));
+	#endif //(1==PWM1_INT_ENABLE)
+
+	#if (1==PWM2_INT_ENABLE)
     myPwm2  = PWM_init  ((void *)PWM_ePWM2_BASE_ADDR, sizeof(PWM_Obj));
+	#endif //(1==PWM2_INT_ENABLE)
+
+	#if (1==PWM2_INT_ENABLE)
     myPwm3  = PWM_init  ((void *)PWM_ePWM3_BASE_ADDR, sizeof(PWM_Obj));
+	#endif //(1==PWM2_INT_ENABLE)
 #endif //(1==USE_F28027_PWM)
 
 #if (1==USE_F28027_WDOG)
@@ -403,34 +460,12 @@ t_error wrapper_Init_Sys (void) {
     mySci   = SCI_init  ((void *)SCIA_BASE_ADDR, sizeof(SCI_Obj));
 #endif //(1==USE_F28027_SCI)
 
-
-	// PERIPHERAL CLOCK ENABLES
-	//---------------------------------------------------
-	// If you are not using a peripheral you may want to switch
-	// the clock off to save power, i.e. set to =0
-	// Note: not all peripherals are available on all 280x derivates.
-	// Refer to the datasheet for your particular device.
-	//------------------------------------------------
-	SysCtrlRegs.PCLKCR0.bit.ADCENCLK   = 1;  // ADC
-	SysCtrlRegs.PCLKCR3.bit.COMP1ENCLK = 0;	 // COMP1
-	SysCtrlRegs.PCLKCR3.bit.COMP2ENCLK = 0;	 // COMP2
-	SysCtrlRegs.PCLKCR0.bit.I2CAENCLK  = 0;  // I2C
-	SysCtrlRegs.PCLKCR0.bit.SPIAENCLK  = 0;	 // SPI-A
-	SysCtrlRegs.PCLKCR0.bit.SCIAENCLK  = 0;  // SCI-A
-	SysCtrlRegs.PCLKCR1.bit.ECAP1ENCLK = 0;	 // eCAP1
-	SysCtrlRegs.PCLKCR1.bit.EPWM1ENCLK = 0;  // ePWM1
-	SysCtrlRegs.PCLKCR1.bit.EPWM2ENCLK = 0;  // ePWM2
-	SysCtrlRegs.PCLKCR1.bit.EPWM3ENCLK = 0;  // ePWM3
-	SysCtrlRegs.PCLKCR1.bit.EPWM4ENCLK = 0;  // ePWM4
-	SysCtrlRegs.PCLKCR0.bit.TBCLKSYNC  = 1;  // Enable TBCLK
-	//------------------------------------------------
-
     // Perform basic system initialization
     WDOG_disable (myWDog);
-/*    CLK_enableAdcClock (myClk);
+    CLK_enableAdcClock (myClk);
     (*Device_cal)();
     CLK_disableAdcClock (myClk);
-*/
+
     //Select the internal oscillator 1 as the clock source
     CLK_setOscSrc (myClk, CLK_OscSrc_Internal);
 
@@ -483,27 +518,26 @@ t_error wrapper_Init_PWM_IRQs (void) {
     // TODO ??? GROUP ???
     //PIE_registerPieIntHandler (myTimer, PIE_GroupNumber_3, PIE_SubGroupNumber_3, (intVec_t)&timer0_isr);
 
-    init_EPwmTimer ();  // For this example, only initialize the ePWM Timers
-
-    // Initalize counters:
-    EPwm1TimerIntCount = 0;
-    EPwm2TimerIntCount = 0;
-    EPwm3TimerIntCount = 0;
-    Timer0IntCount     = 0;
+    // For this example, only initialize the ePWM Timers
+    init_Cfg_EPwmTimers ();
 
     // Enable CPU INT3 which is connected to EPWM1-6 INT
+    Timer0IntCount     = 0;
     CPU_enableInt (myCpu, CPU_IntNumber_3);
 
     // Enable EPWM INTn in the PIE: Group 3 interrupt 1-6
 #if (1==PWM1_INT_ENABLE)
+    EPwm1TimerIntCount = 0;    // Initalize counters:
     PIE_enablePwmInt (myPie, PWM_Number_1);
 #endif //(1==PWM1_INT_ENABLE)
 
 #if (1==PWM2_INT_ENABLE)
+    EPwm2TimerIntCount = 0;    // Initalize counters:
     PIE_enablePwmInt (myPie, PWM_Number_2);
 #endif //(1==PWM2_INT_ENABLE)
 
 #if (1==PWM3_INT_ENABLE)
+    EPwm3TimerIntCount = 0;    // Initalize counters:
     PIE_enablePwmInt (myPie, PWM_Number_3);
 #endif //(1==PWM3_INT_ENABLE)
 
@@ -535,7 +569,11 @@ t_error wrapper_Init_GPIO (void) {
     GPIO_setDirection (myGpio, GPIO_Number_3, GPIO_Direction_Output);
     GPIO_setDirection (myGpio, GPIO_Number_4, GPIO_Direction_Output);
     GPIO_setDirection (myGpio, GPIO_Number_5, GPIO_Direction_Output);
-    GPIO_setPortData  (myGpio, GPIO_Port_A, 0x000F);
+    GPIO_setPortData  (myGpio, GPIO_Port_A, 0x003F);
+
+    GPIO_setMode(myGpio, GPIO_Number_5, GPIO_5_Mode_EPWM3B);
+
+	//InitGpio_Conf_HW();
 #endif //(1==USE_F28027_GPIO)
     return E_OK;
 }
@@ -546,13 +584,13 @@ t_error wrapper_Init_GPIO (void) {
 /* ==========================================================================
 
     return E_OK;
- * NAME - init_EPwmTimer
+ * NAME - init_Cfg_EPwmTimers
  * IN   - void
  * OUT  - void
  * RET  - void
    ========================================================================== */
-void init_EPwmTimer (void) {
-#if (1==USE_F28027_TIMER)
+void init_Cfg_EPwmTimers (void) {
+#if (1==USE_F28027_PWM)
     // Stop all the TB clocks
     CLK_disableTbClockSync(myClk);
     
@@ -581,20 +619,80 @@ void init_EPwmTimer (void) {
 #endif //(1==PWM2_INT_ENABLE)
 
 #if (1==PWM3_INT_ENABLE)
+/*
     CLK_enablePwmClock   (myClk, PWM_Number_3);
     PWM_setSyncMode      (myPwm3, PWM_SyncMode_EPWMxSYNC);      // Setup Sync
+    //PWM_setSyncMode      (myPwm3, PWM_SyncMode_CounterEqualZero);      // Setup Sync
     PWM_enableCounterLoad(myPwm3);                              // Allow each timer to be sync'ed
     PWM_setPhase         (myPwm3, 300);
-    PWM_setPeriod        (myPwm3, PWM3_TIMER_TBPRD);
+    //PWM_setPhase         (myPwm3, 0);
+    //PWM_setPeriod        (myPwm3, PWM3_TIMER_TBPRD);
+    PWM_setPeriod        (myPwm3, 0x0fff);
     PWM_setCounterMode   (myPwm3, PWM_CounterMode_Up);          // Count up
     PWM_setIntMode       (myPwm3, PWM_IntMode_CounterEqualZero);// Enable INT on Zero event
     PWM_enableInt        (myPwm3);                              // Enable INT
     PWM_setIntPeriod     (myPwm3, PWM_IntPeriod_ThirdEvent);    // Generate INT on 3rd event
+*/
+    //=====================================================================
+    // (Note: code for only 3 modules shown)
+    // Initialization Time
+    //========================
+    /*
+    // EPWM Module 1 config
+    EPwm1Regs.TBPRD = 1200; // Period = 1201 TBCLK counts
+    EPwm1Regs.TBPHS.half.TBPHS = 0; // Set Phase register to zero
+    EPwm1Regs.TBCTL.bit.CTRMODE = TB_COUNT_UP; // Asymmetrical mode
+    EPwm1Regs.TBCTL.bit.PHSEN = TB_DISABLE; // Phase loading disabled
+    EPwm1Regs.TBCTL.bit.PRDLD = TB_SHADOW;
+    EPwm1Regs.TBCTL.bit.SYNCOSEL = TB_SYNC_DISABLE;
+    EPwm1Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW;
+    EPwm1Regs.CMPCTL.bit.SHDWBMODE = CC_SHADOW;
+    EPwm1Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO; // load on CTR=Zero
+    EPwm1Regs.CMPCTL.bit.LOADBMODE = CC_CTR_ZERO; // load on CTR=Zero
+    EPwm1Regs.AQCTLA.bit.PRD = AQ_CLEAR;
+    EPwm1Regs.AQCTLA.bit.CAU = AQ_SET;
+    // EPWM Module 2 config
+    EPwm2Regs.TBPRD = 1400; // Period = 1401 TBCLK counts
+    EPwm2Regs.TBPHS.half.TBPHS = 0; // Set Phase register to zero
+    EPwm2Regs.TBCTL.bit.CTRMODE = TB_COUNT_UP; // Asymmetrical mode
+    EPwm2Regs.TBCTL.bit.PHSEN = TB_DISABLE; // Phase loading disabled
+    EPwm2Regs.TBCTL.bit.PRDLD = TB_SHADOW;
+    EPwm2Regs.TBCTL.bit.SYNCOSEL = TB_SYNC_DISABLE;
+    EPwm2Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW;
+    EPwm2Regs.CMPCTL.bit.SHDWBMODE = CC_SHADOW;
+    EPwm2Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO; // load on CTR=Zero
+    EPwm2Regs.CMPCTL.bit.LOADBMODE = CC_CTR_ZERO; // load on CTR=Zero
+    EPwm2Regs.AQCTLA.bit.PRD = AQ_CLEAR;
+    EPwm2Regs.AQCTLA.bit.CAU = AQ_SET;
+    */
+    CLK_enablePwmClock   (myClk, PWM_Number_2);
+    // EPWM Module 3 config
+    EPwm3Regs.TBPRD = 800; // Period = 801 TBCLK counts
+    EPwm3Regs.TBPHS.half.TBPHS = 0; // Set Phase register to zero
+    EPwm3Regs.TBCTL.bit.CTRMODE = TB_COUNT_UP;
+    EPwm3Regs.TBCTL.bit.PHSEN = TB_DISABLE; // Phase loading disabled
+    EPwm3Regs.TBCTL.bit.PRDLD = TB_SHADOW;
+    EPwm3Regs.TBCTL.bit.SYNCOSEL = TB_SYNC_DISABLE;
+    EPwm3Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW;
+    EPwm3Regs.CMPCTL.bit.SHDWBMODE = CC_SHADOW;
+    EPwm3Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO; // load on CTR=Zero
+    EPwm3Regs.CMPCTL.bit.LOADBMODE = CC_CTR_ZERO; // load on CTR=Zero
+    EPwm3Regs.AQCTLB.bit.PRD = AQ_TOGGLE; //AQ_CLEAR;
+    EPwm3Regs.AQCTLB.bit.CBU = AQ_TOGGLE; //AQ_SET;
+    // Run Time (Note: Example execution of one run-time instant)
+    //=========================================================
+    //EPwm1Regs.CMPA.half.CMPA = 700; // adjust duty for output EPWM1A
+    //EPwm2Regs.CMPA.half.CMPA = 700; // adjust duty for output EPWM2A
+    EPwm3Regs.CMPB = 500; // adjust duty for output EPWM3A
+
+    PWM_setIntMode   (myPwm3, PWM_IntMode_CounterEqualZero);// Enable INT on Zero event
+    PWM_enableInt    (myPwm3);                              // Enable INT
+    PWM_setIntPeriod (myPwm3, PWM_IntPeriod_SecondEvent);   // Generate INT on 2nd event
 #endif //(1==PWM3_INT_ENABLE)
 
     // Start all the timers synced
     CLK_enableTbClockSync(myClk);
-#endif //(1==USE_F28027_TIMER)
+#endif //(1==USE_F28027_PWM)
 }
 /* ========================================================================== */
 
@@ -618,7 +716,7 @@ interrupt void epwm1_timer_isr (void) {
     // Acknowledge this interrupt to receive more interrupts from group 3
     PIE_clearInt(myPie, PIE_GroupNumber_3);
 
-    GPIO_setPortData (myGpio, GPIO_Port_A, ++i_pwm0&0x1 ? 0xE : 0xF );
+    //GPIO_setPortData (myGpio, GPIO_Port_A, ++i_pwm3 & 0x1 ? 0xE : 0xF );
 #endif //(1==PWM1_INT_ENABLE)
 #endif //(1==USE_F28027_PWM)
 }
@@ -658,13 +756,35 @@ interrupt void epwm2_timer_isr (void) {
 interrupt void epwm3_timer_isr (void) {
 #if (1==USE_F28027_PWM)
 #if (1==PWM3_INT_ENABLE)
-    EPwm3TimerIntCount++;
+    EPwm3TimerIntCount += 10;
+    //PWM_setPeriod (myPwm3, (uint16_t)EPwm3TimerIntCount);
+/*
+    //-------------------
+    CLK_enablePwmClock   (myClk, PWM_Number_3);
+    //PWM_setSyncMode      (myPwm3, PWM_SyncMode_EPWMxSYNC);      // Setup Sync
+    PWM_setSyncMode      (myPwm3, PWM_SyncMode_CounterEqualZero);      // Setup Sync
+    PWM_enableCounterLoad(myPwm3);                              // Allow each timer to be sync'ed
+    PWM_setPhase         (myPwm3, 0);
+    PWM_setPeriod        (myPwm3, 0xffff);
+    //PWM_setChoppingDutyCycle
+    PWM_setCounterMode   (myPwm3, PWM_CounterMode_Up);          // Count up
+    PWM_setIntMode       (myPwm3, PWM_IntMode_CounterEqualZeroOrPeriod);// Enable INT on Zero event
+    PWM_enableInt        (myPwm3);                              // Enable INT
+    PWM_setIntPeriod     (myPwm3, PWM_IntPeriod_ThirdEvent);    // Generate INT on 3rd event
+    //-------------------
 
+    //PWM_setActionQual_CntUp_CmpB_PwmB(myPwm3, PWM_ActionQual_Toggle);
+    PWM_setActionQual_Period_PwmB(myPwm3, PWM_ActionQual_Toggle);
+*/
     // Clear INT flag for this timer
     PWM_clearIntFlag(myPwm3);
 
     // Acknowledge this interrupt to receive more interrupts from group 3
     PIE_clearInt(myPie, PIE_GroupNumber_3);
+
+    //GPIO_setPortData (myGpio, GPIO_Port_A, ++i_pwm3 & 0x1 ? 0xE : 0xF );
+    if ( ++i_pwm3 & 0x1)  GpioDataRegs.GPADAT.bit.GPIO0 = 1;
+    else                  GpioDataRegs.GPADAT.bit.GPIO0 = 0;
 #endif //(1==PWM3_INT_ENABLE)
 #endif //(1==USE_F28027_PWM)
 }
@@ -786,9 +906,9 @@ t_error wrapper_Init_UART_IRQ (void) {
    ========================================================================== */
 t_error wrapper_Init_TM1638 (void) {
 
-#if (1==__USE__TM1638__)
+#if (1==__USE_TM1638__)
 	tm1638_init();
-#endif //(1==__USE__TM1638__)
+#endif //(1==__USE_TM1638__)
 
     return E_OK;
 }

@@ -52,8 +52,8 @@ typedef enum {
 
 
 /* ************************************************************************** */
-#define gpio_mux  0x0000
-#define gpio_dir  0x003f
+//#define gpio_mux  0x0000
+//#define gpio_dir  0x003f
 
 /* ************************************************************************** */
 #define rst_h     GpioDataRegs.GPASET.bit.GPIO0=1
@@ -72,7 +72,7 @@ typedef enum {
 /* ************************************************************************** */
 //extern void init_sys();
 extern void DELAY (char);
-extern void InitGpio ();
+extern void InitGpio_Conf_HW ();
 extern void init_5110 ();
 extern void set_row (char);
 extern void set_col (char);

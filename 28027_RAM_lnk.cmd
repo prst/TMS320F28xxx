@@ -5,7 +5,7 @@
 //
 // TITLE:   Linker Command File For 28027 examples that run out of RAM
 //
-//          This ONLY includes all SARAM_16k blocks on the 28027 device.
+//          This ONLY includes all SARAM_4k blocks on the 28027 device.
 //          This does not include flash or OTP.
 //
 //          Keep in mind that L0 is protected by the code
@@ -73,7 +73,7 @@
          For simplicity only one instance is used in this
          linker file.
 
-         Contiguous SARAM_16k memory blocks can be combined
+         Contiguous SARAM_4k memory blocks can be combined
          if required to create a larger memory block.
 */
 
@@ -81,12 +81,12 @@ MEMORY
 {
 PAGE 0 :
    /* For this example, L0 is split between PAGE 0 and PAGE 1 */
-   /* BEGIN is used for the "boot to SARAM_16k" bootloader mode   */
+   /* BEGIN is used for the "boot to SARAM_4k" bootloader mode   */
    BEGIN      : origin = 0x000000, length = 0x000002
    //RAMM0      : origin = 0x000050, length = 0x0003B0
    RAM_M01_2k     : origin = 0x000002, length = 0x000800
    //RAML0      : origin = 0x008000, length = 0x000800
-   SARAM_16k     : origin = 0x008000, length = 0x001000
+   SARAM_4k     : origin = 0x008000, length = 0x001000
    //DRAML0      : origin = 0x008900, length = 0x000700
 
    IQTABLES   : origin = 0x3FE000, length = 0x000B50     /* IQ Math Tables in Boot ROM */
@@ -100,7 +100,6 @@ PAGE 0 :
    SYS_PWR_CTL : origin = 0x000985, length = 0x000003     /* System power control registers */
    FLASH_REGS  : origin = 0x000A80, length = 0x000060     /* FLASH registers */
    CSM         : origin = 0x000AE0, length = 0x000010     /* code security module registers */
-   CSM_RSVD    : origin = 0x3F7F80, length = 0x000076     /* Part of FLASHA.  Program with all 0x0000 when CSM is in use. */
    ADC_RESULT  : origin = 0x000B00, length = 0x000020     /* ADC Results register */
    CPU_TIMER0  : origin = 0x000C00, length = 0x000008     /* CPU Timer0 registers */
    CPU_TIMER1  : origin = 0x000C08, length = 0x000008     /* CPU Timer0 registers (CPU Timer1 & Timer2 reserved TI use)*/
@@ -124,14 +123,16 @@ PAGE 0 :
    XINTRUPT    : origin = 0x007070, length = 0x000010     /* external interrupt registers */
    ADC         : origin = 0x007100, length = 0x000080     /* ADC registers */
    I2CA        : origin = 0x007900, length = 0x000040     /* I2C-A registers */
-   //CSM_PWL     : origin = 0x3F7FF8, length = 0x000008     /* Part of FLASHA.  CSM password locations. */
-   CSM_PWL_P0  : origin = 0x3F7FF8, length = 0x000008     /* Part of FLASHA.  CSM password locations in FLASHA */
    PARTID      : origin = 0x3D7FFF, length = 0x000001     /* Part ID register location */
+
+//-----------------------------------------------------------
+   // FLASH-MODE ONLY !!! - NOT FOR RAM-MODE
+   //CSM_RSVD    : origin = 0x3F7F80, length = 0x000076     /* Part of FLASHA.  Program with all 0x0000 when CSM is in use. */
+   //CSM_PWL_P0  : origin = 0x3F7FF8, length = 0x000008     /* Part of FLASHA.  CSM password locations in FLASHA */
+//-----------------------------------------------------------
 #endif
 
-
 PAGE 1 :
-
    /* For this example, L0 is split between PAGE 0 and PAGE 1 */
    //BOOT_RSVD   : origin = 0x000002, length = 0x00004E     /* Part of M0, BOOT rom will use this for stack */
    //RAMM1       : origin = 0x000400, length = 0x000400     /* on-chip RAM block M1 */
@@ -140,38 +141,41 @@ PAGE 1 :
 
 
 SECTIONS  {
-   /* Setup for "boot to SARAM_16k" mode:
+   /* Setup for "boot to SARAM_4k" mode:
       The codestart section (found in DSP28_CodeStartBranch.asm)
       re-directs execution to the start of user code.  */
 
-   csmpasswds       : > CSM_PWL_P0,   PAGE = 0
-   csm_rsvd         : > CSM_RSVD,     PAGE = 0
+//-----------------------------------------------------------
+   // FLASH-MODE ONLY !!! - NOT FOR RAM-MODE
+   //csmpasswds       : > CSM_PWL_P0,   PAGE = 0
+   //csm_rsvd         : > CSM_RSVD,     PAGE = 0
+//-----------------------------------------------------------
 
    codestart        : > BEGIN,     PAGE = 0
-   ramfuncs         : >> SARAM_16k | RAM_M01_2k,     PAGE = 0
+   ramfuncs         : >> SARAM_4k | RAM_M01_2k,     PAGE = 0
 
-   .text            : >> SARAM_16k | RAM_M01_2k,    PAGE = 0
-   .cinit           : > RAM_M01_2k,     PAGE = 0
-   .pinit           : >> SARAM_16k | RAM_M01_2k,     PAGE = 0
-   .switch          : >> SARAM_16k | RAM_M01_2k,     PAGE = 0
+   .text            : >> SARAM_4k | RAM_M01_2k,     PAGE = 0
+   .cinit           : >> SARAM_4k | RAM_M01_2k,     PAGE = 0
+   .pinit           : >> SARAM_4k | RAM_M01_2k,     PAGE = 0
+   .switch          : >> SARAM_4k | RAM_M01_2k,     PAGE = 0
    .reset           : > RESET,     PAGE = 0, TYPE = DSECT /* not used, */
 
    //.stack           : > RAM_M01_2k,     PAGE = 0
    //.ebss            : > DRAML0,    PAGE = 1
    //.econst          : > DRAML0,    PAGE = 1
-   .stack           : > SARAM_16k,     PAGE = 0
-   .ebss            : > SARAM_16k,    PAGE = 0
-   .econst          : > SARAM_16k,    PAGE = 0
+   .stack           : > SARAM_4k,     PAGE = 0
+   .ebss            : > SARAM_4k,    PAGE = 0
+   .econst          : > SARAM_4k,    PAGE = 0
    .esysmem         : > RAM_M01_2k,     PAGE = 0
 
-   IQmath           : > SARAM_16k,    PAGE = 0
+   IQmath           : > SARAM_4k,    PAGE = 0
    IQmathTables     : > IQTABLES,  PAGE = 0, TYPE = NOLOAD
 
   /* Uncomment the section below if calling the IQNexp() or IQexp()
       functions from the IQMath.lib library in order to utilize the
       relevant IQ Math table in Boot ROM (This saves space and Boot ROM
       is 1 wait-state). If this section is not uncommented, IQmathTables2
-      will be loaded into other memory (SARAM_16k, Flash, etc.) and will take
+      will be loaded into other memory (SARAM_4k, Flash, etc.) and will take
       up space, but 0 wait-state is possible.
    */
    /*
@@ -186,7 +190,7 @@ SECTIONS  {
       functions from the IQMath.lib library in order to utilize the
       relevant IQ Math table in Boot ROM (This saves space and Boot ROM
       is 1 wait-state). If this section is not uncommented, IQmathTables2
-      will be loaded into other memory (SARAM_16k, Flash, etc.) and will take
+      will be loaded into other memory (SARAM_4k, Flash, etc.) and will take
       up space, but 0 wait-state is possible.
    */
    /*
@@ -245,12 +249,16 @@ SECTIONS  {
    EPwm3RegsFile     : > EPWM3        PAGE = 0
    EPwm4RegsFile     : > EPWM4        PAGE = 0
 
-/*** Code Security Module Register Structures ***/
-   //CsmPwlFile        : > CSM_PWL,     PAGE = 0
-   CsmPwlFile        : > CSM_PWL_P0,     PAGE = 0
-
 /*** Device Part ID Register Structures ***/
    PartIdRegsFile    : > PARTID,      PAGE = 0
+
+//-----------------------------------------------------------
+/*** Code Security Module Register Structures ***/
+   // FLASH-MODE ONLY !!! - NOT FOR RAM-MODE
+   //CsmPwlFile        : > CSM_PWL,     PAGE = 0
+   //CsmPwlFile        : > CSM_PWL_P0,     PAGE = 0
+//-----------------------------------------------------------
+
 #endif
 
 }
