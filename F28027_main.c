@@ -6,6 +6,7 @@
 /* ========================================================================== */
 
 #include "stddef.h"
+#include "string.h"
 
 #include "./include/DSP28x_Project.h"
 #include "./include/F2802x_Examples.h"
@@ -104,6 +105,8 @@ t_status sys_stat;
 
 
 // Prototype statements for functions found within this file.
+void Init_All ( void );
+
 interrupt void epwm1_timer_isr (void);
 interrupt void epwm2_timer_isr (void);
 interrupt void epwm3_timer_isr (void);
@@ -169,6 +172,10 @@ uint16_t     rdata_pointA;  // Used for checking the received data
 uint16_t     RxTx;
 
 
+
+unsigned char ArrayDisplay[LCD_X_RES];
+
+
 /* ========================================================================== */
 void InitGpio_Conf_HW (void) {
 	EALLOW;
@@ -181,17 +188,89 @@ void InitGpio_Conf_HW (void) {
 /* ========================================================================== */
 
 
+void* memset(void *mem, register int ch, register size_t length)
+{
+     register char *m = (char *)mem;
+
+     while (length--) *m++ = ch;
+     return mem;
+}
+
+
 /* ==========================================================================
  * MAIN
  * ========================================================================== */
 void main (void)
 {
+	Init_All ();
+
+#if (1==__USE_LCD_5110__)
+	Lcd_clear();
+	Lcd_init();
+/*
+	Lcd_prints(0, 0, FONT_1X, "~" );
+	Lcd_prints(1, 0, FONT_1X, "Hello world!" );
+	Lcd_prints(1, 1, FONT_1X, "It's working." );
+	Lcd_prints(1, 2, FONT_1X, "uschema.com" );
+	Lcd_prints(1, 3, FONT_1X, "Станислав" );
+	Lcd_prints(1, 4, FONT_1X, "Приходько" );
+	Lcd_prints(1, 5, FONT_1X, "TMS320F28027." );
+*/
+    /*byte strings[6][14] = {
+    	"Hello world! ",
+    	"It's working.",
+    	"uschema.com  ",
+    	"Станислав    ",
+    	"Приходько    ",
+    	"TMS320F28027."
+    };
+	byte nn;
+
+	for (nn=0; nn<6; nn++) {
+		Lcd_prints(1, nn, FONT_1X, &strings[nn][0] );
+	}*/
+
+	//Lcd_rect_empty ( 0, 8, 8, LCD_X_RES-1, PIXEL_XOR);
+	//Lcd_rect ( 0, 8, 8, LCD_X_RES-1, PIXEL_XOR);
+	//Lcd_line( 20, 8, 30, 16, PIXEL_ON );
+	//Lcd_circle ( 3, 4, 1, PIXEL_ON );
+
+	memset (ArrayDisplay, 16, LCD_X_RES);
+
+	ShowDisplayFromBufferByVertical( ArrayDisplay, 1/*K=0..1*/ );
+
+	Lcd_update();
+#endif //(1==__USE_LCD_5110__)
+
+	// Main code
+    for(;;) {
+    	//wrapper_Main();
+    	//tm1638_prints("123456789");
+    	//tm1638_printx("1", 1);
+
+#if (1==__USE_LCD_5110__)
+    	Lcd_update();
+#endif //(1==__USE__LCD_5110__)
+
+    }
+}
+/* ========================================================================== */
+
+
+
+/* ==========================================================================
+ * NAME - Init_All
+ * IN   - void
+ * OUT  - void
+ * RET  - void
+   ========================================================================== */
+void Init_All ( void ) {
 	if (E_OK==err) {
         err = wrapper_Init_Sys ();     	 // Init system and handles
     } else {
     	wrapper_Error_Handle (err);
     }
-    
+
     if (E_OK==err) {
     	err = wrapper_Init_GPIO ();   // Init GPIO system
     } else {
@@ -216,56 +295,7 @@ void main (void)
     } else {
     	wrapper_Error_Handle (err);
     }
-
-#if (1==__USE_LCD_5110__)
-	Lcd_clear();
-	Lcd_init();
-
-	Lcd_prints(0, 0, FONT_1X, "~" );
-	Lcd_prints(1, 0, FONT_1X, "Hello world!" );
-	Lcd_prints(1, 1, FONT_1X, "It's working." );
-	Lcd_prints(1, 2, FONT_1X, "uschema.com" );
-	Lcd_prints(1, 3, FONT_1X, "Станислав" );
-	Lcd_prints(1, 4, FONT_1X, "Приходько" );
-	Lcd_prints(1, 5, FONT_1X, "TMS320F28027." );
-
-    /*byte strings[6][14] = {
-    	"Hello world! ",
-    	"It's working.",
-    	"uschema.com  ",
-    	"Станислав    ",
-    	"Приходько    ",
-    	"TMS320F28027."
-    };
-	byte nn;
-
-	for (nn=0; nn<6; nn++) {
-		Lcd_prints(1, nn, FONT_1X, &strings[nn][0] );
-	}*/
-
-	//Lcd_rect_empty ( 0, 8, 8, LCD_X_RES-1, PIXEL_XOR);
-	Lcd_rect ( 0, 8, 8, LCD_X_RES-1, PIXEL_XOR);
-
-	//Lcd_line( 20, 8, 30, 16, PIXEL_ON );
-	//Lcd_circle ( 3, 4, 1, PIXEL_ON );
-
-	Lcd_update();
-#endif //(1==__USE_LCD_5110__)
-
-	// Main code
-    for(;;) {
-    	//wrapper_Main();
-    	//tm1638_prints("123456789");
-    	//tm1638_printx("1", 1);
-
-#if (1==__USE_LCD_5110__)
-    	Lcd_update();
-#endif //(1==__USE__LCD_5110__)
-
-    }
 }
-/* ========================================================================== */
-
 
 
 /* ==========================================================================

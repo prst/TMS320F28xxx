@@ -66,6 +66,7 @@
 #define BAR_Y                      47    // координата y
 
 // Размер кэша ( 84 * 48 ) / 8 = 504 байта
+//#define LCD_CACHE_SIZE             ( ( LCD_X_RES * LCD_Y_RES ) / 8 )
 #define LCD_CACHE_SIZE             ( ( LCD_X_RES * LCD_Y_RES ) / 8 )
 
 #define FALSE                      0
@@ -101,6 +102,9 @@ typedef enum {
     FONT_2X = 2       // Увеличенный размер шрифта
 } LcdFontSize;
 /* ************************************************************************** */
+
+
+int ShowDisplayFromBufferByVertical( unsigned char *pArrayDisplay, float zoom );
 
 
 /* ************************************************************************** */

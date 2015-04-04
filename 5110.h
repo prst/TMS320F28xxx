@@ -9,16 +9,16 @@
 #define TRUE               1
 
 // Разрешение дисплея в пикселях
-#define LCD_X_RES                  84    // разрешение по горизонтали
-#define LCD_Y_RES                  48    // разрешение по вертикали
+//#define LCD_X_RES                  84    // разрешение по горизонтали
+//#define LCD_Y_RES                  48    // разрешение по вертикали
 
 // Настройки для рисования группы прямоугольников функцией LcdBars ( byte data[], byte numbBars, byte width, byte multiplier )
-#define EMPTY_SPACE_BARS           2     // расстояние между прямоугольниками
-#define BAR_X                      30    // координата x
-#define BAR_Y                      47    // координата y
+//#define EMPTY_SPACE_BARS           2     // расстояние между прямоугольниками
+//#define BAR_X                      30    // координата x
+//#define BAR_Y                      47    // координата y
 
 // Размер кэша ( 84 * 48 ) / 8 = 504 байта
-#define LCD_CACHE_SIZE     ( ( LCD_X_RES * LCD_Y_RES ) / 8 )
+//#define LCD_CACHE_SIZE     ( ( LCD_X_RES * LCD_Y_RES ) / 8 )
 
 // Для возвращаемых значений
 #define OK                         0   // Безошибочная отрисовка

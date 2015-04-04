@@ -12,6 +12,7 @@
 <stringAttribute key="com.ti.ccstudio.debug.debugModel.MRU_PROGRAM.Texas Instruments XDS100v2 USB Emulator_0/C28xx" value="D:/_PROJECTS\PryStan\2015\LauncPad_F28027F\epwm_timer_interrupts\RAM\F28027.out"/>
 <mapAttribute key="com.ti.ccstudio.debug.ui.displayFormats">
 <mapEntry key="Texas Instruments XDS100v2 USB Emulator/C28xx@##separator##@1" value="16-Bit Hex - TI Style"/>
+<mapEntry key="Texas Instruments XDS100v2 USB Emulator_0/C28xx@##separator##@1" value="16-Bit Hex - TI Style"/>
 </mapAttribute>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
 <listEntry value="/F28027_EPwm_SCI"/>

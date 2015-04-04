@@ -83,6 +83,32 @@ static byte  UpdateLcd;
 /* ************************************************************************** */
 
 
+/* ************************************************************************** */
+/*
+ * Имя                   : ShowDisplayFromBuffer
+ * Описание              : Производит вывод данных на LCD целиком с буффера
+ * Аргумент(ы)           : Нет
+ * Возвращаемое значение : Нет
+ */
+/* ************************************************************************** */
+int ShowDisplayFromBufferByVertical( unsigned char *pArrayDisplay, float zoom )
+{
+	byte  x_line = 0, y_offset;
+
+	for ( x_line=0; x_line<LCD_X_RES; x_line++ ) {
+	  //pArrayDisplay+=x_line;
+	  y_offset = LCD_Y_RES - pArrayDisplay[x_line]*zoom;
+	  pArrayDisplay[x_line] = 10;
+	  Lcd_line (
+	    /*x1*/x_line, /*y1*/y_offset,
+	    /*x2*/x_line, /*y2*/LCD_Y_RES,
+	    PIXEL_ON
+	  );
+	}
+	return 0;
+}
+
+
 
 /* ************************************************************************** */
 /*
@@ -218,7 +244,8 @@ void Lcd_init ( void ) {
     // 0b00100000 -
     // 0b01000000 -
     // 0b10000000 -
-    write_com(0x0d);
+    write_com(0x0c); // color Normal
+    // write_com(0x0d); // color Inverted
     // ........................................................................
 
     lcd_clear();
@@ -269,8 +296,9 @@ void Lcd_update (void) {
 
     if ( HiWaterMark < 0 )
         HiWaterMark = 0;
-    else if ( HiWaterMark >= LCD_CACHE_SIZE )
-        HiWaterMark = LCD_CACHE_SIZE - 1;
+    else
+    	if ( HiWaterMark >= LCD_CACHE_SIZE )
+    		HiWaterMark = LCD_CACHE_SIZE - 1;
 
     #ifdef CHINA_LCD  // Алгоритм для китайского ЖК из нестандартным контроллером
 
