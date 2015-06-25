@@ -174,7 +174,10 @@ byte Lcd_rect_empty ( byte x1, byte y1, byte x2, byte y2, LcdPixelMode mode );  
 byte Lcd_rect       ( byte baseX, byte baseY, byte height, byte width, LcdPixelMode mode );   // Один
 int  gpow ( int n, int power );
 char *gftoa ( float f, int dec );
+
+void Wrapper_LCD_Print ( void );
 /* ************************************************************************** */
+
 
 
 #if (1==__AVR__)

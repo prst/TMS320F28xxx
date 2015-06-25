@@ -1,0 +1,9 @@
+
+!CONFIGURATION: 'com.ti.ccstudio.buildDefinitions.C2000.Debug.750388' [Sun Jun 14 06:48:26 EEST 2015]
+
+	!TOOL: 'com.ti.ccstudio.buildDefinitions.C2000_6.4.exe.compilerDebug.1971614256'
+
+		!WARNING: Unresolved option: com.ti.ccstudio.buildDefinitions.C2000_6.4.compilerID.C_C_PLUS_PLUS_DIALECT
+
+		!WARNING: Unresolved option: com.ti.ccstudio.buildDefinitions.C2000_6.4.compilerID.OPTIMIZER_INTERLIST
+

@@ -95,36 +95,36 @@ unsigned char ArrayDisplay[LCD_X_RES];
  * RET  - void
    ========================================================================== */
 void Wrapper_LCD_Print ( void ) {
-/*
-	Lcd_prints(0, 0, FONT_1X, "~" );
-	Lcd_prints(1, 0, FONT_1X, "Hello world!" );
+
+/*	//Lcd_prints(0, 0, FONT_1X, "~" );
+	Lcd_prints(1, 0, FONT_1X, "Hello world! " );
 	Lcd_prints(1, 1, FONT_1X, "It's working." );
-	Lcd_prints(1, 2, FONT_1X, "uschema.com" );
-	Lcd_prints(1, 3, FONT_1X, "Станислав" );
-	Lcd_prints(1, 4, FONT_1X, "Приходько" );
+	Lcd_prints(1, 2, FONT_1X, "             " );
+	Lcd_prints(1, 3, FONT_1X, "uschema.com  " );
+	Lcd_prints(1, 4, FONT_1X, "             " );
 	Lcd_prints(1, 5, FONT_1X, "TMS320F28027." );
 */
-	/*byte strings[6][14] = {
-		"Hello world! ",
-		"It's working.",
-		"uschema.com  ",
-		"Станислав    ",
-		"Приходько    ",
-		"TMS320F28027."
-	};
 	byte nn;
+	byte strings[6][14] = {
+		"Laboratotian ",
+		"PowerInverter",
+		"220V 50Hz    ",
+		"Based on DSP:",
+		"TMS320F28027 ",
+		" uschema.com ",
+	};
 
 	for (nn=0; nn<6; nn++) {
 		Lcd_prints(1, nn, FONT_1X, &strings[nn][0] );
-	}*/
+	}
 
 	//Lcd_rect_empty ( 0, 8, 8, LCD_X_RES-1, PIXEL_XOR);
-	//Lcd_rect ( 0, 8, 8, LCD_X_RES-1, PIXEL_XOR);
 	//Lcd_line( 20, 8, 30, 16, PIXEL_ON );
-	//Lcd_circle ( 3, 4, 1, PIXEL_ON );
+	Lcd_rect ( 0, 8, 8, LCD_X_RES-1, PIXEL_XOR);
+	Lcd_circle ( 2, 4, 1, PIXEL_OFF );
 
-	memset (ArrayDisplay, 16, LCD_X_RES);
-	ShowDisplayFromBufferByVertical( ArrayDisplay, 1/*K=0..1*/ );
+	//memset (ArrayDisplay, 16, LCD_X_RES);
+	//ShowDisplayFromBufferByVertical( ArrayDisplay, 1/*K=0..1*/ );
 	//Lcd_update();
 }
 

@@ -203,7 +203,6 @@ void main (void)
 #if (1==__USE_LCD_5110__)
 	Lcd_clear();
 	Lcd_init();
-
 	Wrapper_LCD_Print();
 
 	// Main code
