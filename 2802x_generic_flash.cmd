@@ -82,13 +82,6 @@ PAGE 0:    /* Program Memory */
    RESET       : origin = 0x3FFFC0, length = 0x000002     /* part of boot ROM  */
    VECTORS     : origin = 0x3FFFC2, length = 0x00003E     /* part of boot ROM  */
 
-/*   //RAMM0      : origin = 0x000050, length = 0x0003B0
-   RAM_M01_2k     : origin = 0x000002, length = 0x000800
-   //RAML0      : origin = 0x008000, length = 0x000800
-   SARAM_4k     : origin = 0x008000, length = 0x001000
-   //DRAML0      : origin = 0x008900, length = 0x000700
-*/
-
    DEV_EMU     : origin = 0x000880, length = 0x000105     /* device emulation registers */
    SYS_PWR_CTL : origin = 0x000985, length = 0x000003     /* System power control registers */
    FLASH_REGS  : origin = 0x000A80, length = 0x000060     /* FLASH registers */
@@ -116,7 +109,14 @@ PAGE 0:    /* Program Memory */
    XINTRUPT    : origin = 0x007070, length = 0x000010     /* external interrupt registers */
    ADC         : origin = 0x007100, length = 0x000080     /* ADC registers */
    I2CA        : origin = 0x007900, length = 0x000040     /* I2C-A registers */
-
+//-----------------------------------------------------------
+/*
+   //RAMM0      : origin = 0x000050, length = 0x0003B0
+   RAM_M01_2k     : origin = 0x000002, length = 0x000800
+   //RAML0      : origin = 0x008000, length = 0x000800
+   SARAM_4k     : origin = 0x008000, length = 0x001000
+   //DRAML0      : origin = 0x008900, length = 0x000700
+*/
 //-----------------------------------------------------------
    //OTP         : origin = 0x3D7800, length = 0x000400     /* Part ID register location */
    PARTID      : origin = 0x3D7FFF, length = 0x000001     /* Part ID register location */
@@ -132,74 +132,62 @@ PAGE 1 :
    /* Memory (RAM/FLASH/OTP) blocks can be moved to PAGE0 for program allocation */
    /* Registers remain on PAGE1                                                  */
 
+//-----------------------------------------------------------
    /* RAM info */
+   /* SARAM     RAM  0x008000..0x009000  4K       */
    /* M0 vector RAM  0x0000..0x0040      64 byte  */
    /* M0        RAM  0x0000..0x0400      1K-64    */
    /* M1        RAM  0x0400..0x0800      1K       */
-   /* SARAM     RAM  0x008000..0x009000  6K       */
 
+   RAML0       : origin = 0x008000, length = 0x001000     /* on-chip RAM block L0 */
    BOOT_RSVD   : origin = 0x000000, length = 0x000050     /* Part of M0, BOOT rom will use this for stack */
    RAMM0       : origin = 0x000050, length = 0x0003B0     /* on-chip RAM block M0 */
    RAMM1       : origin = 0x000400, length = 0x000400     /* on-chip RAM block M1 */
-   RAML0       : origin = 0x008000, length = 0x000400     /* on-chip RAM block L0 */
 
+//-----------------------------------------------------------
    DEV_EMU     : origin = 0x000880, length = 0x000180     /* device emulation registers */
    FLASH_REGS  : origin = 0x000A80, length = 0x000060     /* FLASH registers */
    CSM         : origin = 0x000AE0, length = 0x000010     /* code security module registers */
-
    ADC_MIRROR  : origin = 0x000B00, length = 0x000010     /* ADC Results register mirror */
-
    CPU_TIMER0  : origin = 0x000C00, length = 0x000008     /* CPU Timer0 registers */
    CPU_TIMER1  : origin = 0x000C08, length = 0x000008     /* CPU Timer0 registers (CPU Timer1 & Timer2 reserved TI use)*/
    CPU_TIMER2  : origin = 0x000C10, length = 0x000008     /* CPU Timer0 registers (CPU Timer1 & Timer2 reserved TI use)*/
-
    PIE_CTRL    : origin = 0x000CE0, length = 0x000020     /* PIE control registers */
    PIE_VECT    : origin = 0x000D00, length = 0x000100     /* PIE Vector Table */
-
    ECANA       : origin = 0x006000, length = 0x000040     /* eCAN-A control and status registers */
    ECANA_LAM   : origin = 0x006040, length = 0x000040     /* eCAN-A local acceptance masks */
    ECANA_MOTS  : origin = 0x006080, length = 0x000040     /* eCAN-A message object time stamps */
    ECANA_MOTO  : origin = 0x0060C0, length = 0x000040     /* eCAN-A object time-out registers */
    ECANA_MBOX  : origin = 0x006100, length = 0x000100     /* eCAN-A mailboxes */
-
    ECANB       : origin = 0x006200, length = 0x000040     /* eCAN-B control and status registers */
    ECANB_LAM   : origin = 0x006240, length = 0x000040     /* eCAN-B local acceptance masks */
    ECANB_MOTS  : origin = 0x006280, length = 0x000040     /* eCAN-B message object time stamps */
    ECANB_MOTO  : origin = 0x0062C0, length = 0x000040     /* eCAN-B object time-out registers */
    ECANB_MBOX  : origin = 0x006300, length = 0x000100     /* eCAN-B mailboxes */
-
    EPWM1       : origin = 0x006800, length = 0x000022     /* Enhanced PWM 1 registers */
    EPWM2       : origin = 0x006840, length = 0x000022     /* Enhanced PWM 2 registers */
    EPWM3       : origin = 0x006880, length = 0x000022     /* Enhanced PWM 3 registers */
    EPWM4       : origin = 0x0068C0, length = 0x000022     /* Enhanced PWM 4 registers */
    EPWM5       : origin = 0x006900, length = 0x000022     /* Enhanced PWM 5 registers */
    EPWM6       : origin = 0x006940, length = 0x000022     /* Enhanced PWM 6 registers */
-
    ECAP1       : origin = 0x006A00, length = 0x000020     /* Enhanced Capture 1 registers */
    ECAP2       : origin = 0x006A20, length = 0x000020     /* Enhanced Capture 2 registers */
    ECAP3       : origin = 0x006A40, length = 0x000020     /* Enhanced Capture 3 registers */
    ECAP4       : origin = 0x006A60, length = 0x000020     /* Enhanced Capture 4 registers */
-
    EQEP1       : origin = 0x006B00, length = 0x000040     /* Enhanced QEP 1 registers */
    EQEP2       : origin = 0x006B40, length = 0x000040     /* Enhanced QEP 2 registers */
-
    GPIOCTRL    : origin = 0x006F80, length = 0x000040     /* GPIO control registers */
    GPIODAT     : origin = 0x006FC0, length = 0x000020     /* GPIO data registers */
    GPIOINT     : origin = 0x006FE0, length = 0x000020     /* GPIO interrupt/LPM registers */
-
    SYSTEM      : origin = 0x007010, length = 0x000020     /* System control registers */
    SPIA        : origin = 0x007040, length = 0x000010     /* SPI-A registers */
    SCIA        : origin = 0x007050, length = 0x000010     /* SCI-A registers */
    XINTRUPT    : origin = 0x007070, length = 0x000010     /* external interrupt registers */
-
    ADC         : origin = 0x007100, length = 0x000020     /* ADC registers */
    SPIB        : origin = 0x007740, length = 0x000010     /* SPI-B registers */
-
    SCIB        : origin = 0x007750, length = 0x000010     /* SCI-B registers */
    SPIC        : origin = 0x007760, length = 0x000010     /* SPI-C registers */
-
    SPID        : origin = 0x007780, length = 0x000010     /* SPI-D registers */
-
    I2CA        : origin = 0x007900, length = 0x000040     /* I2C-A registers */
 }
 
@@ -214,27 +202,18 @@ SECTIONS
 {
 
    /* Allocate program areas: */
-   codestart           : > BEGIN       PAGE = 0
+   codestart         : > BEGIN       PAGE = 0
 
-/*
-   ramfuncs            : LOAD = FLASHA,
-                         RUN = RAMM0,
-                         LOAD_START(_RamfuncsLoadStart),
-                         LOAD_SIZE(_RamfuncsLoadSize),
-                         RUN_START(_RamfuncsRunStart),
-                         PAGE = 0
-*/
    ramfuncs          : LOAD = FLASH,
                        RUN = RAMM0,
                        LOAD_START(_RamfuncsLoadStart),
                        LOAD_END(_RamfuncsLoadEnd),
                        RUN_START(_RamfuncsRunStart),
                        PAGE = 1
-   {
-//   		--library=Solar_Lib_IQ.lib<CNTL_2P2Z_IQ_ASM.obj>
-//   		--library=Solar_Lib_IQ.lib<CNTL_3P3Z_IQ_ASM.obj>
-//   		--library=Solar_Lib_IQ.lib<NOTCH_FLTR_IQ_ASM.obj>
-/*
+   { /*
+   		--library=Solar_Lib_IQ.lib<CNTL_2P2Z_IQ_ASM.obj>
+   		--library=Solar_Lib_IQ.lib<CNTL_3P3Z_IQ_ASM.obj>
+   		--library=Solar_Lib_IQ.lib<NOTCH_FLTR_IQ_ASM.obj>
    		--library=IQmath.lib<IQ24div.obj>
    		--library=IQmath.lib<IQ23sin.obj>
 		--library=IQmath.lib<IQ23cos.obj>
@@ -243,41 +222,40 @@ SECTIONS
 		--library=IQmath.lib<IQ15div.obj>
 		--library=IQmath.lib<IQ4div.obj>
 		--library=IQmath.lib<IQ15sqrt.obj>
-		--library=IQmath.lib<IQ15isqrt.obj>
-*/
+		--library=IQmath.lib<IQ15isqrt.obj> */
    }
 
-   //ramfuncs         : >> SARAM_4k | RAM_M01_2k,     PAGE = 0
-   //ramfuncs         : >> RAMM1 | RAML0,     PAGE = 1
+   //ramfuncs        : >> SARAM_4k | RAM_M01_2k,     PAGE = 0
+   //ramfuncs        : >> RAMM1 | RAML0,     PAGE = 1
 
-   //.cinit              : >  FLASHA | FLASHB,      PAGE = 0
-   //.pinit              : >  FLASHA | FLASHB,      PAGE = 0
-   //.text               : >> FLASHA | FLASHB,      PAGE = 0
-   .cinit              : >  FLASH,      PAGE = 0
-   .pinit              : >  FLASH,      PAGE = 0
-   .text               : >> FLASH,      PAGE = 0
+   //.cinit          : >  FLASHA | FLASHB,      PAGE = 0
+   //.pinit          : >  FLASHA | FLASHB,      PAGE = 0
+   //.text           : >> FLASHA | FLASHB,      PAGE = 0
+   .cinit           : >  FLASH,      PAGE = 0
+   .pinit           : >  FLASH,      PAGE = 0
+   .text            : >> FLASH,      PAGE = 0
 
-   csmpasswds          : > CSM_PWL_P0,  PAGE = 0
-   csm_rsvd            : > CSM_RSVD,    PAGE = 0
+   csmpasswds        : > CSM_PWL_P0,  PAGE = 0
+   csm_rsvd          : > CSM_RSVD,    PAGE = 0
 
    /* Allocate uninitalized data sections: */
-   .stack              : >  RAMM1,             PAGE = 1
-   .ebss               : >> RAMM0 | RAMM1 | RAML0,     PAGE = 1
-   .esysmem            : >> RAMM0 | RAMM1 | RAML0,     PAGE = 1
-   //.stack              : >  RAM_M01_2k,             PAGE = 0
-   //.ebss               : >> SARAM_4k | RAM_M01_2k,     PAGE = 0
-   //.esysmem            : >> SARAM_4k | RAM_M01_2k,     PAGE = 0
+   .stack           : >  RAMM0,             PAGE = 1
+   .ebss            : >> RAMM0 | RAMM1 | RAML0,     PAGE = 1
+   .esysmem          : >> RAMM0 | RAMM1 | RAML0,     PAGE = 1
+   //.stack          : >  RAM_M01_2k,             PAGE = 0
+   //.ebss           : >> SARAM_4k | RAM_M01_2k,     PAGE = 0
+   //.esysmem        : >> SARAM_4k | RAM_M01_2k,     PAGE = 0
 
    /* Initalized sections go in Flash */
    /* For SDFlash to program these, they must be allocated to page 0 */
-   //.econst             : >> FLASHA | FLASHB,   PAGE = 0
-   //.switch             : >> FLASHA | FLASHB,   PAGE = 0
-   .econst             : >> FLASH,   PAGE = 0
-   .switch             : >> FLASH,   PAGE = 0
+   //.econst         : >> FLASHA | FLASHB,   PAGE = 0
+   //.switch         : >> FLASHA | FLASHB,   PAGE = 0
+   .econst           : >> FLASH,   PAGE = 0
+   .switch           : >> FLASH,   PAGE = 0
 
    /* Allocate IQ math areas: */
-//   IQmath              : >> FLASHA | FLASHB,   PAGE = 0            /* Math Code */
-//   IQmathTables        : >  IQTABLES,          PAGE = 0, TYPE = NOLOAD
+//   IQmath          : >> FLASHA | FLASHB,   PAGE = 0            /* Math Code */
+//   IQmathTables    : >  IQTABLES,          PAGE = 0, TYPE = NOLOAD
 
    /* Uncomment the section below if calling the IQNexp() or IQexp()
       functions from the IQMath.lib library in order to utilize the
@@ -315,8 +293,8 @@ SECTIONS
    /* When using the boot ROM this section and the CPU vector */
    /* table is not needed.  Thus the default type is set here to  */
    /* DSECT  */
-   .reset              : > RESET,      PAGE = 0, TYPE = DSECT
-   vectors             : > VECTORS     PAGE = 0, TYPE = DSECT
+   .reset           : > RESET,      PAGE = 0, TYPE = DSECT
+   vectors           : > VECTORS     PAGE = 0, TYPE = DSECT
 
 
    PieVectTableFile : > PIE_VECT,   PAGE = 1
@@ -376,7 +354,7 @@ SECTIONS
    I2caRegsFile      : > I2CA,        PAGE = 1
 
 /*** Code Security Module Register Structures ***/
-   //CsmPwlFile        : > CSM_PWL,     PAGE = 1
+   //CsmPwlFile      : > CSM_PWL,     PAGE = 1
 
 }
 
