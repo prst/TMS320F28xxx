@@ -66,18 +66,18 @@ MEMORY
 PAGE 0:    /* Program Memory */
            /* Memory (RAM/FLASH/OTP) blocks can be moved to PAGE1 for data allocation */
 
-   RAMM0       : origin = 0x000050, length = 0x0003B0     /* on-chip RAM block M0 */
+   //RAMM0       : origin = 0x000050, length = 0x0003B0     /* on-chip RAM block M0 */
+
    OTP         : origin = 0x3D7800, length = 0x000400     /* on-chip OTP */
-   FLASHA      : origin = 0x3F7000, length = 0x000F80     /* on-chip FLASH */
+   //FLASHB      : origin = 0x3F6000, length = 0x001000     /* on-chip FLASH */
+   //FLASHA      : origin = 0x3F7000, length = 0x000F80     /* on-chip FLASH */
+   FLASH      : origin = 0x3F6000, length = 0x001F80     /* on-chip FLASH */
    CSM_RSVD    : origin = 0x3F7F80, length = 0x000076     /* Part of FLASHA.  Program with all 0x0000 when CSM is in use. */
    BEGIN       : origin = 0x3F7FF6, length = 0x000002     /* Part of FLASHA.  Used for "boot to Flash" bootloader mode. */
    CSM_PWL_P0  : origin = 0x3F7FF8, length = 0x000008     /* Part of FLASHA.  CSM password locations in FLASHA */
-   FLASHB      : origin = 0x3F6000, length = 0x001000     /* on-chip FLASH */
-
    IQTABLES    : origin = 0x3FE000, length = 0x000B50     /* IQ Math Tables in Boot ROM */
    IQTABLES2   : origin = 0x3FEB50, length = 0x00008C     /* IQ Math Tables in Boot ROM */
    IQTABLES3   : origin = 0x3FEBDC, length = 0x0000AA      /* IQ Math Tables in Boot ROM */
-
    ROM         : origin = 0x3FF27C, length = 0x000D44     /* Boot ROM */
    RESET       : origin = 0x3FFFC0, length = 0x000002     /* part of boot ROM  */
    VECTORS     : origin = 0x3FFFC2, length = 0x00003E     /* part of boot ROM  */
@@ -89,7 +89,6 @@ PAGE 0:    /* Program Memory */
    //DRAML0      : origin = 0x008900, length = 0x000700
 */
 
-#if 1
    DEV_EMU     : origin = 0x000880, length = 0x000105     /* device emulation registers */
    SYS_PWR_CTL : origin = 0x000985, length = 0x000003     /* System power control registers */
    FLASH_REGS  : origin = 0x000A80, length = 0x000060     /* FLASH registers */
@@ -117,23 +116,32 @@ PAGE 0:    /* Program Memory */
    XINTRUPT    : origin = 0x007070, length = 0x000010     /* external interrupt registers */
    ADC         : origin = 0x007100, length = 0x000080     /* ADC registers */
    I2CA        : origin = 0x007900, length = 0x000040     /* I2C-A registers */
-   PARTID      : origin = 0x3D7FFF, length = 0x000001     /* Part ID register location */
 
 //-----------------------------------------------------------
+   //OTP         : origin = 0x3D7800, length = 0x000400     /* Part ID register location */
+   PARTID      : origin = 0x3D7FFF, length = 0x000001     /* Part ID register location */
+   //CSM_PWL     : origin = 0x3F7FF8, length = 0x000008     /* Part of FLASHA.  CSM password locations. */
+
    // FLASH-MODE ONLY !!! - NOT FOR RAM-MODE
    //CSM_RSVD    : origin = 0x3F7F80, length = 0x000076     /* Part of FLASHA.  Program with all 0x0000 when CSM is in use. */
    //CSM_PWL_P0  : origin = 0x3F7FF8, length = 0x000008     /* Part of FLASHA.  CSM password locations in FLASHA */
 //-----------------------------------------------------------
-#endif
 
-PAGE 1 :   /* Data Memory */
-           /* Memory (RAM/FLASH/OTP) blocks can be moved to PAGE0 for program allocation */
-           /* Registers remain on PAGE1                                                  */
+PAGE 1 :
+   /* Data Memory */
+   /* Memory (RAM/FLASH/OTP) blocks can be moved to PAGE0 for program allocation */
+   /* Registers remain on PAGE1                                                  */
+
+   /* RAM info */
+   /* M0 vector RAM  0x0000..0x0040      64 byte  */
+   /* M0        RAM  0x0000..0x0400      1K-64    */
+   /* M1        RAM  0x0400..0x0800      1K       */
+   /* SARAM     RAM  0x008000..0x009000  6K       */
 
    BOOT_RSVD   : origin = 0x000000, length = 0x000050     /* Part of M0, BOOT rom will use this for stack */
+   RAMM0       : origin = 0x000050, length = 0x0003B0     /* on-chip RAM block M0 */
    RAMM1       : origin = 0x000400, length = 0x000400     /* on-chip RAM block M1 */
    RAML0       : origin = 0x008000, length = 0x000400     /* on-chip RAM block L0 */
-
 
    DEV_EMU     : origin = 0x000880, length = 0x000180     /* device emulation registers */
    FLASH_REGS  : origin = 0x000A80, length = 0x000060     /* FLASH registers */
@@ -193,16 +201,13 @@ PAGE 1 :   /* Data Memory */
    SPID        : origin = 0x007780, length = 0x000010     /* SPI-D registers */
 
    I2CA        : origin = 0x007900, length = 0x000040     /* I2C-A registers */
-
-   CSM_PWL     : origin = 0x3F7FF8, length = 0x000008     /* Part of FLASHA.  CSM password locations. */
-
 }
 
 /* Allocate sections to memory blocks.
    Note:
-         codestart user defined section in DSP28_CodeStartBranch.asm used to redirect code
-                   execution when booting to flash
-         ramfuncs  user defined section to store functions that will be copied from Flash into RAM
+     codestart user defined section in DSP28_CodeStartBranch.asm used to redirect code
+               execution when booting to flash
+     ramfuncs  user defined section to store functions that will be copied from Flash into RAM
 */
 
 SECTIONS
@@ -211,36 +216,64 @@ SECTIONS
    /* Allocate program areas: */
    codestart           : > BEGIN       PAGE = 0
 
-
+/*
    ramfuncs            : LOAD = FLASHA,
                          RUN = RAMM0,
                          LOAD_START(_RamfuncsLoadStart),
                          LOAD_SIZE(_RamfuncsLoadSize),
                          RUN_START(_RamfuncsRunStart),
                          PAGE = 0
+*/
+   ramfuncs          : LOAD = FLASH,
+                       RUN = RAMM0,
+                       LOAD_START(_RamfuncsLoadStart),
+                       LOAD_END(_RamfuncsLoadEnd),
+                       RUN_START(_RamfuncsRunStart),
+                       PAGE = 1
+   {
+//   		--library=Solar_Lib_IQ.lib<CNTL_2P2Z_IQ_ASM.obj>
+//   		--library=Solar_Lib_IQ.lib<CNTL_3P3Z_IQ_ASM.obj>
+//   		--library=Solar_Lib_IQ.lib<NOTCH_FLTR_IQ_ASM.obj>
+/*
+   		--library=IQmath.lib<IQ24div.obj>
+   		--library=IQmath.lib<IQ23sin.obj>
+		--library=IQmath.lib<IQ23cos.obj>
+		--library=IQmath.lib<IQ15rsmpy.obj>
+		--library=IQmath.lib<IQ15rmpy.obj>
+		--library=IQmath.lib<IQ15div.obj>
+		--library=IQmath.lib<IQ4div.obj>
+		--library=IQmath.lib<IQ15sqrt.obj>
+		--library=IQmath.lib<IQ15isqrt.obj>
+*/
+   }
 
    //ramfuncs         : >> SARAM_4k | RAM_M01_2k,     PAGE = 0
    //ramfuncs         : >> RAMM1 | RAML0,     PAGE = 1
 
-   .cinit              : >  FLASHA | FLASHB,      PAGE = 0
-   .pinit              : >  FLASHA | FLASHB,      PAGE = 0
-   .text               : >> FLASHA | FLASHB,      PAGE = 0
+   //.cinit              : >  FLASHA | FLASHB,      PAGE = 0
+   //.pinit              : >  FLASHA | FLASHB,      PAGE = 0
+   //.text               : >> FLASHA | FLASHB,      PAGE = 0
+   .cinit              : >  FLASH,      PAGE = 0
+   .pinit              : >  FLASH,      PAGE = 0
+   .text               : >> FLASH,      PAGE = 0
 
    csmpasswds          : > CSM_PWL_P0,  PAGE = 0
    csm_rsvd            : > CSM_RSVD,    PAGE = 0
 
    /* Allocate uninitalized data sections: */
    .stack              : >  RAMM1,             PAGE = 1
-   .ebss               : >> RAMM1 | RAML0,     PAGE = 1
-   .esysmem            : >> RAMM1 | RAML0,     PAGE = 1
+   .ebss               : >> RAMM0 | RAMM1 | RAML0,     PAGE = 1
+   .esysmem            : >> RAMM0 | RAMM1 | RAML0,     PAGE = 1
    //.stack              : >  RAM_M01_2k,             PAGE = 0
    //.ebss               : >> SARAM_4k | RAM_M01_2k,     PAGE = 0
    //.esysmem            : >> SARAM_4k | RAM_M01_2k,     PAGE = 0
 
    /* Initalized sections go in Flash */
    /* For SDFlash to program these, they must be allocated to page 0 */
-   .econst             : >> FLASHA | FLASHB,   PAGE = 0
-   .switch             : >> FLASHA | FLASHB,   PAGE = 0
+   //.econst             : >> FLASHA | FLASHB,   PAGE = 0
+   //.switch             : >> FLASHA | FLASHB,   PAGE = 0
+   .econst             : >> FLASH,   PAGE = 0
+   .switch             : >> FLASH,   PAGE = 0
 
    /* Allocate IQ math areas: */
 //   IQmath              : >> FLASHA | FLASHB,   PAGE = 0            /* Math Code */
@@ -311,10 +344,10 @@ SECTIONS
    ECanbMOTSRegsFile : > ECANB_MOTS   PAGE = 1
    ECanbMOTORegsFile : > ECANB_MOTO   PAGE = 1
 
-   EPwm1RegsFile     : > EPWM1        PAGE = 1
-   EPwm2RegsFile     : > EPWM2        PAGE = 1
-   EPwm3RegsFile     : > EPWM3        PAGE = 1
-   EPwm4RegsFile     : > EPWM4        PAGE = 1
+   EPwm1RegsFile     : > EPWM1        PAGE = 0
+   EPwm2RegsFile     : > EPWM2        PAGE = 0
+   EPwm3RegsFile     : > EPWM3        PAGE = 0
+   EPwm4RegsFile     : > EPWM4        PAGE = 0
    EPwm5RegsFile     : > EPWM5        PAGE = 1
    EPwm6RegsFile     : > EPWM6        PAGE = 1
 
@@ -343,7 +376,7 @@ SECTIONS
    I2caRegsFile      : > I2CA,        PAGE = 1
 
 /*** Code Security Module Register Structures ***/
-   CsmPwlFile        : > CSM_PWL,     PAGE = 1
+   //CsmPwlFile        : > CSM_PWL,     PAGE = 1
 
 }
 

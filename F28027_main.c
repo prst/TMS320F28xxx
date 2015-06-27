@@ -129,13 +129,25 @@ interrupt void  sciaRxFifoIsr (void);
 t_error  wrapper_Init_UART_IRQ (void);
 t_error  wrapper_Init_TM1638 (void);
 
+void InitFlash(void);
+void MemCopy(Uint16 *SourceAddr, Uint16* SourceEndAddr, Uint16* DestAddr);
+
 
 /* ========================================================================== */
 /* Global variables */
 /* ========================================================================== */
+/*
 uint16_t     RamfuncsLoadStart;
 uint16_t     RamfuncsLoadSize;
 uint16_t     RamfuncsRunStart;
+*/
+
+// Used for running BackGround in flash, and ISR in RAM
+///*extern*/ Uint32 *RamfuncsLoadStart, *RamfuncsLoadEnd, *RamfuncsRunStart;
+///*extern*/ Uint32 *IQfuncsLoadStart, *IQfuncsLoadEnd, *IQfuncsRunStart;
+extern uint16_t RamfuncsLoadStart, RamfuncsLoadEnd, RamfuncsRunStart;
+//extern uint16_t IQfuncsLoadStart, IQfuncsLoadEnd, IQfuncsRunStart;
+
 
 uint32_t     EPwm1TimerIntCount;
 uint32_t     EPwm2TimerIntCount;
@@ -169,6 +181,7 @@ uint16_t     rdataA[RX_LEN];     // Received data for SCI-A
 uint16_t     rdata_pointA;  // Used for checking the received data
 
 uint16_t     RxTx;
+/* ========================================================================== */
 
 
 
@@ -176,7 +189,6 @@ uint16_t     RxTx;
 void InitGpio_Conf_HW (void) {
 	EALLOW;
 	GpioCtrlRegs.GPAMUX1.all |= gpio_mux;
-	// 在这里插入初始化函数的代码
 	GpioCtrlRegs.GPADIR.all |= gpio_dir;
 	//	GpioDataRegs.GPASET.all |= 0xff;
 	EDIS;
@@ -184,6 +196,7 @@ void InitGpio_Conf_HW (void) {
 /* ========================================================================== */
 
 
+/* ========================================================================== */
 void* memset(void *mem, register int ch, register size_t length)
 {
      register char *m = (char *)mem;
@@ -191,6 +204,72 @@ void* memset(void *mem, register int ch, register size_t length)
      while (length--) *m++ = ch;
      return mem;
 }
+/* ========================================================================== */
+
+
+/* ========================================================================== */
+// This function initializes the Flash Control registers
+/* ========================================================================== */
+//                   CAUTION
+// This function MUST be executed out of RAM. Executing it
+// out of OTP/Flash will yield unpredictable results
+void InitFlash(void)
+{
+   EALLOW;
+   //Enable Flash Pipeline mode to improve performance
+   //of code executed from Flash.
+   FlashRegs.FOPT.bit.ENPIPE = 1;
+
+   //                CAUTION
+   //Minimum waitstates required for the flash operating
+   //at a given CPU rate must be characterized by TI.
+   //Refer to the datasheet for the latest information.
+
+   //Set the Paged Waitstate for the Flash
+   FlashRegs.FBANKWAIT.bit.PAGEWAIT = 3;
+
+   //Set the Random Waitstate for the Flash
+   FlashRegs.FBANKWAIT.bit.RANDWAIT = 3;
+
+   //Set the Waitstate for the OTP
+   FlashRegs.FOTPWAIT.bit.OTPWAIT = 5;
+
+   //                CAUTION
+   //ONLY THE DEFAULT VALUE FOR THESE 2 REGISTERS SHOULD BE USED
+   FlashRegs.FSTDBYWAIT.bit.STDBYWAIT = 0x01FF;
+   FlashRegs.FACTIVEWAIT.bit.ACTIVEWAIT = 0x01FF;
+   EDIS;
+
+   //Force a pipeline flush to ensure that the write to
+   //the last register configured occurs before returning.
+
+   asm(" RPT #7 || NOP");
+}
+/* ========================================================================== */
+
+
+/* ========================================================================== */
+// This function will copy the specified memory contents from
+// one location to another.
+//
+//	Uint16 *SourceAddr        Pointer to the first word to be moved
+//                          SourceAddr < SourceEndAddr
+//	Uint16* SourceEndAddr     Pointer to the last word to be moved
+//	Uint16* DestAddr          Pointer to the first destination word
+//
+// No checks are made for invalid memory locations or that the
+// end address is > then the first start address.
+/* ========================================================================== */
+void MemCopy(Uint16 *SourceAddr, Uint16* SourceEndAddr, Uint16* DestAddr)
+{
+    while(SourceAddr < SourceEndAddr)
+    {
+       *DestAddr++ = *SourceAddr++;
+    }
+    return;
+}
+/* ========================================================================== */
+
 
 
 /* ==========================================================================
@@ -468,10 +547,24 @@ t_error wrapper_Init_Sys (void) {
     CPU_disableGlobalInts (myCpu);
     CPU_clearIntFlags (myCpu);
 
+    /*
     // If running from flash copy RAM only functions to RAM
 #ifdef _FLASH
     memcpy (&RamfuncsRunStart, &RamfuncsLoadStart, (size_t)&RamfuncsLoadSize);
 #endif
+    */
+#ifdef _FLASH
+// Copy time critical code and Flash setup code to RAM
+// The  RamfuncsLoadStart, RamfuncsLoadEnd, and RamfuncsRunStart
+// symbols are created by the linker. Refer to the linker files.
+	MemCopy(&RamfuncsLoadStart, &RamfuncsLoadEnd, &RamfuncsRunStart);
+	//MemCopy(&IQfuncsLoadStart, &IQfuncsLoadEnd, &IQfuncsRunStart);
+
+// Call Flash Initialization to setup flash waitstates
+// This function must reside in RAM
+	InitFlash();	// Call the flash wrapper init function
+#endif //(FLASH)
+
 
     return (t_error) E_OK;
 }
