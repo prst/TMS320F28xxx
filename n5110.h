@@ -40,22 +40,6 @@
 /* ************************************************************************** */
 
 
-/* ************************************************************************** */
-#if (1==__TMS320__)
-#define rst_h     GpioDataRegs.GPASET.bit.GPIO0=1
-#define rst_l     GpioDataRegs.GPACLEAR.bit.GPIO0=1
-#define ce_h      GpioDataRegs.GPASET.bit.GPIO1=1
-#define ce_l      GpioDataRegs.GPACLEAR.bit.GPIO1=1
-#define dc_h      GpioDataRegs.GPASET.bit.GPIO2=1
-#define dc_l      GpioDataRegs.GPACLEAR.bit.GPIO2=1
-#define sdin_h    GpioDataRegs.GPASET.bit.GPIO3=1
-#define sdin_l    GpioDataRegs.GPACLEAR.bit.GPIO3=1
-#define sclk_h    GpioDataRegs.GPASET.bit.GPIO4=1
-#define sclk_l    GpioDataRegs.GPACLEAR.bit.GPIO4=1
-/* ************************************************************************** */
-#endif //(1==__TMS320__)
-
-
 // Разрешение дисплея в пикселях
 #define LCD_X_RES                  84    // разрешение по горизонтали
 #define LCD_Y_RES                  48    // разрешение по вертикали

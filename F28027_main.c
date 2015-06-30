@@ -646,15 +646,27 @@ t_error wrapper_Init_PWM_IRQs (void) {
 t_error wrapper_Init_GPIO (void) {
 #if (1==USE_F28027_GPIO)
     // Initalize GPIO
-    GPIO_setDirection (myGpio, GPIO_Number_0, GPIO_Direction_Output);
+
+	// Version 1
+    /*GPIO_setDirection (myGpio, GPIO_Number_0, GPIO_Direction_Output);
     GPIO_setDirection (myGpio, GPIO_Number_1, GPIO_Direction_Output);
     GPIO_setDirection (myGpio, GPIO_Number_2, GPIO_Direction_Output);
     GPIO_setDirection (myGpio, GPIO_Number_3, GPIO_Direction_Output);
     GPIO_setDirection (myGpio, GPIO_Number_4, GPIO_Direction_Output);
     GPIO_setDirection (myGpio, GPIO_Number_5, GPIO_Direction_Output);
-    GPIO_setPortData  (myGpio, GPIO_Port_A, 0x003F);
+    GPIO_setPortData  (myGpio, GPIO_Port_A, 0x003F); */
 
-    GPIO_setMode(myGpio, GPIO_Number_5, GPIO_5_Mode_EPWM3B);
+    // Version 2
+    GPIO_setDirection (myGpio, GPIO_Number_7,  GPIO_Direction_Output);
+    GPIO_setDirection (myGpio, GPIO_Number_6,  GPIO_Direction_Output);
+    GPIO_setDirection (myGpio, GPIO_Number_17, GPIO_Direction_Output);
+    GPIO_setDirection (myGpio, GPIO_Number_16, GPIO_Direction_Output);
+    GPIO_setDirection (myGpio, GPIO_Number_12, GPIO_Direction_Output);
+    GPIO_setDirection (myGpio, GPIO_Number_19, GPIO_Direction_Output);
+    GPIO_setPortData  (myGpio, GPIO_Port_A,
+    		                  ( 1<<7 | 1<<6 | 1<<17 | 1<<16 | 1<<12 | 1<<19 ) );
+
+    //GPIO_setMode(myGpio, GPIO_Number_5, GPIO_5_Mode_EPWM3B);
 
 	//InitGpio_Conf_HW();
 #endif //(1==USE_F28027_GPIO)
