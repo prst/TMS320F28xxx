@@ -55,8 +55,29 @@ typedef enum {
 //#define gpio_mux  0x0000
 //#define gpio_dir  0x003f
 
+/* *** Version 1 ************************************************************ */
+// j6   | pin   |
+// -----+-------+---------------------------------------------------------------
+// RST  | GPIO0 |   сброс
+// CE   | GPIO1 |   включение
+// DC   | GPIO2 |   Команда / данные
+// SDIN | GPIO3 |   Последовательный ввод данных
+// SCLK | GPIO4 |   последовательный ввод тактов
 /* ************************************************************************** */
-#define rst_h     GpioDataRegs.GPASET.bit.GPIO0=1
+
+/* *** Version 2 ************************************************************ */
+// j6    | pin       |
+// ------+-----------+----------------------------------------------------------
+// RST   | GPIO7     |   сброс
+// CE    | GPIO6     |   включение
+// DC    | GPIO17/33 |   Команда / данные
+// SDIN  | GPIO16/32 |   Последовательный ввод данных
+// SCLK  | GPIO12    |   последовательный ввод тактов
+// LIGHT | GPIO12    |   подсветка
+/* ************************************************************************** */
+
+/* ************************************************************************** */
+/*#define rst_h     GpioDataRegs.GPASET.bit.GPIO0=1
 #define rst_l     GpioDataRegs.GPACLEAR.bit.GPIO0=1
 #define ce_h      GpioDataRegs.GPASET.bit.GPIO1=1
 #define ce_l      GpioDataRegs.GPACLEAR.bit.GPIO1=1
@@ -65,9 +86,35 @@ typedef enum {
 #define sdin_h    GpioDataRegs.GPASET.bit.GPIO3=1
 #define sdin_l    GpioDataRegs.GPACLEAR.bit.GPIO3=1
 #define sclk_h    GpioDataRegs.GPASET.bit.GPIO4=1
-#define sclk_l    GpioDataRegs.GPACLEAR.bit.GPIO4=1
+#define sclk_l    GpioDataRegs.GPACLEAR.bit.GPIO4=1*/
 /* ************************************************************************** */
+/* ************************************************************************** */
+#if (1==__TMS320__)
+// Version 1
+/*#define rst_h     GpioDataRegs.GPASET.bit.GPIO0=1
+#define rst_l     GpioDataRegs.GPACLEAR.bit.GPIO0=1
+#define ce_h      GpioDataRegs.GPASET.bit.GPIO1=1
+#define ce_l      GpioDataRegs.GPACLEAR.bit.GPIO1=1
+#define dc_h      GpioDataRegs.GPASET.bit.GPIO2=1
+#define dc_l      GpioDataRegs.GPACLEAR.bit.GPIO2=1
+#define sdin_h    GpioDataRegs.GPASET.bit.GPIO3=1
+#define sdin_l    GpioDataRegs.GPACLEAR.bit.GPIO3=1
+#define sclk_h    GpioDataRegs.GPASET.bit.GPIO4=1
+#define sclk_l    GpioDataRegs.GPACLEAR.bit.GPIO4=1*/
 
+// Version 2
+#define rst_h     GpioDataRegs.GPASET.bit.GPIO7=1
+#define rst_l     GpioDataRegs.GPACLEAR.bit.GPIO7=1
+#define ce_h      GpioDataRegs.GPASET.bit.GPIO6=1
+#define ce_l      GpioDataRegs.GPACLEAR.bit.GPIO6=1
+#define dc_h      GpioDataRegs.GPASET.bit.GPIO17=1
+#define dc_l      GpioDataRegs.GPACLEAR.bit.GPIO17=1
+#define sdin_h    GpioDataRegs.GPASET.bit.GPIO16=1
+#define sdin_l    GpioDataRegs.GPACLEAR.bit.GPIO16=1
+#define sclk_h    GpioDataRegs.GPASET.bit.GPIO12=1
+#define sclk_l    GpioDataRegs.GPACLEAR.bit.GPIO12=1
+/* ************************************************************************** */
+#endif //(1==__TMS320__)
 
 /* ************************************************************************** */
 //extern void init_sys();
