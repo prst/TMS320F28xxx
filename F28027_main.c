@@ -123,11 +123,16 @@ void    error(void);
 
 // Prototype statements for functions found within this file.
 void            scia_fifo_init(void);
+
+// Prototype statements for functions found within this file.
+//__interrupt void adc_isr(void);
+interrupt void adc_isr(void);
 interrupt void  sciaTxFifoIsr (void);
 interrupt void  sciaRxFifoIsr (void);
 
 t_error  wrapper_Init_UART_IRQ (void);
 t_error  wrapper_Init_TM1638 (void);
+t_error  wrapper_Init_ADC (void);
 
 void InitFlash(void);
 void MemCopy(Uint16 *SourceAddr, Uint16* SourceEndAddr, Uint16* DestAddr);
@@ -331,6 +336,12 @@ void Init_All ( void ) {
 
     if (E_OK==err) {
     	err = wrapper_Init_TM1638 ();   // Init TM1638
+    } else {
+    	wrapper_Error_Handle (err);
+    }
+
+    if (E_OK==err) {
+    	err = wrapper_Init_ADC ();   // Init TM1638
     } else {
     	wrapper_Error_Handle (err);
     }
@@ -1008,6 +1019,80 @@ t_error wrapper_Init_TM1638 (void) {
     return E_OK;
 }
 /* ========================================================================== */
+
+
+
+/* ==========================================================================
+ * NAME - wrapper_Init_ADC
+ * IN   - void
+ * OUT  - void
+ * RET  - t_error err
+   ========================================================================== */
+t_error wrapper_Init_ADC (void) {
+
+#if (1==USE_F28027_ADC)
+	//adc_init();
+	{
+	    //Initialize the ADC:
+	    CLK_enableAdcClock(myClk);
+	    (*Device_cal)();
+
+	    // Setup a debug vector table and enable the PIE
+	    PIE_setDebugIntVectorTable (myPie);
+	    PIE_enable (myPie);
+
+	    // Register interrupt handlers in the PIE vector table
+	    PIE_registerPieIntHandler(myPie, PIE_GroupNumber_10, PIE_SubGroupNumber_1, (intVec_t)&adc_isr );
+
+	    //Initialize the ADC:
+	    ADC_enableBandGap(myAdc);
+	    ADC_enableRefBuffers(myAdc);
+	    ADC_powerUp(myAdc);
+	    ADC_enable(myAdc);
+	    ADC_setVoltRefSrc(myAdc, ADC_VoltageRefSrc_Int);
+
+	    ADC_enableTempSensor(myAdc);
+
+	    ADC_setIntPulseGenMode(myAdc, ADC_IntPulseGenMode_Prior);
+	    ADC_enableInt(myAdc, ADC_IntNumber_1);
+	    ADC_setIntMode(myAdc, ADC_IntNumber_1, ADC_IntMode_ClearFlag);
+	    ADC_setIntSrc(myAdc, ADC_IntNumber_1, ADC_IntSrc_EOC1);
+	    ADC_setSocChanNumber (myAdc, ADC_SocNumber_0, ADC_SocChanNumber_A5);
+	    ADC_setSocChanNumber (myAdc, ADC_SocNumber_1, ADC_SocChanNumber_A5);
+	    ADC_setSocTrigSrc(myAdc, ADC_SocNumber_0, ADC_SocTrigSrc_EPWM1_ADCSOCA);
+	    ADC_setSocTrigSrc(myAdc, ADC_SocNumber_1, ADC_SocTrigSrc_EPWM1_ADCSOCA);
+	    ADC_setSocSampleWindow(myAdc, ADC_SocNumber_0, ADC_SocSampleWindow_37_cycles);
+	    ADC_setSocSampleWindow(myAdc, ADC_SocNumber_1, ADC_SocSampleWindow_37_cycles);
+
+	}
+#endif //(1==USE_F28027_ADC)
+
+    return E_OK;
+}
+/* ========================================================================== */
+
+
+uint16_t ConversionCount;
+uint16_t TempSensorVoltage[10];
+
+//__interrupt void  adc_isr(void)
+interrupt void  adc_isr(void)
+{
+
+    TempSensorVoltage[ConversionCount] = ADC_readResult(myAdc, ADC_ResultNumber_1);
+
+    // If 20 conversions have been logged, start over
+    if ( ConversionCount == 9 )
+    {
+      ConversionCount = 0;
+    }
+    else ConversionCount++;
+
+    ADC_clearIntFlag(myAdc, ADC_IntNumber_1);
+    PIE_clearInt(myPie, PIE_GroupNumber_10);
+
+    return;
+}
 
 
 

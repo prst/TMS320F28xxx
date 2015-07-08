@@ -19,7 +19,7 @@
 #include "F2802x_Examples.h"   // DSP2802x Examples Include File
 
 
-#define   USE_F28027_ADC      0
+#define   USE_F28027_ADC      1
 #define   USE_F28027_CAP      0
 #define   USE_F28027_CLK      1
 #define   USE_F28027_COMP     0
@@ -34,16 +34,16 @@
 #define   USE_F28027_PWR      1
 #define   USE_F28027_SCI_IO   0
 #define   USE_F28027_SCI      0
-#define   USE_F28027_SPI      1
-#define   USE_F28027_TIMER    1
-#define   USE_F28027_WDOG     1
+#define   USE_F28027_SPI      0
+#define   USE_F28027_TIMER    0
+#define   USE_F28027_WDOG     0
 #define   USE_F28027_NMI      0
-#define   USE_F28027_PARTID   1
+#define   USE_F28027_PARTID   0
 #define   USE_F28027_SYSCTRL  1
 #define   USE_F28027_EMU      0
 #define   USE_F28027_XINTS    0
-#define   USE_F28027_DEVEMU   1
-#define   USE_F28027_CSM      1
+#define   USE_F28027_DEVEMU   0
+#define   USE_F28027_CSM      0
 
 
 //! \brief External reference to the interrupt flag register (IFR) register
