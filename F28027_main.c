@@ -36,9 +36,9 @@
 /* ========================================================================== */
 // Configure which ePWM timer interrupts are enabled at the PIE level:
 // 1 = enabled,  0 = disabled
-#define PWM1_INT_ENABLE   0
-#define PWM2_INT_ENABLE   0
-#define PWM3_INT_ENABLE   0
+#define  PWM1_INT_ENABLE  1
+#define  PWM2_INT_ENABLE  0
+#define  PWM3_INT_ENABLE  0
 
 // Configure the period for each timer
 #define PWM1_TIMER_TBPRD  0xFFFF
@@ -112,13 +112,20 @@ interrupt void epwm3_timer_isr (void);
 interrupt void timer0_isr      (void);
 void           init_Cfg_EPwmTimers (void);
 
-t_error wrapper_Init_Sys (void);
-t_error wrapper_Init_PWM_IRQs (void);
-t_error wrapper_Init_GPIO (void);
+t_error  Init_Sys    (void);
+t_error  Init_PWM(void);
+t_error  Init_GPIO   (void);
+t_error  Init_UART_IRQ(void);
+t_error  Init_TM1638 (void);
+t_error  Init_PLL    (void);
+t_error  Init_FLASH  (void);
+t_error  Init_ADC    (void);
+
 //t_error wrapper_Init_UART_pooling (void);
 //t_error wrapper_Init_UART_IRQ (void);
+
 void    wrapper_Main ( void );
-void    wrapper_Error_Handle( t_error err );
+void    Error( t_error err );
 void    error(void);
 
 // Prototype statements for functions found within this file.
@@ -129,10 +136,6 @@ void            scia_fifo_init(void);
 interrupt void adc_isr(void);
 interrupt void  sciaTxFifoIsr (void);
 interrupt void  sciaRxFifoIsr (void);
-
-t_error  wrapper_Init_UART_IRQ (void);
-t_error  wrapper_Init_TM1638 (void);
-t_error  wrapper_Init_ADC (void);
 
 void InitFlash(void);
 void MemCopy(Uint16 *SourceAddr, Uint16* SourceEndAddr, Uint16* DestAddr);
@@ -172,7 +175,7 @@ TIMER_Handle myTimer;
 WDOG_Handle  myWDog;
 
 
-t_error      err=E_OK;
+t_error      rc=E_OK;
 int          i=0, i_tx=0, i_rx=0;
 int          i_pwm3=0;
 
@@ -282,7 +285,7 @@ void MemCopy(Uint16 *SourceAddr, Uint16* SourceEndAddr, Uint16* DestAddr)
  * ========================================================================== */
 void main (void)
 {
-	Init_All ();
+	Init_All();
 
 #if (1==__USE_LCD_5110__)
 	Lcd_clear();
@@ -290,7 +293,8 @@ void main (void)
 	Wrapper_LCD_Print();
 
 	// Main code
-    for(;;) {
+    for(;;)
+    {
     	//wrapper_Main();
     	//tm1638_prints("123456789");
     	//tm1638_printx("1", 1);
@@ -308,43 +312,40 @@ void main (void)
  * OUT  - void
  * RET  - void
    ========================================================================== */
-void Init_All ( void ) {
-	if (E_OK==err) {
-        err = wrapper_Init_Sys ();     	 // Init system and handles
-    } else {
-    	wrapper_Error_Handle (err);
-    }
+void Init_All ( void )
+{
+	if (E_OK==rc)  rc = Init_Sys();     // Init system and handles
+    else  Error(rc);
 
-    if (E_OK==err) {
-    	err = wrapper_Init_GPIO ();   // Init GPIO system
-    } else {
-    	wrapper_Error_Handle (err);
-    }
 
-    if (E_OK==err) {
-        err = wrapper_Init_PWM_IRQs ();  // Init IRQs
-    } else {
-    	wrapper_Error_Handle (err);
-    }
+    if (E_OK==rc)  rc = Init_PLL();     // Init PLL
+    else  Error(rc);
 
-    if (E_OK==err) {
-    	err = wrapper_Init_UART_IRQ ();   // Init UART IRQ
-    	//err = wrapper_Init_UART_pooling ();   // Init UART without IRQ
-    } else {
-    	wrapper_Error_Handle (err);
-    }
 
-    if (E_OK==err) {
-    	err = wrapper_Init_TM1638 ();   // Init TM1638
-    } else {
-    	wrapper_Error_Handle (err);
-    }
+    if (E_OK==rc)  rc = Init_ADC();     // Init ADC
+    else  Error(rc);
 
-    if (E_OK==err) {
-    	err = wrapper_Init_ADC ();   // Init TM1638
-    } else {
-    	wrapper_Error_Handle (err);
-    }
+
+    if (E_OK==rc)  rc = Init_PWM();     // Init IRQs
+    else  Error(rc);
+
+
+    if (E_OK==rc)  rc = Init_FLASH();   // Init FLASH
+    else  Error(rc);
+
+
+    if (E_OK==rc)  rc = Init_GPIO();    // Init GPIO system
+    else  Error(rc);
+
+    /*
+    if (E_OK==rc)  rc = Init_UART_IRQ(); // Init UART IRQ
+    	//err = Init_UART_pooling (); // Init UART without IRQ
+    else  Error(rc);
+
+
+    if (E_OK==rc)  rc = Init_TM1638();  // Init TM1638
+    else  Error(rc);
+    */
 }
 
 
@@ -443,12 +444,17 @@ void wrapper_Main ( void ) {
  * OUT  - void
  * RET  - void
    ========================================================================== */
-void wrapper_Error_Handle (t_error err) {
+void Error (t_error err) {
 	switch (err) {
-		case E_OK:		break;
-		case E_FAIL:	case E_BADPTR:		default:
+		case E_OK:
+			break;
+
+		case E_FAIL:
+		case E_BADPTR:
+
+		default:
 			error();
-			//break;
+			break;
 	}
 }
 /* ========================================================================== */
@@ -461,7 +467,7 @@ void wrapper_Error_Handle (t_error err) {
  * OUT  - void
  * RET  - t_error err
    ========================================================================== */
-t_error wrapper_Init_Sys (void) {
+t_error Init_Sys (void) {
 
 	// PERIPHERAL CLOCK ENABLES
 	//---------------------------------------------------
@@ -487,11 +493,11 @@ t_error wrapper_Init_Sys (void) {
 
     // Initialize all the handles needed for this application
 #if (1==USE_F28027_CLK)
-    myClk   = CLK_init  ((void *)CLK_BASE_ADDR, sizeof(CLK_Obj));
+    myClk  = CLK_init  ((void *)CLK_BASE_ADDR, sizeof(CLK_Obj));
 #endif //(1==USE_F28027_CLK)
 
 #if (1==USE_F28027_CPU)
-    myCpu   = CPU_init  ((void *)NULL, sizeof(CPU_Obj));
+    myCpu  = CPU_init  ((void *)NULL, sizeof(CPU_Obj));
 #endif //(1==USE_F28027_CPU)
 
 #if (1==USE_F28027_FLASH)
@@ -499,33 +505,33 @@ t_error wrapper_Init_Sys (void) {
 #endif //(1==USE_F28027_FLASH)
 
 #if (1==USE_F28027_GPIO)
-    myGpio  = GPIO_init ((void *)GPIO_BASE_ADDR, sizeof(GPIO_Obj));
+    myGpio = GPIO_init ((void *)GPIO_BASE_ADDR, sizeof(GPIO_Obj));
 #endif //(1==USE_F28027_GPIO)
 
 #if (1==USE_F28027_PIE)
-    myPie   = PIE_init  ((void *)PIE_BASE_ADDR, sizeof(PIE_Obj));
+    myPie  = PIE_init  ((void *)PIE_BASE_ADDR, sizeof(PIE_Obj));
 #endif //(1==USE_F28027_PIE)
 
 #if (1==USE_F28027_PLL)
-    myPll   = PLL_init  ((void *)PLL_BASE_ADDR, sizeof(PLL_Obj));
+    myPll  = PLL_init  ((void *)PLL_BASE_ADDR, sizeof(PLL_Obj));
 #endif //(1==USE_F28027_PLL)
 
 #if (1==USE_F28027_PWM)
 	#if (1==PWM1_INT_ENABLE)
-    myPwm1  = PWM_init  ((void *)PWM_ePWM1_BASE_ADDR, sizeof(PWM_Obj));
+    myPwm1 = PWM_init  ((void *)PWM_ePWM1_BASE_ADDR, sizeof(PWM_Obj));
 	#endif //(1==PWM1_INT_ENABLE)
 
 	#if (1==PWM2_INT_ENABLE)
-    myPwm2  = PWM_init  ((void *)PWM_ePWM2_BASE_ADDR, sizeof(PWM_Obj));
+    myPwm2 = PWM_init  ((void *)PWM_ePWM2_BASE_ADDR, sizeof(PWM_Obj));
 	#endif //(1==PWM2_INT_ENABLE)
 
 	#if (1==PWM2_INT_ENABLE)
-    myPwm3  = PWM_init  ((void *)PWM_ePWM3_BASE_ADDR, sizeof(PWM_Obj));
+    myPwm3 = PWM_init  ((void *)PWM_ePWM3_BASE_ADDR, sizeof(PWM_Obj));
 	#endif //(1==PWM2_INT_ENABLE)
 #endif //(1==USE_F28027_PWM)
 
 #if (1==USE_F28027_WDOG)
-    myWDog  = WDOG_init ((void *)WDOG_BASE_ADDR, sizeof(WDOG_Obj));
+    myWDog = WDOG_init ((void *)WDOG_BASE_ADDR, sizeof(WDOG_Obj));
 #endif //(1==USE_F28027_WDOG)
 
 #if (1==USE_F28027_TIMER)
@@ -533,49 +539,12 @@ t_error wrapper_Init_Sys (void) {
 #endif //(1==USE_F28027_TIMER)
 
 #if (1==USE_F28027_ADC)
-    myAdc   = ADC_init  ((void *)ADC_BASE_ADDR, sizeof(ADC_Obj));
+    myAdc = ADC_init  ((void *)ADC_BASE_ADDR, sizeof(ADC_Obj));
 #endif //(1==USE_F28027_ADC)
 
 #if (1==USE_F28027_SCI)
     mySci   = SCI_init  ((void *)SCIA_BASE_ADDR, sizeof(SCI_Obj));
 #endif //(1==USE_F28027_SCI)
-
-    // Perform basic system initialization
-    WDOG_disable (myWDog);
-    CLK_enableAdcClock (myClk);
-    (*Device_cal)();
-    CLK_disableAdcClock (myClk);
-
-    //Select the internal oscillator 1 as the clock source
-    CLK_setOscSrc (myClk, CLK_OscSrc_Internal);
-
-    // Setup the PLL for x10 /2 which will yield 50Mhz = 10Mhz * 10 / 2
-    PLL_setup (myPll, PLL_Multiplier_10, PLL_DivideSelect_ClkIn_by_2);
-
-    // Disable the PIE and all interrupts
-    PIE_disable (myPie);
-    PIE_disableAllInts (myPie);
-    CPU_disableGlobalInts (myCpu);
-    CPU_clearIntFlags (myCpu);
-
-    /*
-    // If running from flash copy RAM only functions to RAM
-#ifdef _FLASH
-    memcpy (&RamfuncsRunStart, &RamfuncsLoadStart, (size_t)&RamfuncsLoadSize);
-#endif
-    */
-#ifdef _FLASH
-// Copy time critical code and Flash setup code to RAM
-// The  RamfuncsLoadStart, RamfuncsLoadEnd, and RamfuncsRunStart
-// symbols are created by the linker. Refer to the linker files.
-	MemCopy(&RamfuncsLoadStart, &RamfuncsLoadEnd, &RamfuncsRunStart);
-	//MemCopy(&IQfuncsLoadStart, &IQfuncsLoadEnd, &IQfuncsRunStart);
-
-// Call Flash Initialization to setup flash waitstates
-// This function must reside in RAM
-	InitFlash();	// Call the flash wrapper init function
-#endif //(FLASH)
-
 
     return (t_error) E_OK;
 }
@@ -589,7 +558,20 @@ t_error wrapper_Init_Sys (void) {
  * OUT  - void
  * RET  - t_error err
    ========================================================================== */
-t_error wrapper_Init_PWM_IRQs (void) {
+t_error Init_PWM (void) {
+
+    CLK_enablePwmClock(myClk, PWM_Number_1);
+
+    PWM_enableSocAPulse(myPwm1);
+    PWM_setSocAPulseSrc(myPwm1, PWM_SocPulseSrc_CounterEqualCmpAIncr);
+    PWM_setSocAPeriod(myPwm1, PWM_SocPeriod_FirstEvent);
+    ((PWM_Obj *)myPwm1)->CMPA = 0x0080;
+    PWM_setPeriod(myPwm1, 0xFFFF);
+    PWM_setCounterMode(myPwm1, PWM_CounterMode_Up);
+
+    CLK_enableTbClockSync(myClk);
+
+/*
 #if (1==USE_F28027_PWM)
     // Setup a debug vector table and enable the PIE
     PIE_setDebugIntVectorTable (myPie);
@@ -642,6 +624,8 @@ t_error wrapper_Init_PWM_IRQs (void) {
     CPU_enableDebugInt (myCpu);
 
 #endif //(1==USE_F28027_PWM)
+*/
+
     return E_OK;
 }
 /* ========================================================================== */
@@ -654,7 +638,7 @@ t_error wrapper_Init_PWM_IRQs (void) {
  * OUT  - void
  * RET  - t_error err
    ========================================================================== */
-t_error wrapper_Init_GPIO (void) {
+t_error Init_GPIO (void) {
 #if (1==USE_F28027_GPIO)
     // Initalize GPIO
 
@@ -934,12 +918,12 @@ void error(void) {
 
 
 /* ==========================================================================
- * NAME - wrapper_Init_UART_IRQ
+ * NAME - Init_UART_IRQ
  * IN   - void
  * OUT  - void
  * RET  - t_error err
    ========================================================================== */
-t_error wrapper_Init_UART_IRQ (void) {
+t_error Init_UART_IRQ (void) {
 
 #if (1==USE_F28027_SCI)
 	// Initalize GPIO
@@ -1005,12 +989,12 @@ t_error wrapper_Init_UART_IRQ (void) {
 
 
 /* ==========================================================================
- * NAME - wrapper_Init_TM1638
+ * NAME - Init_TM1638
  * IN   - void
  * OUT  - void
  * RET  - t_error err
    ========================================================================== */
-t_error wrapper_Init_TM1638 (void) {
+t_error Init_TM1638 (void) {
 
 #if (1==__USE_TM1638__)
 	tm1638_init();
@@ -1023,14 +1007,100 @@ t_error wrapper_Init_TM1638 (void) {
 
 
 /* ==========================================================================
- * NAME - wrapper_Init_ADC
+ * NAME - Init_PLL
  * IN   - void
  * OUT  - void
  * RET  - t_error err
    ========================================================================== */
-t_error wrapper_Init_ADC (void) {
+t_error Init_PLL (void) {
+
+#if (1==USE_F28027_PLL)
+
+    // Perform basic system initialization
+    WDOG_disable (myWDog);
+
+    //Select the internal oscillator 1 as the clock source
+    CLK_setOscSrc (myClk, CLK_OscSrc_Internal);
+
+    // Setup the PLL for x10 /2 which will yield 50Mhz = 10Mhz * 10 / 2
+    PLL_setup (myPll, PLL_Multiplier_10, PLL_DivideSelect_ClkIn_by_2);
+
+    // Disable the PIE and all interrupts
+    PIE_disable (myPie);
+    PIE_disableAllInts (myPie);
+    CPU_disableGlobalInts (myCpu);
+    CPU_clearIntFlags (myCpu);
+
+    // Initialize the PIE vector table with pointers to the shell Interrupt
+    // Service Routines (ISR).
+    PIE_setDebugIntVectorTable(myPie);
+    PIE_enable(myPie);
+
+#endif //(1==USE_F28027_PLL)
+
+    return E_OK;
+}
+/* ========================================================================== */
+
+
+
+/* ==========================================================================
+ * NAME - Init_FLASH
+ * IN   - void
+ * OUT  - void
+ * RET  - t_error err
+   ========================================================================== */
+t_error Init_FLASH (void) {
+
+#if (1==USE_F28027_FLASH)
+
+#ifdef _FLASH
+    /*// If running from flash copy RAM only functions to RAM
+#ifdef _FLASH
+    memcpy (&RamfuncsRunStart, &RamfuncsLoadStart, (size_t)&RamfuncsLoadSize);
+#endif */
+
+	// Copy time critical code and Flash setup code to RAM
+	// The  RamfuncsLoadStart, RamfuncsLoadEnd, and RamfuncsRunStart
+	// symbols are created by the linker. Refer to the linker files.
+	MemCopy(&RamfuncsLoadStart, &RamfuncsLoadEnd, &RamfuncsRunStart);
+	//MemCopy(&IQfuncsLoadStart, &IQfuncsLoadEnd, &IQfuncsRunStart);
+
+	// Call Flash Initialization to setup flash waitstates
+	// This function must reside in RAM
+	InitFlash();	// Call the flash wrapper init function
+
+    /*
+    // Initialize the PIE vector table with pointers to the shell Interrupt
+    // Service Routines (ISR).
+    PIE_setDebugIntVectorTable(myPie);
+    PIE_enable(myPie);
+    */
+
+#endif //(FLASH)
+
+#endif //(1==USE_F28027_FLASH)
+
+    return E_OK;
+}
+/* ========================================================================== */
+
+
+
+/* ==========================================================================
+ * NAME - Init_ADC
+ * IN   - void
+ * OUT  - void
+ * RET  - t_error err
+   ========================================================================== */
+t_error Init_ADC (void) {
 
 #if (1==USE_F28027_ADC)
+    //CLK_enableAdcClock (myClk);
+    //(*Device_cal)();
+
+    //CLK_disableAdcClock (myClk);
+
 	//adc_init();
 	{
 	    //Initialize the ADC:
@@ -1064,6 +1134,11 @@ t_error wrapper_Init_ADC (void) {
 	    ADC_setSocSampleWindow(myAdc, ADC_SocNumber_0, ADC_SocSampleWindow_37_cycles);
 	    ADC_setSocSampleWindow(myAdc, ADC_SocNumber_1, ADC_SocSampleWindow_37_cycles);
 
+	    PIE_enableAdcInt(myPie, ADC_IntNumber_1);
+	    CPU_enableInt(myCpu, CPU_IntNumber_10);
+	    CPU_enableGlobalInts(myCpu);
+	    CPU_enableDebugInt(myCpu);
+
 	}
 #endif //(1==USE_F28027_ADC)
 
@@ -1072,8 +1147,10 @@ t_error wrapper_Init_ADC (void) {
 /* ========================================================================== */
 
 
+
 uint16_t ConversionCount;
 uint16_t TempSensorVoltage[10];
+
 
 //__interrupt void  adc_isr(void)
 interrupt void  adc_isr(void)

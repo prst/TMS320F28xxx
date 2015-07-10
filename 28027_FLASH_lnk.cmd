@@ -69,9 +69,13 @@ PAGE 0:    /* Program Memory */
    //RAMM0       : origin = 0x000050, length = 0x0003B0     /* on-chip RAM block M0 */
 
    OTP         : origin = 0x3D7800, length = 0x000400     /* on-chip OTP */
-   //FLASHB      : origin = 0x3F6000, length = 0x001000     /* on-chip FLASH */
-   //FLASHA      : origin = 0x3F7000, length = 0x000F80     /* on-chip FLASH */
-   FLASH      : origin = 0x3F6000, length = 0x001F80     /* on-chip FLASH */
+   //FLASHD      : origin = 0x3F0000, length = 0x002000     /* on-chip FLASH */
+   //FLASHC      : origin = 0x3F2000, length = 0x002000     /* on-chip FLASH */
+   //FLASHB      : origin = 0x3F4000, length = 0x002000     /* on-chip FLASH */
+   //FLASHA      : origin = 0x3F6000, length = 0x001F80     /* on-chip FLASH */
+   ////FLASHB      : origin = 0x3F6000, length = 0x001000     /* on-chip FLASH */
+   ////FLASHA      : origin = 0x3F7000, length = 0x000F80     /* on-chip FLASH */
+   FLASH       : origin = 0x3F0000, length = 0x007F80     /* on-chip FLASH */
    CSM_RSVD    : origin = 0x3F7F80, length = 0x000076     /* Part of FLASHA.  Program with all 0x0000 when CSM is in use. */
    BEGIN       : origin = 0x3F7FF6, length = 0x000002     /* Part of FLASHA.  Used for "boot to Flash" bootloader mode. */
    CSM_PWL_P0  : origin = 0x3F7FF8, length = 0x000008     /* Part of FLASHA.  CSM password locations in FLASHA */
@@ -267,9 +271,7 @@ SECTIONS
    /*
    IQmathTables2    : > IQTABLES2, PAGE = 0, TYPE = NOLOAD
    {
-
               IQmath.lib<IQNexpTable.obj> (IQmathTablesRam)
-
    }
    */
    /* Uncomment the section below if calling the IQNasin() or IQasin()
@@ -282,9 +284,7 @@ SECTIONS
    /*
    IQmathTables3    : > IQTABLES3, PAGE = 0, TYPE = NOLOAD
    {
-
               IQmath.lib<IQNasinTable.obj> (IQmathTablesRam)
-
    }
    */
 
@@ -293,9 +293,8 @@ SECTIONS
    /* When using the boot ROM this section and the CPU vector */
    /* table is not needed.  Thus the default type is set here to  */
    /* DSECT  */
-   .reset           : > RESET,      PAGE = 0, TYPE = DSECT
-   vectors           : > VECTORS     PAGE = 0, TYPE = DSECT
-
+   .reset           : > RESET,     PAGE = 0, TYPE = DSECT
+   vectors           : > VECTORS    PAGE = 0, TYPE = DSECT
 
    PieVectTableFile : > PIE_VECT,   PAGE = 1
 
