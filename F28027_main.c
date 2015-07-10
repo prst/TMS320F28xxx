@@ -1147,29 +1147,52 @@ t_error Init_ADC (void) {
 /* ========================================================================== */
 
 
-
-uint16_t ConversionCount;
+uint16_t ConvCount=0;
 uint16_t TempSensorVoltage[10];
 
+ADC_Obj *adc;
+uint16_t adc_data[16];
 
-//__interrupt void  adc_isr(void)
+typedef  enum { ADC_INIT=0, ADC_READY }  stat_adc_t;
+
+stat_adc_t  stat_adc=ADC_INIT;
+
+/* ========================================================================== */
 interrupt void  adc_isr(void)
 {
+	uint16_t cnt;
 
-    TempSensorVoltage[ConversionCount] = ADC_readResult(myAdc, ADC_ResultNumber_1);
+	switch (stat_adc) {
+		case ADC_INIT:
+		    //adc->ADCRESULT[0];
+		    //memcpy(adc_data, adc->ADCRESULT, 16);
+			for (cnt=0; cnt<16; cnt++) {
+				adc_data[cnt]=adc->ADCRESULT[cnt];
+			}
 
-    // If 20 conversions have been logged, start over
-    if ( ConversionCount == 9 )
-    {
-      ConversionCount = 0;
-    }
-    else ConversionCount++;
+			stat_adc = ADC_READY;
+		break;
+
+		case ADC_READY:
+			for (cnt=0; cnt<16; cnt++) {
+				adc_data[cnt]=adc->ADCRESULT[cnt];
+			}
+
+		    TempSensorVoltage[ConvCount] = ADC_readResult( myAdc, ADC_ResultNumber_1 );
+			// If 20 conversions have been logged, start over
+		    if ( ConvCount >= 9 )
+		    	ConvCount = 0;
+		    else
+		    	ConvCount++;
+		break;
+	}
 
     ADC_clearIntFlag(myAdc, ADC_IntNumber_1);
     PIE_clearInt(myPie, PIE_GroupNumber_10);
 
     return;
 }
+/* ========================================================================== */
 
 
 
