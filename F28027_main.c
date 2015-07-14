@@ -110,12 +110,12 @@ interrupt void epwm1_timer_isr (void);
 interrupt void epwm2_timer_isr (void);
 interrupt void epwm3_timer_isr (void);
 interrupt void timer0_isr      (void);
-void           init_Cfg_EPwmTimers (void);
+void  init_Cfg_EPwmTimers (void);
 
 t_error  Init_Sys    (void);
-t_error  Init_PWM(void);
+t_error  Init_PWM    (void);
 t_error  Init_GPIO   (void);
-t_error  Init_UART_IRQ(void);
+t_error  Init_UART_IRQ (void);
 t_error  Init_TM1638 (void);
 t_error  Init_PLL    (void);
 t_error  Init_FLASH  (void);
@@ -129,7 +129,7 @@ void    Error( t_error err );
 void    error(void);
 
 // Prototype statements for functions found within this file.
-void            scia_fifo_init(void);
+void    scia_fifo_init(void);
 
 // Prototype statements for functions found within this file.
 //__interrupt void adc_isr(void);
@@ -137,8 +137,8 @@ interrupt void adc_isr(void);
 interrupt void  sciaTxFifoIsr (void);
 interrupt void  sciaRxFifoIsr (void);
 
-void InitFlash(void);
-void MemCopy(Uint16 *SourceAddr, Uint16* SourceEndAddr, Uint16* DestAddr);
+void  InitFlash (void);
+void  MemCopy (Uint16 *SourceAddr, Uint16* SourceEndAddr, Uint16* DestAddr);
 
 
 /* ========================================================================== */
@@ -150,6 +150,7 @@ uint16_t     RamfuncsLoadSize;
 uint16_t     RamfuncsRunStart;
 */
 
+//..............................................................................
 // Used for running BackGround in flash, and ISR in RAM
 ///*extern*/ Uint32 *RamfuncsLoadStart, *RamfuncsLoadEnd, *RamfuncsRunStart;
 ///*extern*/ Uint32 *IQfuncsLoadStart, *IQfuncsLoadEnd, *IQfuncsRunStart;
@@ -157,11 +158,13 @@ extern uint16_t RamfuncsLoadStart, RamfuncsLoadEnd, RamfuncsRunStart;
 //extern uint16_t IQfuncsLoadStart, IQfuncsLoadEnd, IQfuncsRunStart;
 
 
+//..............................................................................
 uint32_t     EPwm1TimerIntCount;
 uint32_t     EPwm2TimerIntCount;
 uint32_t     EPwm3TimerIntCount;
 uint32_t     Timer0IntCount;
 
+//..............................................................................
 CPU_Handle   myCpu;
 PLL_Handle   myPll;
 CLK_Handle   myClk;
@@ -174,11 +177,12 @@ PWM_Handle   myPwm1, myPwm2, myPwm3;
 TIMER_Handle myTimer;
 WDOG_Handle  myWDog;
 
-
+//..............................................................................
 t_error      rc=E_OK;
 int          i=0, i_tx=0, i_rx=0;
 int          i_pwm3=0;
 
+//..............................................................................
 char         *p_sci_msg;
 uint16_t     LoopCount;
 uint16_t     ErrorCount;
@@ -189,6 +193,19 @@ uint16_t     rdataA[RX_LEN];     // Received data for SCI-A
 uint16_t     rdata_pointA;  // Used for checking the received data
 
 uint16_t     RxTx;
+//..............................................................................
+
+//..............................................................................
+// ADC variables
+//..............................................................................
+//ADC_Obj  *adc;
+typedef   enum { ADC_INIT=0, ADC_READY }  stat_adc_t;
+uint16_t   adc_data[16];
+uint16_t   ConvCount=0;
+uint16_t   TempSensorVoltage[10];
+stat_adc_t stat_adc=ADC_INIT;
+//..............................................................................
+
 /* ========================================================================== */
 
 
@@ -1096,6 +1113,8 @@ t_error Init_FLASH (void) {
 t_error Init_ADC (void) {
 
 #if (1==USE_F28027_ADC)
+	uint16_t cnt;
+
     //CLK_enableAdcClock (myClk);
     //(*Device_cal)();
 
@@ -1103,43 +1122,137 @@ t_error Init_ADC (void) {
 
 	//adc_init();
 	{
-	    //Initialize the ADC:
-	    CLK_enableAdcClock(myClk);
-	    (*Device_cal)();
+	//Initialize the ADC:
+	CLK_enableAdcClock(myClk);
+	(*Device_cal)();
 
-	    // Setup a debug vector table and enable the PIE
-	    PIE_setDebugIntVectorTable (myPie);
-	    PIE_enable (myPie);
+	// Setup a debug vector table and enable the PIE
+	PIE_setDebugIntVectorTable (myPie);
+	PIE_enable (myPie);
 
-	    // Register interrupt handlers in the PIE vector table
-	    PIE_registerPieIntHandler(myPie, PIE_GroupNumber_10, PIE_SubGroupNumber_1, (intVec_t)&adc_isr );
+	// Register interrupt handlers in the PIE vector table
+	PIE_registerPieIntHandler (
+			myPie,
+			PIE_GroupNumber_10,
+			PIE_SubGroupNumber_1,
+			(intVec_t)&adc_isr
+			);
 
-	    //Initialize the ADC:
-	    ADC_enableBandGap(myAdc);
-	    ADC_enableRefBuffers(myAdc);
-	    ADC_powerUp(myAdc);
-	    ADC_enable(myAdc);
-	    ADC_setVoltRefSrc(myAdc, ADC_VoltageRefSrc_Int);
+	//Initialize the ADC:
+	ADC_enableBandGap(myAdc);
+	ADC_enableRefBuffers(myAdc);
+	ADC_powerUp(myAdc);
+	ADC_enable(myAdc);
+	ADC_setVoltRefSrc(myAdc, ADC_VoltageRefSrc_Int);
 
-	    ADC_enableTempSensor(myAdc);
+	ADC_enableTempSensor(myAdc);
 
-	    ADC_setIntPulseGenMode(myAdc, ADC_IntPulseGenMode_Prior);
-	    ADC_enableInt(myAdc, ADC_IntNumber_1);
-	    ADC_setIntMode(myAdc, ADC_IntNumber_1, ADC_IntMode_ClearFlag);
-	    ADC_setIntSrc(myAdc, ADC_IntNumber_1, ADC_IntSrc_EOC1);
-	    ADC_setSocChanNumber (myAdc, ADC_SocNumber_0, ADC_SocChanNumber_A5);
-	    ADC_setSocChanNumber (myAdc, ADC_SocNumber_1, ADC_SocChanNumber_A5);
-	    ADC_setSocTrigSrc(myAdc, ADC_SocNumber_0, ADC_SocTrigSrc_EPWM1_ADCSOCA);
-	    ADC_setSocTrigSrc(myAdc, ADC_SocNumber_1, ADC_SocTrigSrc_EPWM1_ADCSOCA);
-	    ADC_setSocSampleWindow(myAdc, ADC_SocNumber_0, ADC_SocSampleWindow_37_cycles);
-	    ADC_setSocSampleWindow(myAdc, ADC_SocNumber_1, ADC_SocSampleWindow_37_cycles);
+	ADC_setIntPulseGenMode (myAdc, ADC_IntPulseGenMode_Prior);
 
-	    PIE_enableAdcInt(myPie, ADC_IntNumber_1);
-	    CPU_enableInt(myCpu, CPU_IntNumber_10);
-	    CPU_enableGlobalInts(myCpu);
-	    CPU_enableDebugInt(myCpu);
+	ADC_enableInt          (myAdc, ADC_IntNumber_1);
+	ADC_setIntMode         (myAdc, ADC_IntNumber_1, ADC_IntMode_ClearFlag);
+	//ADC_setIntMode         (myAdc, ADC_IntNumber_1, ADC_IntMode_EOC); // ????
+	ADC_setIntSrc          (myAdc, ADC_IntNumber_1, ADC_IntSrc_EOC1);
 
-	}
+	ADC_setSocChanNumber   (myAdc, ADC_SocNumber_0,  ADC_SocChanNumber_A0);
+	ADC_setSocChanNumber   (myAdc, ADC_SocNumber_1,  ADC_SocChanNumber_A1);
+	ADC_setSocChanNumber   (myAdc, ADC_SocNumber_2,  ADC_SocChanNumber_A2);
+	ADC_setSocChanNumber   (myAdc, ADC_SocNumber_3,  ADC_SocChanNumber_A3);
+	ADC_setSocChanNumber   (myAdc, ADC_SocNumber_4,  ADC_SocChanNumber_A4);
+	ADC_setSocChanNumber   (myAdc, ADC_SocNumber_5,  ADC_SocChanNumber_A5);
+	ADC_setSocChanNumber   (myAdc, ADC_SocNumber_6,  ADC_SocChanNumber_A6);
+	ADC_setSocChanNumber   (myAdc, ADC_SocNumber_7,  ADC_SocChanNumber_A7);
+	ADC_setSocChanNumber   (myAdc, ADC_SocNumber_8,  ADC_SocChanNumber_B0);
+	ADC_setSocChanNumber   (myAdc, ADC_SocNumber_9,  ADC_SocChanNumber_B1);
+	ADC_setSocChanNumber   (myAdc, ADC_SocNumber_10, ADC_SocChanNumber_B2);
+	ADC_setSocChanNumber   (myAdc, ADC_SocNumber_11, ADC_SocChanNumber_B3);
+	ADC_setSocChanNumber   (myAdc, ADC_SocNumber_12, ADC_SocChanNumber_B4);
+	ADC_setSocChanNumber   (myAdc, ADC_SocNumber_13, ADC_SocChanNumber_B5);
+	ADC_setSocChanNumber   (myAdc, ADC_SocNumber_14, ADC_SocChanNumber_B6);
+	ADC_setSocChanNumber   (myAdc, ADC_SocNumber_15, ADC_SocChanNumber_B7);
+
+	ADC_setSocTrigSrc      (myAdc, ADC_SocNumber_0,  ADC_SocTrigSrc_EPWM1_ADCSOCA);
+	ADC_setSocTrigSrc      (myAdc, ADC_SocNumber_1,  ADC_SocTrigSrc_EPWM1_ADCSOCA);
+	ADC_setSocTrigSrc      (myAdc, ADC_SocNumber_2,  ADC_SocTrigSrc_EPWM1_ADCSOCA);
+	ADC_setSocTrigSrc      (myAdc, ADC_SocNumber_3,  ADC_SocTrigSrc_EPWM1_ADCSOCA);
+	ADC_setSocTrigSrc      (myAdc, ADC_SocNumber_4,  ADC_SocTrigSrc_EPWM1_ADCSOCA);
+	ADC_setSocTrigSrc      (myAdc, ADC_SocNumber_5,  ADC_SocTrigSrc_EPWM1_ADCSOCA);
+	ADC_setSocTrigSrc      (myAdc, ADC_SocNumber_6,  ADC_SocTrigSrc_EPWM1_ADCSOCA);
+	ADC_setSocTrigSrc      (myAdc, ADC_SocNumber_7,  ADC_SocTrigSrc_EPWM1_ADCSOCA);
+	ADC_setSocTrigSrc      (myAdc, ADC_SocNumber_8,  ADC_SocTrigSrc_EPWM1_ADCSOCA);
+	ADC_setSocTrigSrc      (myAdc, ADC_SocNumber_9,  ADC_SocTrigSrc_EPWM1_ADCSOCA);
+	ADC_setSocTrigSrc      (myAdc, ADC_SocNumber_10, ADC_SocTrigSrc_EPWM1_ADCSOCA);
+	ADC_setSocTrigSrc      (myAdc, ADC_SocNumber_11, ADC_SocTrigSrc_EPWM1_ADCSOCA);
+	ADC_setSocTrigSrc      (myAdc, ADC_SocNumber_12, ADC_SocTrigSrc_EPWM1_ADCSOCA);
+	ADC_setSocTrigSrc      (myAdc, ADC_SocNumber_13, ADC_SocTrigSrc_EPWM1_ADCSOCA);
+	ADC_setSocTrigSrc      (myAdc, ADC_SocNumber_14, ADC_SocTrigSrc_EPWM1_ADCSOCA);
+	ADC_setSocTrigSrc      (myAdc, ADC_SocNumber_15, ADC_SocTrigSrc_EPWM1_ADCSOCA);
+
+	ADC_setSocSampleWindow (myAdc, ADC_SocNumber_0,  ADC_SocSampleWindow_37_cycles);
+	ADC_setSocSampleWindow (myAdc, ADC_SocNumber_1,  ADC_SocSampleWindow_37_cycles);
+	ADC_setSocSampleWindow (myAdc, ADC_SocNumber_2,  ADC_SocSampleWindow_37_cycles);
+	ADC_setSocSampleWindow (myAdc, ADC_SocNumber_3,  ADC_SocSampleWindow_37_cycles);
+	ADC_setSocSampleWindow (myAdc, ADC_SocNumber_4,  ADC_SocSampleWindow_37_cycles);
+	ADC_setSocSampleWindow (myAdc, ADC_SocNumber_5,  ADC_SocSampleWindow_37_cycles);
+	ADC_setSocSampleWindow (myAdc, ADC_SocNumber_6,  ADC_SocSampleWindow_37_cycles);
+	ADC_setSocSampleWindow (myAdc, ADC_SocNumber_7,  ADC_SocSampleWindow_37_cycles);
+	ADC_setSocSampleWindow (myAdc, ADC_SocNumber_8,  ADC_SocSampleWindow_37_cycles);
+	ADC_setSocSampleWindow (myAdc, ADC_SocNumber_9,  ADC_SocSampleWindow_37_cycles);
+	ADC_setSocSampleWindow (myAdc, ADC_SocNumber_10, ADC_SocSampleWindow_37_cycles);
+	ADC_setSocSampleWindow (myAdc, ADC_SocNumber_11, ADC_SocSampleWindow_37_cycles);
+	ADC_setSocSampleWindow (myAdc, ADC_SocNumber_12, ADC_SocSampleWindow_37_cycles);
+	ADC_setSocSampleWindow (myAdc, ADC_SocNumber_13, ADC_SocSampleWindow_37_cycles);
+	ADC_setSocSampleWindow (myAdc, ADC_SocNumber_14, ADC_SocSampleWindow_37_cycles);
+	ADC_setSocSampleWindow (myAdc, ADC_SocNumber_15, ADC_SocSampleWindow_37_cycles);
+
+	PIE_enableAdcInt (myPie, ADC_IntNumber_1); // Enable ADCINT1 in PIE
+	CPU_enableInt (myCpu, CPU_IntNumber_10);   // Enable CPU Interrupt 1
+	CPU_enableGlobalInts (myCpu);              // Enable Global interrupt INTM
+	CPU_enableDebugInt (myCpu);                // Enable Global realtime interrupt DBGM
+
+/*
+	// Configure ADC
+	//Note: Channel ADCINA4  will be double sampled to workaround the ADC 1st sample issue for rev0 silicon errata
+	//ADCINT1 trips after AdcResults latch
+	ADC_setIntPulseGenMode(myAdc, ADC_IntPulseGenMode_Prior);
+
+	//Enabled ADCINT1
+	ADC_enableInt(myAdc, ADC_IntNumber_1);
+
+	//Disable ADCINT1 Continuous mode
+	ADC_setIntMode(myAdc, ADC_IntNumber_1, ADC_IntMode_ClearFlag);
+
+	//setup EOC2 to trigger ADCINT1 to fire
+	ADC_setIntSrc(myAdc, ADC_IntNumber_1, ADC_IntSrc_EOC2);
+
+	//set SOC0 channel select to ADCINA4
+	ADC_setSocChanNumber (myAdc, ADC_SocNumber_0, ADC_SocChanNumber_A4);
+
+	//set SOC1 channel select to ADCINA4
+	ADC_setSocChanNumber (myAdc, ADC_SocNumber_1, ADC_SocChanNumber_A4);
+
+	//set SOC2 channel select to ADCINA2
+	ADC_setSocChanNumber (myAdc, ADC_SocNumber_2, ADC_SocChanNumber_A2);
+
+	//set SOC0 start trigger on EPWM1A, due to round-robin SOC0 converts first then SOC1
+	ADC_setSocTrigSrc(myAdc, ADC_SocNumber_0, ADC_SocTrigSrc_EPWM1_ADCSOCA);
+
+	//set SOC1 start trigger on EPWM1A, due to round-robin SOC0 converts first then SOC1
+	ADC_setSocTrigSrc(myAdc, ADC_SocNumber_1, ADC_SocTrigSrc_EPWM1_ADCSOCA);
+
+	//set SOC2 start trigger on EPWM1A, due to round-robin SOC0 converts first then SOC1, then SOC2
+	ADC_setSocTrigSrc(myAdc, ADC_SocNumber_2, ADC_SocTrigSrc_EPWM1_ADCSOCA);
+
+	//set SOC0 S/H Window to 7 ADC Clock Cycles, (6 ACQPS plus 1)
+	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_0, ADC_SocSampleWindow_7_cycles);
+
+	//set SOC1 S/H Window to 7 ADC Clock Cycles, (6 ACQPS plus 1)
+	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_1, ADC_SocSampleWindow_7_cycles);
+
+	//set SOC2 S/H Window to 7 ADC Clock Cycles, (6 ACQPS plus 1)
+	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_2, ADC_SocSampleWindow_7_cycles);
+*/
+ 	}
 #endif //(1==USE_F28027_ADC)
 
     return E_OK;
@@ -1147,43 +1260,36 @@ t_error Init_ADC (void) {
 /* ========================================================================== */
 
 
-uint16_t ConvCount=0;
-uint16_t TempSensorVoltage[10];
-
-ADC_Obj *adc;
-uint16_t adc_data[16];
-
-typedef  enum { ADC_INIT=0, ADC_READY }  stat_adc_t;
-
-stat_adc_t  stat_adc=ADC_INIT;
-
 /* ========================================================================== */
 interrupt void  adc_isr(void)
 {
-	uint16_t cnt;
+	uint16_t cnt=0, tmp=0;
 
-	switch (stat_adc) {
+	switch (stat_adc)
+	{
 		case ADC_INIT:
 		    //adc->ADCRESULT[0];
 		    //memcpy(adc_data, adc->ADCRESULT, 16);
 			for (cnt=0; cnt<16; cnt++) {
-				adc_data[cnt]=adc->ADCRESULT[cnt];
+				//adc_data[cnt]=adc->ADCRESULT[cnt];
+			adc_data[cnt]= ADC_readResult( myAdc, cnt );
 			}
-
 			stat_adc = ADC_READY;
 		break;
 
 		case ADC_READY:
 			for (cnt=0; cnt<16; cnt++) {
-				adc_data[cnt]=adc->ADCRESULT[cnt];
+				//adc_data[cnt]=adc->ADCRESULT[cnt];
+				adc_data[cnt] = ADC_readResult( myAdc, (cnt+ADC_ResultNumber_0) );
 			}
-
-		    TempSensorVoltage[ConvCount] = ADC_readResult( myAdc, ADC_ResultNumber_1 );
-			// If 20 conversions have been logged, start over
-		    if ( ConvCount >= 9 )
-		    	ConvCount = 0;
-		    else
-		    	ConvCount++;
+	//	    //TempSensorVoltage[ConvCount] = ADC_readResult( myAdc, ADC_ResultNumber_0 );
+	//	    tmp = adc_data[0];
+	//	    TempSensorVoltage[0] = tmp;
+	//		// If 20 conversions have been logged, start over
+	//	    if ( ConvCount >= 9 )
+	//	    	ConvCount = 0;
+	//	    else
+	//	    	ConvCount++;
 		break;
 	}
 

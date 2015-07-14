@@ -104,8 +104,8 @@ extern "C" {
       User does not have to change anything here.
 -----------------------------------------------------------------------------*/
 #if (DSP28_28026PT||DSP28_28026DA||DSP28_28027PT||DSP28_28027DA)    // 28026||28027 devices only
-  #define CPU_FRQ_60MHZ    0     // 60 Mhz CPU Freq (10 MHz input clock)
-  #define CPU_FRQ_50MHZ    1
+  #define CPU_FRQ_60MHZ    1     // 60 Mhz CPU Freq (10 MHz input clock)
+  #define CPU_FRQ_50MHZ    0
   #define CPU_FRQ_40MHZ    0
 #elif (DSP28_28023PT||DSP28_28023DA||DSP28_28022PT||DSP28_28022DA) // 28023||28023 devices
   #define CPU_FRQ_60MHZ    0
