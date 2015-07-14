@@ -101,12 +101,12 @@ unsigned char ArrayDisplay[LCD_X_RES];
 
 
 /* ==========================================================================
- * NAME - Wrapper_LCD_Print
+ * NAME - LCD_PrintToScreen
  * IN   - void
  * OUT  - void
  * RET  - void
    ========================================================================== */
-void Wrapper_LCD_Print ( void ) {
+void LCD_PrintToScreen ( void ) {
 
 /*	//Lcd_prints(0, 0, FONT_1X, "~" );
 	Lcd_prints(1, 0, FONT_1X, "Hello world! " );

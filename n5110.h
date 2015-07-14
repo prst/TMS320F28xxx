@@ -146,7 +146,7 @@ void Lcd_init       ( void );   // Инициализация
 void Lcd_clear      ( void );   // Очистка буфера
 void Lcd_update     ( void );   // Копирование буфера в ОЗУ дисплея
 void LcdContrast    ( byte contrast );   // Установка контрастности дисплея
-byte LcdGotoXY	    ( byte x, byte y );   // Установка курсора в позицию x,y
+byte LcdGotoXY	     ( byte x, byte y );   // Установка курсора в позицию x,y
 byte LcdChr         ( LcdFontSize size, byte ch );   // Вывод символа в текущей позиции
 byte Lcd_print      ( byte x, byte y, LcdFontSize size, byte dataArray[] );   // Вывод строки из переменной
 byte Lcd_prints     ( byte x, byte y, LcdFontSize size, const byte *dataPtr );   // Вывод статичной строки
@@ -159,7 +159,7 @@ byte Lcd_rect       ( byte baseX, byte baseY, byte height, byte width, LcdPixelM
 int  gpow ( int n, int power );
 char *gftoa ( float f, int dec );
 
-void Wrapper_LCD_Print ( void );
+void LCD_PrintToScreen ( void );
 /* ************************************************************************** */
 
 

@@ -6,6 +6,7 @@
 /* ========================================================================== */
 
 #include "stddef.h"
+#include "stdlib.h"
 
 #include "./include/DSP28x_Project.h"
 #include "./include/F2802x_Examples.h"
@@ -296,6 +297,7 @@ void MemCopy(Uint16 *SourceAddr, Uint16* SourceEndAddr, Uint16* DestAddr)
 /* ========================================================================== */
 
 
+char lcd_buff[8] = "       \n";
 
 /* ==========================================================================
  * MAIN
@@ -307,7 +309,7 @@ void main (void)
 #if (1==__USE_LCD_5110__)
 	Lcd_clear();
 	Lcd_init();
-	Wrapper_LCD_Print();
+	//LCD_PrintToScreen();
 
 	// Main code
     for(;;)
@@ -315,6 +317,16 @@ void main (void)
     	//wrapper_Main();
     	//tm1638_prints("123456789");
     	//tm1638_printx("1", 1);
+
+    	//Lcd_prints ( 0, 0, FONT_1X, "ADC0:     " );
+    	//ltoa( adc_data[0], (char *)&lcd_buff );
+    	//Lcd_prints ( 6, 0, FONT_1X, (byte *)lcd_buff );
+
+    	//Lcd_pixel(0, 0, PIXEL_ON);
+    	//Lcd_pixel(1, 1, PIXEL_ON);
+    	//Lcd_pixel(2, 2, PIXEL_ON);
+    	//Lcd_pixel(3, 3, PIXEL_ON);
+
     	Lcd_update();
     }
 #endif //(1==__USE__LCD_5110__)
@@ -1263,7 +1275,8 @@ t_error Init_ADC (void) {
 /* ========================================================================== */
 interrupt void  adc_isr(void)
 {
-	uint16_t cnt=0, tmp=0;
+	uint16_t  cnt=0, tmp=0;
+	static uint16_t  x=0;
 
 	switch (stat_adc)
 	{
@@ -1290,6 +1303,10 @@ interrupt void  adc_isr(void)
 	//	    	ConvCount = 0;
 	//	    else
 	//	    	ConvCount++;
+
+	    	Lcd_pixel( x, adc_data[0]/100, PIXEL_XOR );
+	    	x++;
+	    	if (x>=84) x=0;
 		break;
 	}
 

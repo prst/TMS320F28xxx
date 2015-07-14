@@ -150,6 +150,7 @@ PAGE 1 :
 
 //-----------------------------------------------------------
    DEV_EMU     : origin = 0x000880, length = 0x000180     /* device emulation registers */
+   //SYS_PWR_CTL : origin = 0x000985, length = 0x000003     /* System power control registers */
    FLASH_REGS  : origin = 0x000A80, length = 0x000060     /* FLASH registers */
    CSM         : origin = 0x000AE0, length = 0x000010     /* code security module registers */
    ADC_MIRROR  : origin = 0x000B00, length = 0x000010     /* ADC Results register mirror */
@@ -208,6 +209,8 @@ SECTIONS
    /* Allocate program areas: */
    codestart         : > BEGIN       PAGE = 0
 
+   //ramfuncs        : >> SARAM_4k | RAM_M01_2k,     PAGE = 0
+   //ramfuncs        : >> RAMM1 | RAML0,     PAGE = 1
    ramfuncs          : LOAD = FLASH,
                        RUN = RAMM0,
                        LOAD_START(_RamfuncsLoadStart),
@@ -228,9 +231,6 @@ SECTIONS
 		--library=IQmath.lib<IQ15sqrt.obj>
 		--library=IQmath.lib<IQ15isqrt.obj> */
    }
-
-   //ramfuncs        : >> SARAM_4k | RAM_M01_2k,     PAGE = 0
-   //ramfuncs        : >> RAMM1 | RAML0,     PAGE = 1
 
    //.cinit          : >  FLASHA | FLASHB,      PAGE = 0
    //.pinit          : >  FLASHA | FLASHB,      PAGE = 0
@@ -258,35 +258,32 @@ SECTIONS
    .switch           : >> FLASH,   PAGE = 0
 
    /* Allocate IQ math areas: */
-//   IQmath          : >> FLASHA | FLASHB,   PAGE = 0            /* Math Code */
-//   IQmathTables    : >  IQTABLES,          PAGE = 0, TYPE = NOLOAD
+   //IQmath          : >> FLASHA | FLASHB,   PAGE = 0            /* Math Code */
+   //IQmathTables    : >  IQTABLES,          PAGE = 0, TYPE = NOLOAD
 
    /* Uncomment the section below if calling the IQNexp() or IQexp()
       functions from the IQMath.lib library in order to utilize the
       relevant IQ Math table in Boot ROM (This saves space and Boot ROM
       is 1 wait-state). If this section is not uncommented, IQmathTables2
       will be loaded into other memory (SARAM, Flash, etc.) and will take
-      up space, but 0 wait-state is possible.
-   */
-   /*
-   IQmathTables2    : > IQTABLES2, PAGE = 0, TYPE = NOLOAD
+      up space, but 0 wait-state is possible.    */
+
+   /*IQmathTables2    : > IQTABLES2, PAGE = 0, TYPE = NOLOAD
    {
               IQmath.lib<IQNexpTable.obj> (IQmathTablesRam)
-   }
-   */
+   }*/
+
    /* Uncomment the section below if calling the IQNasin() or IQasin()
       functions from the IQMath.lib library in order to utilize the
       relevant IQ Math table in Boot ROM (This saves space and Boot ROM
       is 1 wait-state). If this section is not uncommented, IQmathTables2
       will be loaded into other memory (SARAM, Flash, etc.) and will take
-      up space, but 0 wait-state is possible.
-   */
-   /*
-   IQmathTables3    : > IQTABLES3, PAGE = 0, TYPE = NOLOAD
+      up space, but 0 wait-state is possible.  */
+
+   /* IQmathTables3    : > IQTABLES3, PAGE = 0, TYPE = NOLOAD
    {
-              IQmath.lib<IQNasinTable.obj> (IQmathTablesRam)
-   }
-   */
+     IQmath.lib<IQNasinTable.obj> (IQmathTablesRam)
+   } */
 
    /* .reset is a standard section used by the compiler.  It contains the */
    /* the address of the start of _c_int00 for C Code.   /*
@@ -296,9 +293,21 @@ SECTIONS
    .reset           : > RESET,     PAGE = 0, TYPE = DSECT
    vectors           : > VECTORS    PAGE = 0, TYPE = DSECT
 
-   PieVectTableFile : > PIE_VECT,   PAGE = 1
+   /*** PIE Vect Table and Boot ROM Variables Structures ***/
+   UNION run = PIE_VECT, PAGE = 1
+   {
+      PieVectTableFile
+      GROUP {
+         EmuKeyVar
+         EmuBModeVar
+         FlashCallbackVar
+         FlashScalingVar
+      }
+   }
+   //PieVectTableFile : > PIE_VECT,   PAGE = 1
+   SysPwrCtrlRegsFile: > SYS_PWR_CTL, PAGE = 0
 
-/*** Peripheral Frame 0 Register Structures ***/
+   /*** Peripheral Frame 0 Register Structures ***/
    DevEmuRegsFile    : > DEV_EMU,     PAGE = 1
    FlashRegsFile     : > FLASH_REGS,  PAGE = 1
    CsmRegsFile       : > CSM,         PAGE = 1
