@@ -99,56 +99,54 @@ typedef struct {
 	struct {
 		t_sci_stat tx :4;
 	} sci;
+	struct {
+		t_error error :2;
+	} sys;
 } t_status;
-
 t_status sys_stat;
 
 
 // Prototype statements for functions found within this file.
-void Init_All ( void );
+void     InitFlash (void);
+void     MemCopy (Uint16 *SourceAddr, Uint16* SourceEndAddr, Uint16* DestAddr);
 
-interrupt void epwm1_timer_isr (void);
-interrupt void epwm2_timer_isr (void);
-interrupt void epwm3_timer_isr (void);
-interrupt void timer0_isr      (void);
-void  init_Cfg_EPwmTimers (void);
-
+void     Init_All ( void );
+void     init_Cfg_EPwmTimers (void);
 t_error  Init_Sys    (void);
 t_error  Init_PWM    (void);
 t_error  Init_GPIO   (void);
+t_error  Init_Timer0 (void);
 t_error  Init_UART_IRQ (void);
 t_error  Init_TM1638 (void);
 t_error  Init_PLL    (void);
 t_error  Init_FLASH  (void);
 t_error  Init_ADC    (void);
+void     scia_fifo_init(void);
 
-//t_error wrapper_Init_UART_pooling (void);
-//t_error wrapper_Init_UART_IRQ (void);
+void     wrapper_Main ( void );
+void     Error( t_error err );
+void     error(void);
+//t_error  wrapper_Init_UART_pooling (void);
+//t_error  wrapper_Init_UART_IRQ (void);
 
-void    wrapper_Main ( void );
-void    Error( t_error err );
-void    error(void);
-
-// Prototype statements for functions found within this file.
-void    scia_fifo_init(void);
-
-// Prototype statements for functions found within this file.
-//__interrupt void adc_isr(void);
-interrupt void adc_isr(void);
+interrupt void  adc_isr(void);
 interrupt void  sciaTxFifoIsr (void);
 interrupt void  sciaRxFifoIsr (void);
+__interrupt void  cpu_timer0_isr(void);
 
-void  InitFlash (void);
-void  MemCopy (Uint16 *SourceAddr, Uint16* SourceEndAddr, Uint16* DestAddr);
+interrupt void  epwm1_timer_isr (void);
+interrupt void  epwm2_timer_isr (void);
+interrupt void  epwm3_timer_isr (void);
+//interrupt void  timer0_isr      (void);
 
 
 /* ========================================================================== */
 /* Global variables */
 /* ========================================================================== */
 /*
-uint16_t     RamfuncsLoadStart;
-uint16_t     RamfuncsLoadSize;
-uint16_t     RamfuncsRunStart;
+	uint16_t RamfuncsLoadStart;
+	uint16_t RamfuncsLoadSize;
+	uint16_t RamfuncsRunStart;
 */
 
 //..............................................................................
@@ -184,16 +182,19 @@ int          i=0, i_tx=0, i_rx=0;
 int          i_pwm3=0;
 
 //..............................................................................
-char         *p_sci_msg;
+#define     RX_LEN  (8)
+
+char        *p_sci_msg;
 uint16_t     LoopCount;
 uint16_t     ErrorCount;
 uint16_t     ReceivedChar;
-#define      RX_LEN         (8)
 uint16_t     sdataA[RX_LEN];     // Send data for SCI-A
 uint16_t     rdataA[RX_LEN];     // Received data for SCI-A
-uint16_t     rdata_pointA;  // Used for checking the received data
-
+uint16_t     rdata_pointA;       // Used for checking the received data
 uint16_t     RxTx;
+char        lcd_buff[8] = "       \n";
+
+
 //..............................................................................
 
 //..............................................................................
@@ -205,6 +206,7 @@ uint16_t   adc_data[16];
 uint16_t   ConvCount=0;
 uint16_t   TempSensorVoltage[10];
 stat_adc_t stat_adc=ADC_INIT;
+
 //..............................................................................
 
 /* ========================================================================== */
@@ -297,8 +299,6 @@ void MemCopy(Uint16 *SourceAddr, Uint16* SourceEndAddr, Uint16* DestAddr)
 /* ========================================================================== */
 
 
-char lcd_buff[8] = "       \n";
-
 /* ==========================================================================
  * MAIN
  * ========================================================================== */
@@ -365,6 +365,11 @@ void Init_All ( void )
 
     if (E_OK==rc)  rc = Init_GPIO();    // Init GPIO system
     else  Error(rc);
+
+
+    if (E_OK==rc)  rc = Init_Timer0();  // Init Timer0
+    else  Error(rc);
+
 
     /*
     if (E_OK==rc)  rc = Init_UART_IRQ(); // Init UART IRQ
@@ -468,7 +473,7 @@ void wrapper_Main ( void ) {
 
 
 /* ==========================================================================
- * NAME - Wrapper_Error_Handle
+ * NAME - Error
  * IN   - t_error err
  * OUT  - void
  * RET  - void
@@ -476,12 +481,16 @@ void wrapper_Main ( void ) {
 void Error (t_error err) {
 	switch (err) {
 		case E_OK:
+			sys_stat.sys.error = E_OK;
 			break;
 
 		case E_FAIL:
 		case E_BADPTR:
+			sys_stat.sys.error = E_FAIL;
+			break;
 
 		default:
+			sys_stat.sys.error = E_FAIL;
 			error();
 			break;
 	}
@@ -491,7 +500,7 @@ void Error (t_error err) {
 
 
 /* ==========================================================================
- * NAME - Wrapper_Init_Sys
+ * NAME - Init_Sys
  * IN   - void
  * OUT  - void
  * RET  - t_error err
@@ -582,7 +591,7 @@ t_error Init_Sys (void) {
 
 
 /* ==========================================================================
- * NAME - Wrapper_Init_Cfg_IRQs
+ * NAME - Init_PWM
  * IN   - void
  * OUT  - void
  * RET  - t_error err
@@ -620,15 +629,17 @@ t_error Init_PWM (void) {
     PIE_registerPieIntHandler (myPie, PIE_GroupNumber_3, PIE_SubGroupNumber_3, (intVec_t)&epwm3_timer_isr);
 #endif //(1==PWM3_INT_ENABLE)
 
-    // TODO ??? GROUP ???
-    //PIE_registerPieIntHandler (myTimer, PIE_GroupNumber_3, PIE_SubGroupNumber_3, (intVec_t)&timer0_isr);
-
     // For this example, only initialize the ePWM Timers
     init_Cfg_EPwmTimers ();
 
-    // Enable CPU INT3 which is connected to EPWM1-6 INT
-    Timer0IntCount     = 0;
-    CPU_enableInt (myCpu, CPU_IntNumber_3);
+	{
+		// TODO ??? GROUP ???
+		//PIE_registerPieIntHandler (myTimer, PIE_GroupNumber_3, PIE_SubGroupNumber_3, (intVec_t)&timer0_isr);
+
+		// Enable CPU INT3 which is connected to EPWM1-6 INT
+		//Timer0IntCount     = 0;
+		//CPU_enableInt (myCpu, CPU_IntNumber_3);
+	}
 
     // Enable EPWM INTn in the PIE: Group 3 interrupt 1-6
 #if (1==PWM1_INT_ENABLE)
@@ -662,7 +673,7 @@ t_error Init_PWM (void) {
 
 
 /* ==========================================================================
- * NAME - Wrapper_Init_Cfg_Sys
+ * NAME - Init_GPIO
  * IN   - void
  * OUT  - void
  * RET  - t_error err
@@ -690,10 +701,63 @@ t_error Init_GPIO (void) {
     GPIO_setPortData  (myGpio, GPIO_Port_A,
     		                  ( 1<<7 | 1<<6 | 1<<17 | 1<<16 | 1<<12 | 1<<19 ) );
 
+    GPIO_setDirection (myGpio, GPIO_Number_0, GPIO_Direction_Output);
+    GPIO_setDirection (myGpio, GPIO_Number_1, GPIO_Direction_Output);
+    GPIO_setDirection (myGpio, GPIO_Number_2, GPIO_Direction_Output);
+    GPIO_setDirection (myGpio, GPIO_Number_3, GPIO_Direction_Output);
+
+    //GPIO_setPortData (myGpio, GPIO_Port_A, 0xF ); // 0=LED_ON, 1=LED_OFF
+    GpioDataRegs.GPADAT.bit.GPIO0 = 0;  // 0=LED_ON, 1=LED_OFF
+    GpioDataRegs.GPADAT.bit.GPIO1 = 0;  // 0=LED_ON, 1=LED_OFF
+    GpioDataRegs.GPADAT.bit.GPIO2 = 0;  // 0=LED_ON, 1=LED_OFF
+    GpioDataRegs.GPADAT.bit.GPIO3 = 0;  // 0=LED_ON, 1=LED_OFF
+
+
     //GPIO_setMode(myGpio, GPIO_Number_5, GPIO_5_Mode_EPWM3B);
 
 	//InitGpio_Conf_HW();
 #endif //(1==USE_F28027_GPIO)
+    return E_OK;
+}
+/* ========================================================================== */
+
+
+
+/* ==========================================================================
+ * NAME - Init_Timer0
+ * IN   - void
+ * OUT  - void
+ * RET  - t_error err
+   ========================================================================== */
+t_error Init_Timer0 (void) {
+#if (1==USE_F28027_TIMER)
+
+    // Register interrupt handlers in the PIE vector table
+    PIE_registerPieIntHandler(myPie, PIE_GroupNumber_1, PIE_SubGroupNumber_7, (intVec_t)&cpu_timer0_isr);
+
+    // Configure CPU-Timer 0 to interrupt every 500 milliseconds:
+    // 60MHz CPU Freq, 50 millisecond Period (in uSeconds)
+    //    ConfigCpuTimer(&CpuTimer0, 60, 500000);
+    TIMER_stop(myTimer);
+    TIMER_setPeriod(myTimer, 50 * 500000);
+    TIMER_setPreScaler(myTimer, 0);
+    TIMER_reload(myTimer);
+    TIMER_setEmulationMode(myTimer, TIMER_EmulationMode_StopAfterNextDecrement);
+    TIMER_enableInt(myTimer);
+
+    TIMER_start(myTimer);
+
+    // Enable CPU INT1 which is connected to CPU-Timer 0:
+    CPU_enableInt(myCpu, CPU_IntNumber_1);
+
+    // Enable TINT0 in the PIE: Group 1 interrupt 7
+    PIE_enableTimer0Int(myPie);
+
+    // Enable global Interrupts and higher priority real-time debug events
+    CPU_enableGlobalInts(myCpu);
+    CPU_enableDebugInt(myCpu);
+
+#endif //(1==USE_F28027_TIMER)
     return E_OK;
 }
 /* ========================================================================== */
@@ -917,6 +981,7 @@ interrupt void epwm3_timer_isr (void) {
  * OUT  - void
  * RET  - void
    ========================================================================== */
+/*
 interrupt void timer0_isr (void) {
 #if (1==USE_F28027_TIMER)
     Timer0IntCount++;
@@ -928,6 +993,7 @@ interrupt void timer0_isr (void) {
     //TIMER_clearIntFlag(myTimer);
 #endif //(1==USE_F28027_TIMER)
 }
+*/
 /* ========================================================================== */
 
 
@@ -1163,7 +1229,6 @@ t_error Init_ADC (void) {
 
 	ADC_enableInt          (myAdc, ADC_IntNumber_1);
 	ADC_setIntMode         (myAdc, ADC_IntNumber_1, ADC_IntMode_ClearFlag);
-	//ADC_setIntMode         (myAdc, ADC_IntNumber_1, ADC_IntMode_EOC); // ????
 	ADC_setIntSrc          (myAdc, ADC_IntNumber_1, ADC_IntSrc_EOC1);
 
 	ADC_setSocChanNumber   (myAdc, ADC_SocNumber_0,  ADC_SocChanNumber_A0);
@@ -1314,6 +1379,27 @@ interrupt void  adc_isr(void)
     PIE_clearInt(myPie, PIE_GroupNumber_10);
 
     return;
+}
+/* ========================================================================== */
+
+
+
+/* ========================================================================== */
+__interrupt void cpu_timer0_isr(void)
+{
+    //interruptCount++;
+
+	//if (sys_stat.sys.error != E_OK)
+	//{
+    // Toggle GPIOs
+	GPIO_toggle(myGpio, GPIO_Number_0); // 0=LED_ON, 1=LED_OFF
+	GPIO_toggle(myGpio, GPIO_Number_1); // 0=LED_ON, 1=LED_OFF
+	GPIO_toggle(myGpio, GPIO_Number_2); // 0=LED_ON, 1=LED_OFF
+	GPIO_toggle(myGpio, GPIO_Number_3); // 0=LED_ON, 1=LED_OFF
+	//}
+
+    // Acknowledge this interrupt to receive more interrupts from group 1
+    PIE_clearInt(myPie, PIE_GroupNumber_1);
 }
 /* ========================================================================== */
 

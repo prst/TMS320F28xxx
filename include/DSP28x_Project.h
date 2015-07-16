@@ -35,7 +35,7 @@
 #define   USE_F28027_SCI_IO   0
 #define   USE_F28027_SCI      0
 #define   USE_F28027_SPI      0
-#define   USE_F28027_TIMER    0
+#define   USE_F28027_TIMER    1
 #define   USE_F28027_WDOG     0
 #define   USE_F28027_NMI      0
 #define   USE_F28027_PARTID   0
