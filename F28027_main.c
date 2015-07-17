@@ -35,6 +35,20 @@
 
 
 /* ========================================================================== */
+#define TIME_PERIOD_1MS    (60 * 1000)
+#define TIME_PERIOD_10MS   (60 * 10000)
+#define TIME_PERIOD_20MS   (60 * 20000)
+#define TIME_PERIOD_30MS   (60 * 30000)
+#define TIME_PERIOD_40MS   (60 * 40000)
+#define TIME_PERIOD_50MS   (60 * 50000)
+#define TIME_PERIOD_100MS  (60 * 100000)
+#define TIME_PERIOD_500MS  (60 * 500000)
+#define TIME_PERIOD_1S     (60 * 1000000)
+//#define TIME_PERIOD_MIN    (0xFFFF) // OK
+#define TIME_PERIOD_MIN    (0x2FFF) // TEST
+
+#define TMR0__TIME_PERIOD  (TIME_PERIOD_MIN)
+/* ========================================================================== */
 // Configure which ePWM timer interrupts are enabled at the PIE level:
 // 1 = enabled,  0 = disabled
 #define  PWM1_INT_ENABLE  1
@@ -52,15 +66,15 @@
 
 /* ========================================================================== */
 #if (CPU_FRQ_40MHZ)
-#define CPU_FREQ          (40000000) // Default=40 MHz Change to 50E6 for 50 MHz devices
+#define CPU_FREQ  (40000000) //Default=40 MHz Change to 50E6 for 50 MHz devices
 #endif
 
 #if (CPU_FRQ_50MHZ)
-#define CPU_FREQ          (50000000) // Default=40 MHz Change to 50E6 for 50 MHz devices
+#define CPU_FREQ  (50000000) //Default=40 MHz Change to 50E6 for 50 MHz devices
 #endif
 
 #if (CPU_FRQ_60MHZ)
-#define CPU_FREQ          (60000000) // Default=40 MHz Change to 50E6 for 50 MHz devices
+#define CPU_FREQ  (60000000) //Default=40 MHz Change to 50E6 for 50 MHz devices
 #endif
 
 #define LSPCLK_FREQ       (CPU_FREQ/4)
@@ -202,7 +216,9 @@ char        lcd_buff[8] = "       \n";
 //..............................................................................
 //ADC_Obj  *adc;
 typedef   enum { ADC_INIT=0, ADC_READY }  stat_adc_t;
-uint16_t   adc_data[16];
+uint16_t   adc_offset    [16];
+uint16_t   adc_data      [16];
+uint16_t   adc_data_array[LCD_X_RES];
 uint16_t   ConvCount=0;
 uint16_t   TempSensorVoltage[10];
 stat_adc_t stat_adc=ADC_INIT;
@@ -327,7 +343,7 @@ void main (void)
     	//Lcd_pixel(2, 2, PIXEL_ON);
     	//Lcd_pixel(3, 3, PIXEL_ON);
 
-    	Lcd_update();
+    	//Lcd_update();
     }
 #endif //(1==__USE__LCD_5110__)
 }
@@ -343,39 +359,18 @@ void main (void)
    ========================================================================== */
 void Init_All ( void )
 {
-	if (E_OK==rc)  rc = Init_Sys();     // Init system and handles
-    else  Error(rc);
-
-
-    if (E_OK==rc)  rc = Init_PLL();     // Init PLL
-    else  Error(rc);
-
-
-    if (E_OK==rc)  rc = Init_ADC();     // Init ADC
-    else  Error(rc);
-
-
-    if (E_OK==rc)  rc = Init_PWM();     // Init IRQs
-    else  Error(rc);
-
-
-    if (E_OK==rc)  rc = Init_FLASH();   // Init FLASH
-    else  Error(rc);
-
-
-    if (E_OK==rc)  rc = Init_GPIO();    // Init GPIO system
-    else  Error(rc);
-
-
-    if (E_OK==rc)  rc = Init_Timer0();  // Init Timer0
-    else  Error(rc);
-
+	if (E_OK==rc)  rc = Init_Sys();  else  Error(rc); // Init system and handles
+    if (E_OK==rc)  rc = Init_PLL();  else  Error(rc); // Init PLL
+    if (E_OK==rc)  rc = Init_ADC();  else  Error(rc); // Init ADC
+    if (E_OK==rc)  rc = Init_PWM();  else  Error(rc); // Init IRQs
+    if (E_OK==rc)  rc = Init_FLASH(); else  Error(rc); // Init FLASH
+    if (E_OK==rc)  rc = Init_GPIO();  else  Error(rc); // Init GPIO system
+    if (E_OK==rc)  rc = Init_Timer0(); else  Error(rc); // Init Timer0
 
     /*
     if (E_OK==rc)  rc = Init_UART_IRQ(); // Init UART IRQ
     	//err = Init_UART_pooling (); // Init UART without IRQ
     else  Error(rc);
-
 
     if (E_OK==rc)  rc = Init_TM1638();  // Init TM1638
     else  Error(rc);
@@ -604,7 +599,8 @@ t_error Init_PWM (void) {
     PWM_setSocAPulseSrc(myPwm1, PWM_SocPulseSrc_CounterEqualCmpAIncr);
     PWM_setSocAPeriod(myPwm1, PWM_SocPeriod_FirstEvent);
     ((PWM_Obj *)myPwm1)->CMPA = 0x0080;
-    PWM_setPeriod(myPwm1, 0xFFFF);
+    //PWM_setPeriod(myPwm1, 0xFFFF);
+    PWM_setPeriod(myPwm1, 0x00FF);
     PWM_setCounterMode(myPwm1, PWM_CounterMode_Up);
 
     CLK_enableTbClockSync(myClk);
@@ -618,15 +614,18 @@ t_error Init_PWM (void) {
     // Register interrupt handlers in the PIE vector table
 
 #if (1==PWM1_INT_ENABLE)
-    PIE_registerPieIntHandler (myPie, PIE_GroupNumber_3, PIE_SubGroupNumber_1, (intVec_t)&epwm1_timer_isr);
+    PIE_registerPieIntHandler (myPie, PIE_GroupNumber_3, PIE_SubGroupNumber_1,
+                                 (intVec_t)&epwm1_timer_isr );
 #endif //(1==PWM1_INT_ENABLE)
 
 #if (1==PWM2_INT_ENABLE)
-    PIE_registerPieIntHandler (myPie, PIE_GroupNumber_3, PIE_SubGroupNumber_2, (intVec_t)&epwm2_timer_isr);
+    PIE_registerPieIntHandler (myPie, PIE_GroupNumber_3, PIE_SubGroupNumber_2,
+                                 (intVec_t)&epwm2_timer_isr );
 #endif //(1==PWM2_INT_ENABLE)
 
 #if (1==PWM3_INT_ENABLE)
-    PIE_registerPieIntHandler (myPie, PIE_GroupNumber_3, PIE_SubGroupNumber_3, (intVec_t)&epwm3_timer_isr);
+    PIE_registerPieIntHandler (myPie, PIE_GroupNumber_3, PIE_SubGroupNumber_3,
+                                 (intVec_t)&epwm3_timer_isr );
 #endif //(1==PWM3_INT_ENABLE)
 
     // For this example, only initialize the ePWM Timers
@@ -634,7 +633,10 @@ t_error Init_PWM (void) {
 
 	{
 		// TODO ??? GROUP ???
-		//PIE_registerPieIntHandler (myTimer, PIE_GroupNumber_3, PIE_SubGroupNumber_3, (intVec_t)&timer0_isr);
+		//PIE_registerPieIntHandler ( myTimer,
+		                              PIE_GroupNumber_3,
+		                              PIE_SubGroupNumber_3,
+		                              (intVec_t)&timer0_isr );
 
 		// Enable CPU INT3 which is connected to EPWM1-6 INT
 		//Timer0IntCount     = 0;
@@ -722,7 +724,6 @@ t_error Init_GPIO (void) {
 /* ========================================================================== */
 
 
-
 /* ==========================================================================
  * NAME - Init_Timer0
  * IN   - void
@@ -733,13 +734,15 @@ t_error Init_Timer0 (void) {
 #if (1==USE_F28027_TIMER)
 
     // Register interrupt handlers in the PIE vector table
-    PIE_registerPieIntHandler(myPie, PIE_GroupNumber_1, PIE_SubGroupNumber_7, (intVec_t)&cpu_timer0_isr);
+    PIE_registerPieIntHandler ( myPie, PIE_GroupNumber_1, PIE_SubGroupNumber_7,
+    		                    (intVec_t)&cpu_timer0_isr );
 
     // Configure CPU-Timer 0 to interrupt every 500 milliseconds:
     // 60MHz CPU Freq, 50 millisecond Period (in uSeconds)
     //    ConfigCpuTimer(&CpuTimer0, 60, 500000);
     TIMER_stop(myTimer);
-    TIMER_setPeriod(myTimer, 50 * 500000);
+    //TIMER_setPeriod(myTimer, 50 * 500000);
+    TIMER_setPeriod(myTimer, (uint32_t)TMR0__TIME_PERIOD);
     TIMER_setPreScaler(myTimer, 0);
     TIMER_reload(myTimer);
     TIMER_setEmulationMode(myTimer, TIMER_EmulationMode_StopAfterNextDecrement);
@@ -779,42 +782,42 @@ void init_Cfg_EPwmTimers (void) {
     
 #if (1==PWM1_INT_ENABLE)
     CLK_enablePwmClock   (myClk, PWM_Number_1);
-    PWM_setSyncMode      (myPwm1, PWM_SyncMode_EPWMxSYNC);      // Setup Sync
-    PWM_enableCounterLoad(myPwm1);                              // Allow each timer to be sync'ed
+    PWM_setSyncMode      (myPwm1, PWM_SyncMode_EPWMxSYNC);    // Setup Sync
+    PWM_enableCounterLoad(myPwm1);     // Allow each timer to be sync'ed
     PWM_setPhase         (myPwm1, 100);
     PWM_setPeriod        (myPwm1, PWM1_TIMER_TBPRD);
-    PWM_setCounterMode   (myPwm1, PWM_CounterMode_Up);          // Count up
+    PWM_setCounterMode   (myPwm1, PWM_CounterMode_Up);        // Count up
     PWM_setIntMode       (myPwm1, PWM_IntMode_CounterEqualZero);// Select INT on Zero event
-    PWM_enableInt        (myPwm1);                              // Enable INT
-    PWM_setIntPeriod     (myPwm1, PWM_IntPeriod_FirstEvent);    // Generate INT on 1st event
+    PWM_enableInt        (myPwm1);                            // Enable INT
+    PWM_setIntPeriod     (myPwm1, PWM_IntPeriod_FirstEvent);  // Generate INT on 1st event
 #endif //(1==PWM1_INT_ENABLE)
 
 #if (1==PWM2_INT_ENABLE)
     CLK_enablePwmClock   (myClk, PWM_Number_2);
-    PWM_setSyncMode      (myPwm2, PWM_SyncMode_EPWMxSYNC);      // Setup Sync
-    PWM_enableCounterLoad(myPwm2);                              // Allow each timer to be sync'ed
+    PWM_setSyncMode      (myPwm2, PWM_SyncMode_EPWMxSYNC);    // Setup Sync
+    PWM_enableCounterLoad(myPwm2);     // Allow each timer to be sync'ed
     PWM_setPhase         (myPwm2, 200);
     PWM_setPeriod        (myPwm2, PWM2_TIMER_TBPRD);
-    PWM_setCounterMode   (myPwm2, PWM_CounterMode_Up);          // Count up
+    PWM_setCounterMode   (myPwm2, PWM_CounterMode_Up);        // Count up
     PWM_setIntMode       (myPwm2, PWM_IntMode_CounterEqualZero);// Enable INT on Zero event
-    PWM_enableInt        (myPwm2);                              // Enable INT
-    PWM_setIntPeriod     (myPwm2, PWM_IntPeriod_SecondEvent);   // Generate INT on 2nd event
+    PWM_enableInt        (myPwm2);                            // Enable INT
+    PWM_setIntPeriod     (myPwm2, PWM_IntPeriod_SecondEvent); // Generate INT on 2nd event
 #endif //(1==PWM2_INT_ENABLE)
 
 #if (1==PWM3_INT_ENABLE)
 /*
     CLK_enablePwmClock   (myClk, PWM_Number_3);
-    PWM_setSyncMode      (myPwm3, PWM_SyncMode_EPWMxSYNC);      // Setup Sync
-    //PWM_setSyncMode      (myPwm3, PWM_SyncMode_CounterEqualZero);      // Setup Sync
-    PWM_enableCounterLoad(myPwm3);                              // Allow each timer to be sync'ed
+    PWM_setSyncMode      (myPwm3, PWM_SyncMode_EPWMxSYNC);    // Setup Sync
+    //PWM_setSyncMode      (myPwm3, PWM_SyncMode_CounterEqualZero); // Setup Sync
+    PWM_enableCounterLoad(myPwm3);    // Allow each timer to be sync'ed
     PWM_setPhase         (myPwm3, 300);
     //PWM_setPhase         (myPwm3, 0);
     //PWM_setPeriod        (myPwm3, PWM3_TIMER_TBPRD);
     PWM_setPeriod        (myPwm3, 0x0fff);
-    PWM_setCounterMode   (myPwm3, PWM_CounterMode_Up);          // Count up
+    PWM_setCounterMode   (myPwm3, PWM_CounterMode_Up);        // Count up
     PWM_setIntMode       (myPwm3, PWM_IntMode_CounterEqualZero);// Enable INT on Zero event
-    PWM_enableInt        (myPwm3);                              // Enable INT
-    PWM_setIntPeriod     (myPwm3, PWM_IntPeriod_ThirdEvent);    // Generate INT on 3rd event
+    PWM_enableInt        (myPwm3);                            // Enable INT
+    PWM_setIntPeriod     (myPwm3, PWM_IntPeriod_ThirdEvent);  // Generate INT on 3rd event
 */
     //=====================================================================
     // (Note: code for only 3 modules shown)
@@ -944,8 +947,8 @@ interrupt void epwm3_timer_isr (void) {
 /*
     //-------------------
     CLK_enablePwmClock   (myClk, PWM_Number_3);
-    //PWM_setSyncMode      (myPwm3, PWM_SyncMode_EPWMxSYNC);      // Setup Sync
-    PWM_setSyncMode      (myPwm3, PWM_SyncMode_CounterEqualZero);      // Setup Sync
+    //PWM_setSyncMode      (myPwm3, PWM_SyncMode_EPWMxSYNC);    // Setup Sync
+    PWM_setSyncMode      (myPwm3, PWM_SyncMode_CounterEqualZero); // Setup Sync
     PWM_enableCounterLoad(myPwm3);                              // Allow each timer to be sync'ed
     PWM_setPhase         (myPwm3, 0);
     PWM_setPeriod        (myPwm3, 0xffff);
@@ -1225,62 +1228,62 @@ t_error Init_ADC (void) {
 
 	ADC_enableTempSensor(myAdc);
 
-	ADC_setIntPulseGenMode (myAdc, ADC_IntPulseGenMode_Prior);
+	ADC_setIntPulseGenMode(myAdc, ADC_IntPulseGenMode_Prior);
 
-	ADC_enableInt          (myAdc, ADC_IntNumber_1);
-	ADC_setIntMode         (myAdc, ADC_IntNumber_1, ADC_IntMode_ClearFlag);
-	ADC_setIntSrc          (myAdc, ADC_IntNumber_1, ADC_IntSrc_EOC1);
+	ADC_enableInt         (myAdc, ADC_IntNumber_1);
+	ADC_setIntMode        (myAdc, ADC_IntNumber_1, ADC_IntMode_ClearFlag);
+	ADC_setIntSrc         (myAdc, ADC_IntNumber_1, ADC_IntSrc_EOC1);
 
-	ADC_setSocChanNumber   (myAdc, ADC_SocNumber_0,  ADC_SocChanNumber_A0);
-	ADC_setSocChanNumber   (myAdc, ADC_SocNumber_1,  ADC_SocChanNumber_A1);
-	ADC_setSocChanNumber   (myAdc, ADC_SocNumber_2,  ADC_SocChanNumber_A2);
-	ADC_setSocChanNumber   (myAdc, ADC_SocNumber_3,  ADC_SocChanNumber_A3);
-	ADC_setSocChanNumber   (myAdc, ADC_SocNumber_4,  ADC_SocChanNumber_A4);
-	ADC_setSocChanNumber   (myAdc, ADC_SocNumber_5,  ADC_SocChanNumber_A5);
-	ADC_setSocChanNumber   (myAdc, ADC_SocNumber_6,  ADC_SocChanNumber_A6);
-	ADC_setSocChanNumber   (myAdc, ADC_SocNumber_7,  ADC_SocChanNumber_A7);
-	ADC_setSocChanNumber   (myAdc, ADC_SocNumber_8,  ADC_SocChanNumber_B0);
-	ADC_setSocChanNumber   (myAdc, ADC_SocNumber_9,  ADC_SocChanNumber_B1);
-	ADC_setSocChanNumber   (myAdc, ADC_SocNumber_10, ADC_SocChanNumber_B2);
-	ADC_setSocChanNumber   (myAdc, ADC_SocNumber_11, ADC_SocChanNumber_B3);
-	ADC_setSocChanNumber   (myAdc, ADC_SocNumber_12, ADC_SocChanNumber_B4);
-	ADC_setSocChanNumber   (myAdc, ADC_SocNumber_13, ADC_SocChanNumber_B5);
-	ADC_setSocChanNumber   (myAdc, ADC_SocNumber_14, ADC_SocChanNumber_B6);
-	ADC_setSocChanNumber   (myAdc, ADC_SocNumber_15, ADC_SocChanNumber_B7);
+	ADC_setSocChanNumber  (myAdc, ADC_SocNumber_0,  ADC_SocChanNumber_A0);
+	ADC_setSocChanNumber  (myAdc, ADC_SocNumber_1,  ADC_SocChanNumber_A1);
+	ADC_setSocChanNumber  (myAdc, ADC_SocNumber_2,  ADC_SocChanNumber_A2);
+	ADC_setSocChanNumber  (myAdc, ADC_SocNumber_3,  ADC_SocChanNumber_A3);
+	ADC_setSocChanNumber  (myAdc, ADC_SocNumber_4,  ADC_SocChanNumber_A4);
+	ADC_setSocChanNumber  (myAdc, ADC_SocNumber_5,  ADC_SocChanNumber_A5);
+	ADC_setSocChanNumber  (myAdc, ADC_SocNumber_6,  ADC_SocChanNumber_A6);
+	ADC_setSocChanNumber  (myAdc, ADC_SocNumber_7,  ADC_SocChanNumber_A7);
+	ADC_setSocChanNumber  (myAdc, ADC_SocNumber_8,  ADC_SocChanNumber_B0);
+	ADC_setSocChanNumber  (myAdc, ADC_SocNumber_9,  ADC_SocChanNumber_B1);
+	ADC_setSocChanNumber  (myAdc, ADC_SocNumber_10, ADC_SocChanNumber_B2);
+	ADC_setSocChanNumber  (myAdc, ADC_SocNumber_11, ADC_SocChanNumber_B3);
+	ADC_setSocChanNumber  (myAdc, ADC_SocNumber_12, ADC_SocChanNumber_B4);
+	ADC_setSocChanNumber  (myAdc, ADC_SocNumber_13, ADC_SocChanNumber_B5);
+	ADC_setSocChanNumber  (myAdc, ADC_SocNumber_14, ADC_SocChanNumber_B6);
+	ADC_setSocChanNumber  (myAdc, ADC_SocNumber_15, ADC_SocChanNumber_B7);
 
-	ADC_setSocTrigSrc      (myAdc, ADC_SocNumber_0,  ADC_SocTrigSrc_EPWM1_ADCSOCA);
-	ADC_setSocTrigSrc      (myAdc, ADC_SocNumber_1,  ADC_SocTrigSrc_EPWM1_ADCSOCA);
-	ADC_setSocTrigSrc      (myAdc, ADC_SocNumber_2,  ADC_SocTrigSrc_EPWM1_ADCSOCA);
-	ADC_setSocTrigSrc      (myAdc, ADC_SocNumber_3,  ADC_SocTrigSrc_EPWM1_ADCSOCA);
-	ADC_setSocTrigSrc      (myAdc, ADC_SocNumber_4,  ADC_SocTrigSrc_EPWM1_ADCSOCA);
-	ADC_setSocTrigSrc      (myAdc, ADC_SocNumber_5,  ADC_SocTrigSrc_EPWM1_ADCSOCA);
-	ADC_setSocTrigSrc      (myAdc, ADC_SocNumber_6,  ADC_SocTrigSrc_EPWM1_ADCSOCA);
-	ADC_setSocTrigSrc      (myAdc, ADC_SocNumber_7,  ADC_SocTrigSrc_EPWM1_ADCSOCA);
-	ADC_setSocTrigSrc      (myAdc, ADC_SocNumber_8,  ADC_SocTrigSrc_EPWM1_ADCSOCA);
-	ADC_setSocTrigSrc      (myAdc, ADC_SocNumber_9,  ADC_SocTrigSrc_EPWM1_ADCSOCA);
-	ADC_setSocTrigSrc      (myAdc, ADC_SocNumber_10, ADC_SocTrigSrc_EPWM1_ADCSOCA);
-	ADC_setSocTrigSrc      (myAdc, ADC_SocNumber_11, ADC_SocTrigSrc_EPWM1_ADCSOCA);
-	ADC_setSocTrigSrc      (myAdc, ADC_SocNumber_12, ADC_SocTrigSrc_EPWM1_ADCSOCA);
-	ADC_setSocTrigSrc      (myAdc, ADC_SocNumber_13, ADC_SocTrigSrc_EPWM1_ADCSOCA);
-	ADC_setSocTrigSrc      (myAdc, ADC_SocNumber_14, ADC_SocTrigSrc_EPWM1_ADCSOCA);
-	ADC_setSocTrigSrc      (myAdc, ADC_SocNumber_15, ADC_SocTrigSrc_EPWM1_ADCSOCA);
+	ADC_setSocTrigSrc     (myAdc, ADC_SocNumber_0,  ADC_SocTrigSrc_EPWM1_ADCSOCA);
+	ADC_setSocTrigSrc     (myAdc, ADC_SocNumber_1,  ADC_SocTrigSrc_EPWM1_ADCSOCA);
+	ADC_setSocTrigSrc     (myAdc, ADC_SocNumber_2,  ADC_SocTrigSrc_EPWM1_ADCSOCA);
+	ADC_setSocTrigSrc     (myAdc, ADC_SocNumber_3,  ADC_SocTrigSrc_EPWM1_ADCSOCA);
+	ADC_setSocTrigSrc     (myAdc, ADC_SocNumber_4,  ADC_SocTrigSrc_EPWM1_ADCSOCA);
+	ADC_setSocTrigSrc     (myAdc, ADC_SocNumber_5,  ADC_SocTrigSrc_EPWM1_ADCSOCA);
+	ADC_setSocTrigSrc     (myAdc, ADC_SocNumber_6,  ADC_SocTrigSrc_EPWM1_ADCSOCA);
+	ADC_setSocTrigSrc     (myAdc, ADC_SocNumber_7,  ADC_SocTrigSrc_EPWM1_ADCSOCA);
+	ADC_setSocTrigSrc     (myAdc, ADC_SocNumber_8,  ADC_SocTrigSrc_EPWM1_ADCSOCA);
+	ADC_setSocTrigSrc     (myAdc, ADC_SocNumber_9,  ADC_SocTrigSrc_EPWM1_ADCSOCA);
+	ADC_setSocTrigSrc     (myAdc, ADC_SocNumber_10, ADC_SocTrigSrc_EPWM1_ADCSOCA);
+	ADC_setSocTrigSrc     (myAdc, ADC_SocNumber_11, ADC_SocTrigSrc_EPWM1_ADCSOCA);
+	ADC_setSocTrigSrc     (myAdc, ADC_SocNumber_12, ADC_SocTrigSrc_EPWM1_ADCSOCA);
+	ADC_setSocTrigSrc     (myAdc, ADC_SocNumber_13, ADC_SocTrigSrc_EPWM1_ADCSOCA);
+	ADC_setSocTrigSrc     (myAdc, ADC_SocNumber_14, ADC_SocTrigSrc_EPWM1_ADCSOCA);
+	ADC_setSocTrigSrc     (myAdc, ADC_SocNumber_15, ADC_SocTrigSrc_EPWM1_ADCSOCA);
 
-	ADC_setSocSampleWindow (myAdc, ADC_SocNumber_0,  ADC_SocSampleWindow_37_cycles);
-	ADC_setSocSampleWindow (myAdc, ADC_SocNumber_1,  ADC_SocSampleWindow_37_cycles);
-	ADC_setSocSampleWindow (myAdc, ADC_SocNumber_2,  ADC_SocSampleWindow_37_cycles);
-	ADC_setSocSampleWindow (myAdc, ADC_SocNumber_3,  ADC_SocSampleWindow_37_cycles);
-	ADC_setSocSampleWindow (myAdc, ADC_SocNumber_4,  ADC_SocSampleWindow_37_cycles);
-	ADC_setSocSampleWindow (myAdc, ADC_SocNumber_5,  ADC_SocSampleWindow_37_cycles);
-	ADC_setSocSampleWindow (myAdc, ADC_SocNumber_6,  ADC_SocSampleWindow_37_cycles);
-	ADC_setSocSampleWindow (myAdc, ADC_SocNumber_7,  ADC_SocSampleWindow_37_cycles);
-	ADC_setSocSampleWindow (myAdc, ADC_SocNumber_8,  ADC_SocSampleWindow_37_cycles);
-	ADC_setSocSampleWindow (myAdc, ADC_SocNumber_9,  ADC_SocSampleWindow_37_cycles);
-	ADC_setSocSampleWindow (myAdc, ADC_SocNumber_10, ADC_SocSampleWindow_37_cycles);
-	ADC_setSocSampleWindow (myAdc, ADC_SocNumber_11, ADC_SocSampleWindow_37_cycles);
-	ADC_setSocSampleWindow (myAdc, ADC_SocNumber_12, ADC_SocSampleWindow_37_cycles);
-	ADC_setSocSampleWindow (myAdc, ADC_SocNumber_13, ADC_SocSampleWindow_37_cycles);
-	ADC_setSocSampleWindow (myAdc, ADC_SocNumber_14, ADC_SocSampleWindow_37_cycles);
-	ADC_setSocSampleWindow (myAdc, ADC_SocNumber_15, ADC_SocSampleWindow_37_cycles);
+	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_0,  ADC_SocSampleWindow_37_cycles);
+	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_1,  ADC_SocSampleWindow_37_cycles);
+	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_2,  ADC_SocSampleWindow_37_cycles);
+	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_3,  ADC_SocSampleWindow_37_cycles);
+	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_4,  ADC_SocSampleWindow_37_cycles);
+	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_5,  ADC_SocSampleWindow_37_cycles);
+	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_6,  ADC_SocSampleWindow_37_cycles);
+	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_7,  ADC_SocSampleWindow_37_cycles);
+	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_8,  ADC_SocSampleWindow_37_cycles);
+	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_9,  ADC_SocSampleWindow_37_cycles);
+	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_10, ADC_SocSampleWindow_37_cycles);
+	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_11, ADC_SocSampleWindow_37_cycles);
+	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_12, ADC_SocSampleWindow_37_cycles);
+	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_13, ADC_SocSampleWindow_37_cycles);
+	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_14, ADC_SocSampleWindow_37_cycles);
+	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_15, ADC_SocSampleWindow_37_cycles);
 
 	PIE_enableAdcInt (myPie, ADC_IntNumber_1); // Enable ADCINT1 in PIE
 	CPU_enableInt (myCpu, CPU_IntNumber_10);   // Enable CPU Interrupt 1
@@ -1341,7 +1344,6 @@ t_error Init_ADC (void) {
 interrupt void  adc_isr(void)
 {
 	uint16_t  cnt=0, tmp=0;
-	static uint16_t  x=0;
 
 	switch (stat_adc)
 	{
@@ -1350,7 +1352,7 @@ interrupt void  adc_isr(void)
 		    //memcpy(adc_data, adc->ADCRESULT, 16);
 			for (cnt=0; cnt<16; cnt++) {
 				//adc_data[cnt]=adc->ADCRESULT[cnt];
-			adc_data[cnt]= ADC_readResult( myAdc, cnt );
+			adc_offset[cnt]= ADC_readResult( myAdc, cnt );
 			}
 			stat_adc = ADC_READY;
 		break;
@@ -1369,9 +1371,11 @@ interrupt void  adc_isr(void)
 	//	    else
 	//	    	ConvCount++;
 
-	    	Lcd_pixel( x, adc_data[0]/100, PIXEL_XOR );
-	    	x++;
-	    	if (x>=84) x=0;
+			static uint16_t  yy=0;
+	    	//Lcd_pixel( x, adc_data[0]/100, PIXEL_XOR );
+	    	yy++;
+	    	if (yy>=LCD_X_RES) yy=0;
+	    	adc_data_array[yy] = adc_data[0] /*-adc_offset[0]*/;
 		break;
 	}
 
@@ -1387,16 +1391,47 @@ interrupt void  adc_isr(void)
 /* ========================================================================== */
 __interrupt void cpu_timer0_isr(void)
 {
-    //interruptCount++;
+	static uint16_t  cnt_Update=0;
+	static uint16_t  xx=0;
+	static byte      x1=0, y1=0, x2=0, y2=0;
 
-	//if (sys_stat.sys.error != E_OK)
-	//{
-    // Toggle GPIOs
-	GPIO_toggle(myGpio, GPIO_Number_0); // 0=LED_ON, 1=LED_OFF
-	GPIO_toggle(myGpio, GPIO_Number_1); // 0=LED_ON, 1=LED_OFF
-	GPIO_toggle(myGpio, GPIO_Number_2); // 0=LED_ON, 1=LED_OFF
-	GPIO_toggle(myGpio, GPIO_Number_3); // 0=LED_ON, 1=LED_OFF
-	//}
+	//interruptCount++;
+
+	if (sys_stat.sys.error != E_OK) {
+		// Toggle GPIOs
+		GPIO_toggle(myGpio, GPIO_Number_0); // 0=LED_ON, 1=LED_OFF
+		GPIO_toggle(myGpio, GPIO_Number_1); // 0=LED_ON, 1=LED_OFF
+		GPIO_toggle(myGpio, GPIO_Number_2); // 0=LED_ON, 1=LED_OFF
+		GPIO_toggle(myGpio, GPIO_Number_3); // 0=LED_ON, 1=LED_OFF
+	}
+
+	xx++;
+	if ( xx>=LCD_X_RES )
+		xx=0;
+
+	x2 = xx;
+	y2 = adc_data_array[0]/100;
+	Lcd_line(x2, 0, x2, LCD_Y_RES-1, PIXEL_OFF);
+	Lcd_line(x1, y1, x2, y2, PIXEL_ON); // as lines (Slow)
+	//Lcd_pixel( x2, y2, PIXEL_ON ); // as dots (Fast)
+	if ( x2 < (LCD_X_RES-1) )
+	{
+		x1 = x2;
+		y1 = y2;
+	} else {
+		x1 = 0;
+		y1 = 0;
+	}
+
+	if (cnt_Update++ > 125) {
+		Lcd_update();
+		cnt_Update = 0;
+	} else {
+	}
+
+	//Lcd_prints ( 0, 0, FONT_1X, "ADC0:     " );
+	//ltoa( adc_data_array[0]/100, (char *)&lcd_buff );
+	//Lcd_prints ( 6, 0, FONT_1X, (byte *)lcd_buff );
 
     // Acknowledge this interrupt to receive more interrupts from group 1
     PIE_clearInt(myPie, PIE_GroupNumber_1);

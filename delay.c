@@ -8,7 +8,8 @@ void DELAY(char s) {
   int i;
 
   //i = s * 100;
-  i = s * 10;
+  //i = s * 10;
+  i = s * 1;
 
   while(i--);
 }
