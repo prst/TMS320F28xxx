@@ -2,9 +2,52 @@
 //#include"f2802x_headers/include/F2802x_Device.h"
 #include "include/F2802x_Device.h"     // DSP2802x Headerfile Include File
 
+#include "types.h"
 #include "init.h"
+
 #include "5110.h"
+
+#include "./include/DSP28x_Project.h"
+#include "./include/F2802x_Examples.h"
+#include "./include/F2802x_GlobalPrototypes.h"
+
+/*
+#include "./include/cpu.h"
+#include "./include/clk.h"
+#include "./include/flash.h"
+#include "./include/gpio.h"
+#include "./include/pll.h"
+#include "./include/pwm.h"
+#include "./include/wdog.h"
+#include "./include/pie.h"
+//#include "./include/pie_init.h"
+#include "./include/timer.h"
+#include "./include/adc.h"
+#include "./include/sci.h"
+*/
+
+//#include "./F28027_SCI.h"
+//#include "TM1638.h"
+
+#include "n5110.h"
+#include "5110.h"
+
+#include "interrupts.h"
+
 /* ************************************************************************** */
+
+extern CPU_Handle   myCpu;
+extern PLL_Handle   myPll;
+extern CLK_Handle   myClk;
+extern FLASH_Handle myFlash;
+extern ADC_Handle   myAdc;
+extern SCI_Handle   mySci;
+extern GPIO_Handle  myGpio;
+extern PIE_Handle   myPie;
+extern PWM_Handle   myPwm1, myPwm2, myPwm3;
+extern TIMER_Handle myTimer;
+extern WDOG_Handle  myWDog;
+
 
 /* ************************************************************************** */
 // j6   | pin   |

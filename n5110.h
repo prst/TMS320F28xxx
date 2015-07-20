@@ -13,7 +13,9 @@
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
 */
-#include "init.h"
+#include "types.h"
+//#include "init.h"
+
 /* ************************************************************************** */
 #ifndef _N5110_H_
 #define _N5110_H_

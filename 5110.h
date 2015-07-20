@@ -4,6 +4,10 @@
 /* ************************************************************************** */
 #include  "init.h"
 
+#include "./include/DSP28x_Project.h"
+#include "./include/F2802x_Examples.h"
+#include "./include/F2802x_GlobalPrototypes.h"
+
 /* ************************************************************************** */
 #define FALSE              0
 #define TRUE               1
