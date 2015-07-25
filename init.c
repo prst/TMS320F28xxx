@@ -55,7 +55,8 @@ extern WDOG_Handle  myWDog;
 //#define TIME_PERIOD_MIN    (0xFFFF) // OK
 
 //#define TIME_PERIOD_MIN    11000 //(0x2FFF) // TEST
-#define TIME_PERIOD_MIN    30000 //(0x2FFF) // TEST
+//#define TIME_PERIOD_MIN    30000 //(0x2FFF) // OK
+#define TIME_PERIOD_MIN    65000 //(0x2FFF) // TEST
 
 #define TMR0__TIME_PERIOD  (TIME_PERIOD_MIN)
 /* ========================================================================== */
@@ -210,7 +211,7 @@ void Init_All ( void )
     if (E_OK==rc)  rc = Init_PWM();  else  Error(rc); // Init IRQs
     if (E_OK==rc)  rc = Init_FLASH(); else  Error(rc); // Init FLASH
     if (E_OK==rc)  rc = Init_GPIO();  else  Error(rc); // Init GPIO system
-    if (E_OK==rc)  rc = Init_Timer0(); else  Error(rc); // Init Timer0
+    //if (E_OK==rc)  rc = Init_Timer0(); else  Error(rc); // Init Timer0
 
     /*
     if (E_OK==rc)  rc = Init_UART_IRQ(); // Init UART IRQ
@@ -353,17 +354,18 @@ t_error Init_Sys (void) {
    ========================================================================== */
 t_error Init_PWM (void) {
 
-    CLK_enablePwmClock(myClk, PWM_Number_1);
-
-    PWM_enableSocAPulse(myPwm1);
-    PWM_setSocAPulseSrc(myPwm1, PWM_SocPulseSrc_CounterEqualCmpAIncr);
-    PWM_setSocAPeriod(myPwm1, PWM_SocPeriod_FirstEvent);
-    ((PWM_Obj *)myPwm1)->CMPA = 0x0080;
-    //PWM_setPeriod(myPwm1, 0xFFFF);
-    PWM_setPeriod(myPwm1, 0x00FF);
-    PWM_setCounterMode(myPwm1, PWM_CounterMode_Up);
-
-    CLK_enableTbClockSync(myClk);
+    CLK_enablePwmClock (myClk, PWM_Number_1);
+    PWM_enableSocAPulse (myPwm1);
+    //PWM_setSocAPulseSrc (myPwm1, PWM_SocPulseSrc_CounterEqualCmpAIncr); // ok
+    PWM_setSocAPulseSrc (myPwm1, PWM_SocPulseSrc_CounterEqualCmpBIncr );  // PWM_SocPulseSrc_CounterEqualPeriod
+    PWM_setSocAPeriod (myPwm1, PWM_SocPeriod_FirstEvent);
+    //PWM_setPeriod (myPwm1, 0xFFFF);
+    //PWM_setPeriod (myPwm1, 0x00FF); // ok
+    PWM_setPeriod (myPwm1, 0x0010);
+    //((PWM_Obj *)myPwm1)->CMPA = 0x0080; // ok
+    ((PWM_Obj *)myPwm1)->CMPB = 0x0008;
+    PWM_setCounterMode (myPwm1, PWM_CounterMode_Up);
+    CLK_enableTbClockSync (myClk);
 
 /*
 #if (1==USE_F28027_PWM)
@@ -494,7 +496,9 @@ t_error Init_Timer0 (void) {
 #if (1==USE_F28027_TIMER)
 
     // Register interrupt handlers in the PIE vector table
-    PIE_registerPieIntHandler ( myPie, PIE_GroupNumber_1, PIE_SubGroupNumber_7,
+    PIE_registerPieIntHandler ( myPie,
+                                PIE_GroupNumber_1,
+								PIE_SubGroupNumber_7,
     		                    (intVec_t)&cpu_timer0_isr );
 
     // Configure CPU-Timer 0 to interrupt every 500 milliseconds:
@@ -875,7 +879,7 @@ t_error Init_ADC (void) {
 
 	ADC_enableInt         (myAdc, ADC_IntNumber_1);
 	ADC_setIntMode        (myAdc, ADC_IntNumber_1, ADC_IntMode_ClearFlag);
-	ADC_setIntSrc         (myAdc, ADC_IntNumber_1, ADC_IntSrc_EOC1);
+	ADC_setIntSrc         (myAdc, ADC_IntNumber_1, ADC_IntSrc_EOC0);
 
 	ADC_setSocChanNumber  (myAdc, ADC_SocNumber_0,  ADC_SocChanNumber_A0);
 	ADC_setSocChanNumber  (myAdc, ADC_SocNumber_1,  ADC_SocChanNumber_A1);

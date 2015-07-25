@@ -42,7 +42,11 @@ uint32_t     EPwm2TimerIntCount;
 uint32_t     EPwm3TimerIntCount;
 uint32_t     Timer0IntCount;
 
-extern  t_status  sys_stat;
+extern t_status  sys_stat;
+
+volatile uint16_t     update_LCD_flag;
+volatile uint16_t     update_data_from_adc=0;
+
 //..............................................................................
 
 
@@ -198,7 +202,10 @@ interrupt void  adc_isr(void)
 			static uint16_t  yy=0;
 	    	//Lcd_pixel( x, adc_data[0]/100, PIXEL_XOR );
 	    	yy++;
-	    	if (yy>=84/*LCD_X_RES*/) yy=0;
+	    	if (yy>=84/*LCD_X_RES*/) {
+	    		yy=0;
+	    		update_data_from_adc = 1;
+	    	}
 	    	adc_data_array[yy] = adc_data[0] /*-adc_offset[0]*/;
 		break;
 	}
@@ -215,13 +222,9 @@ interrupt void  adc_isr(void)
 /* ========================================================================== */
 __interrupt void cpu_timer0_isr(void)
 {
-	static uint16_t  cnt_Update=0;
-	static uint16_t  xx=0;
-	static byte      x1=0, y1=0, x2=0, y2=0;
-
 	//interruptCount++;
 
-	//if (sys_stat.sys.error != E_OK)
+	if (sys_stat.sys.error != E_OK)
 	{
 		// Toggle GPIOs
 		GPIO_toggle(myGpio, GPIO_Number_0); // 0=LED_ON, 1=LED_OFF
@@ -230,35 +233,7 @@ __interrupt void cpu_timer0_isr(void)
 		GPIO_toggle(myGpio, GPIO_Number_3); // 0=LED_ON, 1=LED_OFF
 	}
 
-	xx++;
-	if ( xx>=84/*LCD_X_RES*/ )
-		xx=0;
-
-	x2 = xx;
-	y2 = adc_data_array[0]/100;
-	Lcd_line(x2, 0, x2, /*LCD_Y_RES*/48-1, PIXEL_OFF);
-	Lcd_line(x1, y1, x2, y2, PIXEL_ON); // as lines (Slow)
-	//Lcd_pixel( x2, y2, PIXEL_ON ); // as dots (Fast)
-	if ( x2 < (/*LCD_X_RES*/84-1) )
-	{
-		x1 = x2;
-		y1 = y2;
-	} else {
-		x1 = 0;
-		y1 = 0;
-	}
-
-	if (cnt_Update++ > 83) {
-		Lcd_update();
-		cnt_Update = 0;
-	} else {
-	}
-
-	//Lcd_prints ( 0, 0, FONT_1X, "ADC0:     " );
-	//ltoa( adc_data_array[0]/100, (char *)&lcd_buff );
-	//Lcd_prints ( 6, 0, FONT_1X, (byte *)lcd_buff );
-
-    // Acknowledge this interrupt to receive more interrupts from group 1
+	// Acknowledge this interrupt to receive more interrupts from group 1
     PIE_clearInt(myPie, PIE_GroupNumber_1);
 }
 /* ========================================================================== */

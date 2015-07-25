@@ -62,6 +62,9 @@ char        lcd_buff[8] = "       \n";
 
 
 //..............................................................................
+extern volatile uint16_t     update_LCD_flag;
+extern volatile uint16_t     update_data_from_adc;
+extern uint16_t   adc_data_array[84/*LCD_X_RES*/];
 
 
 //..............................................................................
@@ -99,7 +102,52 @@ void main (void)
     	//Lcd_pixel(2, 2, PIXEL_ON);
     	//Lcd_pixel(3, 3, PIXEL_ON);
 
+    	if (update_data_from_adc)
+    	{
+    		static uint16_t  cnt, cnt_Update=0;
+    		static uint16_t  xx=0;
+    		static byte      x1=0, y1=0, x2=0, y2=0;
+
+    		for ( cnt=0; cnt<84; cnt++ )
+    		{
+    			xx++;
+    			if ( xx>=84/*LCD_X_RES*/ ) {
+    				xx=0;
+    			}
+
+    			x2 = xx;
+    			y2 = adc_data_array[cnt]/50;
+    			Lcd_line(x2, 0, x2, /*LCD_Y_RES*/48-1, PIXEL_OFF);
+    			Lcd_line(x1, y1, x2, y2, PIXEL_ON); // as lines (Slow)
+    			//Lcd_pixel( x2, y2, PIXEL_ON ); // as dots (Fast)
+    			if ( x2 < (/*LCD_X_RES*/84-1) )
+    			{
+    				x1 = x2;
+    				y1 = y2;
+    			} else {
+    				x1 = 0;
+    				y1 = 0;
+    			}
+
+    			//if (cnt_Update++ > 200/*83*/) {
+    				//Lcd_update();
+    				update_LCD_flag = 1;
+    			//	cnt_Update = 0;
+    			//} else {
+    			//}
+
+    			//Lcd_prints ( 0, 0, FONT_1X, "ADC0:     " );
+    			//ltoa( adc_data_array[0]/100, (char *)&lcd_buff );
+    			//Lcd_prints ( 6, 0, FONT_1X, (byte *)lcd_buff );
+
+    			update_data_from_adc = 0;
+    		}
+    	}
     	//Lcd_update();
+    	if ( update_LCD_flag == 1 ) {
+    		Lcd_update();
+    		update_LCD_flag = 0;
+    	}
     }
 #endif //(1==__USE__LCD_5110__)
 }

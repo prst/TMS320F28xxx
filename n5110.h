@@ -53,7 +53,9 @@
 
 // Размер кэша ( 84 * 48 ) / 8 = 504 байта
 //#define LCD_CACHE_SIZE             ( ( LCD_X_RES * LCD_Y_RES ) / 8 )
-#define LCD_CACHE_SIZE             ( ( LCD_X_RES * LCD_Y_RES ) / 8 )
+
+// Размер кэша ( 84 * 48 ) / 2 = 2016 байта
+#define LCD_CACHE_SIZE             ( ( LCD_X_RES * LCD_Y_RES ) / 2 )
 
 #define FALSE                      0
 #define TRUE                       1
