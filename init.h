@@ -75,6 +75,7 @@ void     Init_All ( void );
 void     init_Cfg_EPwmTimers (void);
 t_error  Init_Sys    (void);
 t_error  Init_PWM    (void);
+t_error  ReInit_PWM_adc_on_VarResistor (void);
 t_error  Init_GPIO   (void);
 t_error  Init_Timer0 (void);
 t_error  Init_UART_IRQ (void);

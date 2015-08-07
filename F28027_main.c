@@ -58,13 +58,15 @@ uint16_t     sdataA[RX_LEN];     // Send data for SCI-A
 uint16_t     rdataA[RX_LEN];     // Received data for SCI-A
 uint16_t     rdata_pointA;       // Used for checking the received data
 uint16_t     RxTx;
-char        lcd_buff[8] = "       \n";
+char         lcd_buff[8] = "       \n";
 
 
 //..............................................................................
 extern volatile uint16_t     update_LCD_flag;
 extern volatile uint16_t     update_data_from_adc;
 extern uint16_t   adc_data_array[84/*LCD_X_RES*/];
+extern uint16_t   adc_data      [16];
+extern uint16_t   adc_on_VarResistor;
 
 
 //..............................................................................
@@ -116,7 +118,7 @@ void main (void)
     			}
 
     			x2 = xx;
-    			y2 = adc_data_array[cnt]/50;
+    			y2 = adc_data_array[cnt]/35;
     			Lcd_line(x2, 0, x2, /*LCD_Y_RES*/48-1, PIXEL_OFF);
     			Lcd_line(x1, y1, x2, y2, PIXEL_ON); // as lines (Slow)
     			//Lcd_pixel( x2, y2, PIXEL_ON ); // as dots (Fast)
@@ -140,13 +142,22 @@ void main (void)
     			//ltoa( adc_data_array[0]/100, (char *)&lcd_buff );
     			//Lcd_prints ( 6, 0, FONT_1X, (byte *)lcd_buff );
 
+
+
     			update_data_from_adc = 0;
     		}
     	}
     	//Lcd_update();
-    	if ( update_LCD_flag == 1 ) {
-    		Lcd_update();
+    	if ( update_LCD_flag ) {
+    		//long tmp=0;
+        	Lcd_prints ( 0, 5, FONT_1X, "ADC_B6:     " );
+        	ltoa( adc_on_VarResistor, (char *)&lcd_buff[0] );
+        	Lcd_prints ( 8, 5, FONT_1X, (byte *)lcd_buff );
+
     		update_LCD_flag = 0;
+    		Lcd_update();
+
+    		ReInit_PWM_adc_on_VarResistor();
     	}
     }
 #endif //(1==__USE__LCD_5110__)

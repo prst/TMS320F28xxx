@@ -41,6 +41,8 @@ extern PWM_Handle   myPwm1, myPwm2, myPwm3;
 extern TIMER_Handle myTimer;
 extern WDOG_Handle  myWDog;
 */
+extern uint16_t   adc_on_VarResistor;
+
 
 /* ========================================================================== */
 #define TIME_PERIOD_1MS    (60 * 1000)
@@ -357,13 +359,13 @@ t_error Init_PWM (void) {
     CLK_enablePwmClock (myClk, PWM_Number_1);
     PWM_enableSocAPulse (myPwm1);
     //PWM_setSocAPulseSrc (myPwm1, PWM_SocPulseSrc_CounterEqualCmpAIncr); // ok
-    PWM_setSocAPulseSrc (myPwm1, PWM_SocPulseSrc_CounterEqualCmpBIncr );  // PWM_SocPulseSrc_CounterEqualPeriod
+    PWM_setSocAPulseSrc (myPwm1, PWM_SocPulseSrc_CounterEqualCmpAIncr );  // PWM_SocPulseSrc_CounterEqualPeriod
     PWM_setSocAPeriod (myPwm1, PWM_SocPeriod_FirstEvent);
     //PWM_setPeriod (myPwm1, 0xFFFF);
     //PWM_setPeriod (myPwm1, 0x00FF); // ok
-    PWM_setPeriod (myPwm1, 0x0010);
+    PWM_setPeriod (myPwm1, 0xFFFF /*adc_on_VarResistor*/ );
     //((PWM_Obj *)myPwm1)->CMPA = 0x0080; // ok
-    ((PWM_Obj *)myPwm1)->CMPB = 0x0008;
+    ((PWM_Obj *)myPwm1)->CMPB = 0x0040;
     PWM_setCounterMode (myPwm1, PWM_CounterMode_Up);
     CLK_enableTbClockSync (myClk);
 
@@ -437,6 +439,37 @@ t_error Init_PWM (void) {
 
 
 /* ==========================================================================
+ * NAME - ReInit_PWM_adc_on_VarResistor
+ * IN   - void
+ * OUT  - void
+ * RET  - t_error err
+   ========================================================================== */
+t_error ReInit_PWM_adc_on_VarResistor (void) {
+	uint16_t PeriodValue;
+
+    CLK_enablePwmClock (myClk, PWM_Number_1);
+    PWM_enableSocAPulse (myPwm1);
+    //PWM_setSocAPulseSrc (myPwm1, PWM_SocPulseSrc_CounterEqualCmpAIncr); // ok
+    PWM_setSocAPulseSrc (myPwm1, PWM_SocPulseSrc_CounterEqualCmpAIncr );  // PWM_SocPulseSrc_CounterEqualPeriod
+    PWM_setSocAPeriod (myPwm1, PWM_SocPeriod_FirstEvent);
+    //PWM_setPeriod (myPwm1, 0xFFFF);
+    //PWM_setPeriod (myPwm1, 0x00FF); // ok
+    if (adc_on_VarResistor<50) {
+    	PeriodValue = 50;
+    } else {
+    	PeriodValue = adc_on_VarResistor;
+    }
+    PWM_setPeriod (myPwm1, PeriodValue );
+    //((PWM_Obj *)myPwm1)->CMPA = 0x0080; // ok
+    ((PWM_Obj *)myPwm1)->CMPB = 0x0080;
+    PWM_setCounterMode (myPwm1, PWM_CounterMode_Up);
+    CLK_enableTbClockSync (myClk);
+}
+/* ========================================================================== */
+
+
+
+/* ==========================================================================
  * NAME - Init_GPIO
  * IN   - void
  * OUT  - void
@@ -480,6 +513,12 @@ t_error Init_GPIO (void) {
     //GPIO_setMode(myGpio, GPIO_Number_5, GPIO_5_Mode_EPWM3B);
 
 	//InitGpio_Conf_HW();
+
+    // Add Voltage sensor regulator
+    GPIO_setDirection (myGpio, GPIO_Number_18, GPIO_Direction_Output);
+    GPIO_setPortData  (myGpio, GPIO_Port_A, ( 1<<18 ) );
+    GpioDataRegs.GPADAT.bit.GPIO18 = 1;  // 0=PIN_OFF, 1=PIN_ON
+
 #endif //(1==USE_F28027_GPIO)
     return E_OK;
 }
@@ -768,7 +807,8 @@ t_error Init_PLL (void) {
     CLK_setOscSrc (myClk, CLK_OscSrc_Internal);
 
     // Setup the PLL for x10 /2 which will yield 50Mhz = 10Mhz * 10 / 2
-    PLL_setup (myPll, PLL_Multiplier_10, PLL_DivideSelect_ClkIn_by_2);
+    //PLL_setup (myPll, PLL_Multiplier_10, PLL_DivideSelect_ClkIn_by_2); //50Mhz
+    PLL_setup (myPll, PLL_Multiplier_12, PLL_DivideSelect_ClkIn_by_2); //60Mhz
 
     // Disable the PIE and all interrupts
     PIE_disable (myPie);
@@ -915,22 +955,22 @@ t_error Init_ADC (void) {
 	ADC_setSocTrigSrc     (myAdc, ADC_SocNumber_14, ADC_SocTrigSrc_EPWM1_ADCSOCA);
 	ADC_setSocTrigSrc     (myAdc, ADC_SocNumber_15, ADC_SocTrigSrc_EPWM1_ADCSOCA);
 
-	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_0,  ADC_SocSampleWindow_37_cycles);
-	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_1,  ADC_SocSampleWindow_37_cycles);
-	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_2,  ADC_SocSampleWindow_37_cycles);
-	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_3,  ADC_SocSampleWindow_37_cycles);
-	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_4,  ADC_SocSampleWindow_37_cycles);
-	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_5,  ADC_SocSampleWindow_37_cycles);
-	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_6,  ADC_SocSampleWindow_37_cycles);
-	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_7,  ADC_SocSampleWindow_37_cycles);
-	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_8,  ADC_SocSampleWindow_37_cycles);
-	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_9,  ADC_SocSampleWindow_37_cycles);
-	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_10, ADC_SocSampleWindow_37_cycles);
-	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_11, ADC_SocSampleWindow_37_cycles);
-	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_12, ADC_SocSampleWindow_37_cycles);
-	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_13, ADC_SocSampleWindow_37_cycles);
-	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_14, ADC_SocSampleWindow_37_cycles);
-	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_15, ADC_SocSampleWindow_37_cycles);
+	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_0,  ADC_SocSampleWindow_16_cycles); // ADC_SocSampleWindow_37_cycles
+	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_1,  ADC_SocSampleWindow_16_cycles); // ADC_SocSampleWindow_37_cycles
+	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_2,  ADC_SocSampleWindow_16_cycles); // ADC_SocSampleWindow_37_cycles
+	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_3,  ADC_SocSampleWindow_16_cycles); // ADC_SocSampleWindow_37_cycles
+	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_4,  ADC_SocSampleWindow_16_cycles); // ADC_SocSampleWindow_37_cycles
+	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_5,  ADC_SocSampleWindow_16_cycles); // ADC_SocSampleWindow_37_cycles
+	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_6,  ADC_SocSampleWindow_16_cycles); // ADC_SocSampleWindow_37_cycles
+	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_7,  ADC_SocSampleWindow_16_cycles); // ADC_SocSampleWindow_37_cycles
+	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_8,  ADC_SocSampleWindow_16_cycles); // ADC_SocSampleWindow_37_cycles
+	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_9,  ADC_SocSampleWindow_16_cycles); // ADC_SocSampleWindow_37_cycles
+	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_10, ADC_SocSampleWindow_16_cycles); // ADC_SocSampleWindow_37_cycles
+	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_11, ADC_SocSampleWindow_16_cycles); // ADC_SocSampleWindow_37_cycles
+	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_12, ADC_SocSampleWindow_16_cycles); // ADC_SocSampleWindow_37_cycles
+	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_13, ADC_SocSampleWindow_16_cycles); // ADC_SocSampleWindow_37_cycles
+	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_14, ADC_SocSampleWindow_16_cycles); // ADC_SocSampleWindow_37_cycles
+	ADC_setSocSampleWindow(myAdc, ADC_SocNumber_15, ADC_SocSampleWindow_16_cycles); // ADC_SocSampleWindow_37_cycles
 
 	PIE_enableAdcInt (myPie, ADC_IntNumber_1); // Enable ADCINT1 in PIE
 	CPU_enableInt (myCpu, CPU_IntNumber_10);   // Enable CPU Interrupt 1

@@ -32,6 +32,7 @@ typedef   enum { ADC_INIT=0, ADC_READY }  stat_adc_t;
 uint16_t   adc_offset    [16];
 uint16_t   adc_data      [16];
 uint16_t   adc_data_array[84/*LCD_X_RES*/];
+uint16_t   adc_on_VarResistor;
 uint16_t   ConvCount=0;
 uint16_t   TempSensorVoltage[10];
 stat_adc_t stat_adc=ADC_INIT;
@@ -172,6 +173,7 @@ interrupt void timer0_isr (void) {
 interrupt void  adc_isr(void)
 {
 	uint16_t  cnt=0, tmp=0;
+	static uint16_t  yy=0;
 
 	switch (stat_adc)
 	{
@@ -186,10 +188,10 @@ interrupt void  adc_isr(void)
 		break;
 
 		case ADC_READY:
-			for (cnt=0; cnt<16; cnt++) {
-				//adc_data[cnt]=adc->ADCRESULT[cnt];
-				adc_data[cnt] = ADC_readResult( myAdc, (cnt+ADC_ResultNumber_0) );
-			}
+			//for (cnt=0; cnt<16; cnt++) {
+			//	//adc_data[cnt]=adc->ADCRESULT[cnt];
+			//	adc_data[cnt] = ADC_readResult( myAdc, (cnt+ADC_ResultNumber_0) );
+			//}
 	//	    //TempSensorVoltage[ConvCount] = ADC_readResult( myAdc, ADC_ResultNumber_0 );
 	//	    tmp = adc_data[0];
 	//	    TempSensorVoltage[0] = tmp;
@@ -199,14 +201,15 @@ interrupt void  adc_isr(void)
 	//	    else
 	//	    	ConvCount++;
 
-			static uint16_t  yy=0;
 	    	//Lcd_pixel( x, adc_data[0]/100, PIXEL_XOR );
 	    	yy++;
 	    	if (yy>=84/*LCD_X_RES*/) {
 	    		yy=0;
 	    		update_data_from_adc = 1;
 	    	}
-	    	adc_data_array[yy] = adc_data[0] /*-adc_offset[0]*/;
+	    	//adc_data_array[yy] = adc_data[0] /*-adc_offset[0]*/;
+	    	adc_data_array[yy] = ADC_readResult( myAdc, (ADC_ResultNumber_0) );
+        	adc_on_VarResistor = ADC_readResult( myAdc, (ADC_ResultNumber_14) );
 		break;
 	}
 
