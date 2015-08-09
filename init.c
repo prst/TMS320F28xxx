@@ -106,6 +106,9 @@ extern uint16_t   adc_on_VarResistor;
 t_error      rc = E_OK;
 t_status     sys_stat;
 
+uint16_t     pwm1_Period;
+int          adc_T_sampling_ns;
+
 /* ========================================================================== */
 
 
@@ -364,8 +367,8 @@ t_error Init_PWM (void) {
     //PWM_setPeriod (myPwm1, 0xFFFF);
     //PWM_setPeriod (myPwm1, 0x00FF); // ok
     PWM_setPeriod (myPwm1, 0xFFFF /*adc_on_VarResistor*/ );
-    //((PWM_Obj *)myPwm1)->CMPA = 0x0080; // ok
-    ((PWM_Obj *)myPwm1)->CMPB = 0x0040;
+    ((PWM_Obj *)myPwm1)->CMPA = 0x0080; // ok
+    //((PWM_Obj *)myPwm1)->CMPB = 0x0040;
     PWM_setCounterMode (myPwm1, PWM_CounterMode_Up);
     CLK_enableTbClockSync (myClk);
 
@@ -445,23 +448,28 @@ t_error Init_PWM (void) {
  * RET  - t_error err
    ========================================================================== */
 t_error ReInit_PWM_adc_on_VarResistor (void) {
-	uint16_t PeriodValue;
-
     CLK_enablePwmClock (myClk, PWM_Number_1);
     PWM_enableSocAPulse (myPwm1);
-    //PWM_setSocAPulseSrc (myPwm1, PWM_SocPulseSrc_CounterEqualCmpAIncr); // ok
-    PWM_setSocAPulseSrc (myPwm1, PWM_SocPulseSrc_CounterEqualCmpAIncr );  // PWM_SocPulseSrc_CounterEqualPeriod
+    PWM_setSocAPulseSrc (myPwm1, PWM_SocPulseSrc_CounterEqualPeriod );  // PWM_SocPulseSrc_CounterEqualPeriod
     PWM_setSocAPeriod (myPwm1, PWM_SocPeriod_FirstEvent);
     //PWM_setPeriod (myPwm1, 0xFFFF);
-    //PWM_setPeriod (myPwm1, 0x00FF); // ok
-    if (adc_on_VarResistor<50) {
-    	PeriodValue = 50;
+
+    //adc_on_VarResistor<<=8;
+    if ( adc_on_VarResistor < 50 ) {
+    	pwm1_Period = 50;
     } else {
-    	PeriodValue = adc_on_VarResistor;
+    	pwm1_Period = adc_on_VarResistor;
     }
-    PWM_setPeriod (myPwm1, PeriodValue );
-    //((PWM_Obj *)myPwm1)->CMPA = 0x0080; // ok
-    ((PWM_Obj *)myPwm1)->CMPB = 0x0080;
+
+	if (pwm1_Period > 0 && pwm1_Period < 255) {
+		adc_T_sampling_ns = ( pwm1_Period * 16 ); // 16 @ 60MHz
+	} else {
+		adc_T_sampling_ns = 256;
+	}
+
+    PWM_setPeriod (myPwm1, pwm1_Period );
+    ((PWM_Obj *)myPwm1)->CMPA = 0x0080; // ok
+    //((PWM_Obj *)myPwm1)->CMPB = 0x0080;
     PWM_setCounterMode (myPwm1, PWM_CounterMode_Up);
     CLK_enableTbClockSync (myClk);
 }

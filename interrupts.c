@@ -24,6 +24,8 @@ extern TIMER_Handle myTimer;
 extern WDOG_Handle  myWDog;
 
 
+#define ADC_NUMS  (2*84/*LCD_X_RES*/)
+
 //..............................................................................
 // ADC variables
 //..............................................................................
@@ -31,7 +33,7 @@ extern WDOG_Handle  myWDog;
 typedef   enum { ADC_INIT=0, ADC_READY }  stat_adc_t;
 uint16_t   adc_offset    [16];
 uint16_t   adc_data      [16];
-uint16_t   adc_data_array[84/*LCD_X_RES*/];
+uint16_t   adc_data_array[ADC_NUMS];
 uint16_t   adc_on_VarResistor;
 uint16_t   ConvCount=0;
 uint16_t   TempSensorVoltage[10];
@@ -172,7 +174,8 @@ interrupt void timer0_isr (void) {
 //* ========================================================================== */
 interrupt void  adc_isr(void)
 {
-	uint16_t  cnt=0, tmp=0;
+	uint16_t  cnt=0, nn=0;
+	uint32_t  tmp=0;
 	static uint16_t  yy=0;
 
 	switch (stat_adc)
@@ -182,7 +185,7 @@ interrupt void  adc_isr(void)
 		    //memcpy(adc_data, adc->ADCRESULT, 16);
 			for (cnt=0; cnt<16; cnt++) {
 				//adc_data[cnt]=adc->ADCRESULT[cnt];
-			adc_offset[cnt]= ADC_readResult( (ADC_Handle)myAdc, cnt );
+				adc_offset[cnt]= ADC_readResult( (ADC_Handle)myAdc, cnt );
 			}
 			stat_adc = ADC_READY;
 		break;
@@ -202,14 +205,24 @@ interrupt void  adc_isr(void)
 	//	    	ConvCount++;
 
 	    	//Lcd_pixel( x, adc_data[0]/100, PIXEL_XOR );
-	    	yy++;
-	    	if (yy>=84/*LCD_X_RES*/) {
-	    		yy=0;
+	    	//yy++;
+	    	if ( ++yy >= ADC_NUMS ) {
 	    		update_data_from_adc = 1;
+	    		yy=0;
 	    	}
 	    	//adc_data_array[yy] = adc_data[0] /*-adc_offset[0]*/;
 	    	adc_data_array[yy] = ADC_readResult( myAdc, (ADC_ResultNumber_0) );
-        	adc_on_VarResistor = ADC_readResult( myAdc, (ADC_ResultNumber_14) );
+        	tmp = ADC_readResult( myAdc, (ADC_ResultNumber_14) );
+        	//adc_on_VarResistor >>= 4;
+
+        	if ( nn++ >= 16 ) {
+        		tmp++;
+        	} else {
+        		adc_on_VarResistor = tmp/16;
+        		nn = 0;
+        		tmp = 0;
+        	}
+
 		break;
 	}
 

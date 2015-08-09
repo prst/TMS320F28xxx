@@ -38,6 +38,94 @@
 
 
 /* ========================================================================== */
+//Sinus
+//Sin table values
+int sinus[] = {
+	/*// http://www.meraman.com/htmls/en/sinTableOld.html
+	// 360 values
+	127, 129, 131, 134, 136, 138, 140, 142, 145, 147, 149, 151, 153, 156, 158, 160,
+	162, 164, 166, 168, 170, 173, 175, 177, 179, 181, 183, 185, 187, 189, 191, 192,
+	194, 196, 198, 200, 202, 203, 205, 207, 209, 210, 212, 214, 215, 217, 218, 220,
+	221, 223, 224, 226, 227, 228, 230, 231, 232, 234, 235, 236, 237, 238, 239, 240,
+	241, 242, 243, 244, 245, 246, 246, 247, 248, 248, 249, 250, 250, 251, 251, 252,
+	252, 252, 253, 253, 253, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254, 254,
+	253, 253, 253, 252, 252, 252, 251, 251, 250, 250, 249, 248, 248, 247, 246, 246,
+	245, 244, 243, 242, 241, 240, 239, 238, 237, 236, 235, 234, 232, 231, 230, 228,
+	227, 226, 224, 223, 221, 220, 218, 217, 215, 214, 212, 210, 209, 207, 205, 203,
+	202, 200, 198, 196, 194, 192, 191, 189, 187, 185, 183, 181, 179, 177, 175, 173,
+	170, 168, 166, 164, 162, 160, 158, 156, 153, 151, 149, 147, 145, 142, 140, 138,
+	136, 134, 131, 129, 127, 125, 123, 120, 118, 116, 114, 112, 109, 107, 105, 103,
+	101, 98, 96, 94, 92, 90, 88, 86, 84, 81, 79, 77, 75, 73, 71, 69, 67, 65, 63, 62,
+	60, 58, 56, 54, 52, 51, 49, 47, 45, 44, 42, 40, 39, 37, 36, 34, 33, 31, 30, 28,
+	27, 26, 24, 23, 22, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 8, 7, 6, 6,
+	5, 4, 4, 3, 3, 2, 2, 2, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 2, 2,
+	2, 3, 3, 4, 4, 5, 6, 6, 7, 8, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+	22, 23, 24, 26, 27, 28, 30, 31, 33, 34, 36, 37, 39, 40, 42, 44, 45, 47, 49, 51,
+	52, 54, 56, 58, 60, 62, 63, 65, 67, 69, 71, 73, 75, 77, 79, 81, 84, 86, 88, 90,
+	92, 94, 96, 98, 101, 103, 105, 107, 109, 112, 114, 116, 118, 120, 123, 125*/
+
+	// http://www.daycounter.com/Calculators/Sine-Generator-Calculator2.phtml
+	// 360 values
+	/*0x80,0x82,0x84,0x86,0x88,0x8b,0x8d,0x8f,
+	0x91,0x93,0x96,0x98,0x9a,0x9c,0x9e,0xa0,
+	0xa3,0xa5,0xa7,0xa9,0xab,0xad,0xaf,0xb1,
+	0xb3,0xb5,0xb7,0xb9,0xbb,0xbd,0xbf,0xc1,
+	0xc3,0xc5,0xc7,0xc9,0xca,0xcc,0xce,0xd0,
+	0xd1,0xd3,0xd5,0xd6,0xd8,0xda,0xdb,0xdd,
+	0xde,0xe0,0xe1,0xe3,0xe4,0xe5,0xe7,0xe8,
+	0xe9,0xea,0xec,0xed,0xee,0xef,0xf0,0xf1,
+	0xf2,0xf3,0xf4,0xf5,0xf6,0xf7,0xf7,0xf8,
+	0xf9,0xf9,0xfa,0xfb,0xfb,0xfc,0xfc,0xfd,
+	0xfd,0xfd,0xfe,0xfe,0xfe,0xff,0xff,0xff,
+	0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,
+	0xfe,0xfe,0xfe,0xfd,0xfd,0xfd,0xfc,0xfc,
+	0xfb,0xfb,0xfa,0xf9,0xf9,0xf8,0xf7,0xf7,
+	0xf6,0xf5,0xf4,0xf3,0xf2,0xf1,0xf0,0xef,
+	0xee,0xed,0xec,0xea,0xe9,0xe8,0xe7,0xe5,
+	0xe4,0xe3,0xe1,0xe0,0xde,0xdd,0xdb,0xda,
+	0xd8,0xd6,0xd5,0xd3,0xd1,0xd0,0xce,0xcc,
+	0xca,0xc9,0xc7,0xc5,0xc3,0xc1,0xbf,0xbd,
+	0xbb,0xb9,0xb7,0xb5,0xb3,0xb1,0xaf,0xad,
+	0xab,0xa9,0xa7,0xa5,0xa3,0xa0,0x9e,0x9c,
+	0x9a,0x98,0x96,0x93,0x91,0x8f,0x8d,0x8b,
+	0x88,0x86,0x84,0x82,0x80,0x7d,0x7b,0x79,
+	0x77,0x74,0x72,0x70,0x6e,0x6c,0x69,0x67,
+	0x65,0x63,0x61,0x5f,0x5c,0x5a,0x58,0x56,
+	0x54,0x52,0x50,0x4e,0x4c,0x4a,0x48,0x46,
+	0x44,0x42,0x40,0x3e,0x3c,0x3a,0x38,0x36,
+	0x35,0x33,0x31,0x2f,0x2e,0x2c,0x2a,0x29,
+	0x27,0x25,0x24,0x22,0x21,0x1f,0x1e,0x1c,
+	0x1b,0x1a,0x18,0x17,0x16,0x15,0x13,0x12,
+	0x11,0x10,0xf,0xe,0xd,0xc,0xb,0xa,
+	0x9,0x8,0x8,0x7,0x6,0x6,0x5,0x4,
+	0x4,0x3,0x3,0x2,0x2,0x2,0x1,0x1,
+	0x1,0x0,0x0,0x0,0x0,0x0,0x0,0x0,
+	0x0,0x0,0x0,0x0,0x1,0x1,0x1,0x2,
+	0x2,0x2,0x3,0x3,0x4,0x4,0x5,0x6,
+	0x6,0x7,0x8,0x8,0x9,0xa,0xb,0xc,
+	0xd,0xe,0xf,0x10,0x11,0x12,0x13,0x15,
+	0x16,0x17,0x18,0x1a,0x1b,0x1c,0x1e,0x1f,
+	0x21,0x22,0x24,0x25,0x27,0x29,0x2a,0x2c,
+	0x2e,0x2f,0x31,0x33,0x35,0x36,0x38,0x3a,
+	0x3c,0x3e,0x40,0x42,0x44,0x46,0x48,0x4a,
+	0x4c,0x4e,0x50,0x52,0x54,0x56,0x58,0x5a,
+	0x5c,0x5f,0x61,0x63,0x65,0x67,0x69,0x6c,
+	0x6e,0x70,0x72,0x74,0x77,0x79,0x7b,0x7d */
+
+	// 84 values
+	0x80,0x89,0x93,0x9c,0xa5,0xae,0xb7,0xbf,
+	0xc7,0xcf,0xd6,0xdd,0xe3,0xe9,0xee,0xf2,
+	0xf6,0xf9,0xfc,0xfe,0xff,0xff,0xff,0xfe,
+	0xfc,0xf9,0xf6,0xf2,0xee,0xe9,0xe3,0xdd,
+	0xd6,0xcf,0xc7,0xbf,0xb7,0xae,0xa5,0x9c,
+	0x93,0x89,0x80,0x76,0x6c,0x63,0x5a,0x51,
+	0x48,0x40,0x38,0x30,0x29,0x22,0x1c,0x16,
+	0x11,0xd,0x9,0x6,0x3,0x1,0x0,0x0,
+	0x0,0x1,0x3,0x6,0x9,0xd,0x11,0x16,
+	0x1c,0x22,0x29,0x30,0x38,0x40,0x48,0x51,
+	0x5a,0x63,0x6c,0x76,0x80
+};
+
 /* ========================================================================== */
 
 /* ========================================================================== */
@@ -64,14 +152,71 @@ char         lcd_buff[8] = "       \n";
 //..............................................................................
 extern volatile uint16_t     update_LCD_flag;
 extern volatile uint16_t     update_data_from_adc;
+
 extern uint16_t   adc_data_array[84/*LCD_X_RES*/];
 extern uint16_t   adc_data      [16];
 extern uint16_t   adc_on_VarResistor;
 
+extern uint16_t   pwm1_Period;
+extern int        adc_T_sampling_ns;
+
 
 //..............................................................................
+typedef enum {
+	LCD_UPD_PREPARE = 0,
+	LCD_UPD_UPDATE
+} lcd_update_seq_t;
+
+lcd_update_seq_t lcd_update_seq = LCD_UPD_PREPARE;
 
 /* ========================================================================== */
+
+
+
+uint16_t adc_find_offset_for_start (char mode)
+{
+	uint16_t  cnt, start_offfset=0;
+	uint16_t  now, next, next2;
+
+	if ( mode == 'q' || mode == 'Q' ) // find if square
+	{
+		for ( cnt=0; cnt<84; cnt++ )
+		{
+			now=adc_data_array[cnt];
+			next=adc_data_array[cnt+1];
+			next2=adc_data_array[cnt+2];
+			if ( now < next && next < next2 )
+			{
+				start_offfset = cnt;
+
+				return start_offfset;
+			}
+		}
+	}
+
+	return 0;
+}
+
+
+uint16_t adc_find_center_for_sinus (char mode)
+{
+	uint16_t  cnt, start_offfset=0;
+
+	if ( mode == 's' || mode == 'S' ) // find if square
+	{
+		long SinusRMS=0;
+
+		for ( cnt=0; cnt<84; cnt++ )
+		{
+			SinusRMS += sinus[cnt];
+		}
+		start_offfset = SinusRMS/84;
+
+		return start_offfset;
+	}
+
+	return 0;
+}
 
 
 
@@ -104,25 +249,48 @@ void main (void)
     	//Lcd_pixel(2, 2, PIXEL_ON);
     	//Lcd_pixel(3, 3, PIXEL_ON);
 
-    	if (update_data_from_adc)
+    	if ( update_data_from_adc )
     	{
-    		static uint16_t  cnt, cnt_Update=0;
+    		static uint16_t  cnt, cnt_Update;
     		static uint16_t  xx=0;
-    		static byte      x1=0, y1=0, x2=0, y2=0;
+    		static uint16_t  x1=0, y1=0, x2=0, y2=0;
+    		uint16_t         adc_lcd_offset , sinus_center;
+    		volatile int     dbg=0;
 
-    		for ( cnt=0; cnt<84; cnt++ )
-    		{
-    			xx++;
-    			if ( xx>=84/*LCD_X_RES*/ ) {
+    		adc_lcd_offset = adc_find_offset_for_start('q');
+
+    		adc_lcd_offset = 0;
+
+    		sinus_center = adc_find_center_for_sinus('s');
+
+			dbg++;
+
+    		//for ( cnt=0; cnt<84; cnt++ )
+        	for ( cnt=adc_lcd_offset; cnt < 84+adc_lcd_offset; cnt++ )
+        	{
+    			/*if ( cnt == adc_lcd_offset )
+    				dbg++;
+
+    			if ( cnt == 84-adc_lcd_offset )
+    				dbg++; */
+
+    			//xx++;
+    			if ( ++xx >= 84+adc_lcd_offset /*LCD_X_RES*/ ) {
     				xx=0;
     			}
 
     			x2 = xx;
-    			y2 = adc_data_array[cnt]/35;
-    			Lcd_line(x2, 0, x2, /*LCD_Y_RES*/48-1, PIXEL_OFF);
-    			Lcd_line(x1, y1, x2, y2, PIXEL_ON); // as lines (Slow)
-    			//Lcd_pixel( x2, y2, PIXEL_ON ); // as dots (Fast)
-    			if ( x2 < (/*LCD_X_RES*/84-1) )
+    		    y2 = sinus[cnt-adc_lcd_offset]/7;    /*test*/
+    			//y2 = adc_data_array[cnt]/35;
+    			Lcd_line( x2, 0, x2, LCD_Y_RES-1, PIXEL_OFF );
+                if ( x1 != 0 ) {
+                	Lcd_line( x1, y1, x2, y2, PIXEL_ON );  // as lines - (Slow)
+    			} else {
+                	Lcd_pixel( x2, y2, PIXEL_ON );     // as dots  - (Fast)
+        		}
+    			//Lcd_pixel( x2, y2, PIXEL_ON );     // as dots  - (Fast)
+
+    			if ( x2 < ( LCD_X_RES-1+adc_lcd_offset ) )
     			{
     				x1 = x2;
     				y1 = y2;
@@ -131,33 +299,48 @@ void main (void)
     				y1 = 0;
     			}
 
-    			//if (cnt_Update++ > 200/*83*/) {
-    				//Lcd_update();
+    			cnt_Update++;
+
+    			if ( cnt_Update> 5 * 84 )
+    			{
     				update_LCD_flag = 1;
-    			//	cnt_Update = 0;
-    			//} else {
-    			//}
-
-    			//Lcd_prints ( 0, 0, FONT_1X, "ADC0:     " );
-    			//ltoa( adc_data_array[0]/100, (char *)&lcd_buff );
-    			//Lcd_prints ( 6, 0, FONT_1X, (byte *)lcd_buff );
-
-
+    				cnt_Update = 0;
+    				lcd_update_seq = LCD_UPD_PREPARE;
+    			}
 
     			update_data_from_adc = 0;
     		}
-    	}
-    	//Lcd_update();
-    	if ( update_LCD_flag ) {
-    		//long tmp=0;
-        	Lcd_prints ( 0, 5, FONT_1X, "ADC_B6:     " );
-        	ltoa( adc_on_VarResistor, (char *)&lcd_buff[0] );
-        	Lcd_prints ( 8, 5, FONT_1X, (byte *)lcd_buff );
 
-    		update_LCD_flag = 0;
-    		Lcd_update();
+        	//Lcd_update();
+        	if ( update_LCD_flag )
+        	{
+        		//long tmp=0;
 
-    		ReInit_PWM_adc_on_VarResistor();
+        		//switch (lcd_update_seq)
+        		{
+    				//case LCD_UPD_PREPARE:
+    					//Lcd_clear();
+    				    //ce_l;            // чип позволит 0xFB = 11111011
+    					lcd_update_seq = LCD_UPD_UPDATE;
+
+    					//Lcd_line(0, 0,  LCD_X_RES, 0,  PIXEL_ON);  // as lines - (Slow)
+    					Lcd_line(0, (sinus_center/7)-1, LCD_X_RES, (sinus_center/7)-1, PIXEL_ON);  // as lines - (Slow)
+    					//Lcd_line(0, 39, LCD_X_RES, 39, PIXEL_ON);  // as lines - (Slow)
+
+    		        	Lcd_prints ( 0, 5, FONT_1X, "ADC Ts:     nS" );
+    		        	//ltoa( adc_on_VarResistor, (char *)&lcd_buff[0] );
+    		        	ltoa( adc_T_sampling_ns, (char *)&lcd_buff[0] );
+    		        	Lcd_prints ( 8, 5, FONT_1X, (byte *)lcd_buff );
+    		        //break;
+
+    				//case LCD_UPD_UPDATE:
+    		    		Lcd_update();
+    		    		ReInit_PWM_adc_on_VarResistor();
+    		    		update_LCD_flag = 0;
+    		    	//break;
+        		}
+        	}
+
     	}
     }
 #endif //(1==__USE__LCD_5110__)
