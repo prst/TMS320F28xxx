@@ -66,13 +66,16 @@ interrupt void epwm1_timer_isr (void) {
 #if (1==PWM1_INT_ENABLE)
     EPwm1TimerIntCount++;
 
+    //if (EPwm1TimerIntCount==0) EPwm1TimerIntCount = 1;
+    //PWM_setPeriod(myPwm1, EPwm1TimerIntCount );
+
     // Clear INT flag for this timer
     PWM_clearIntFlag(myPwm1);
 
     // Acknowledge this interrupt to receive more interrupts from group 3
     PIE_clearInt(myPie, PIE_GroupNumber_3);
 
-    //GPIO_setPortData (myGpio, GPIO_Port_A, ++i_pwm3 & 0x1 ? 0xE : 0xF );
+    //GPIO_setPortData (myGpio, GPIO_Port_A, EPwm1TimerIntCount & 0x1 ? 0xE : 0xF );
 #endif //(1==PWM1_INT_ENABLE)
 #endif //(1==USE_F28027_PWM)
 }
@@ -139,8 +142,8 @@ interrupt void epwm3_timer_isr (void) {
     PIE_clearInt(myPie, PIE_GroupNumber_3);
 
     //GPIO_setPortData (myGpio, GPIO_Port_A, ++i_pwm3 & 0x1 ? 0xE : 0xF );
-    if ( ++i_pwm3 & 0x1)  GpioDataRegs.GPADAT.bit.GPIO0 = 1;
-    else                  GpioDataRegs.GPADAT.bit.GPIO0 = 0;
+    //if ( ++i_pwm3 & 0x1)  GpioDataRegs.GPADAT.bit.GPIO0 = 1;
+    //else                  GpioDataRegs.GPADAT.bit.GPIO0 = 0;
 #endif //(1==PWM3_INT_ENABLE)
 #endif //(1==USE_F28027_PWM)
 }

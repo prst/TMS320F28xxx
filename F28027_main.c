@@ -131,6 +131,18 @@ int sinus[] = {
 /* ========================================================================== */
 /* Global variables */
 /* ========================================================================== */
+extern CPU_Handle   myCpu;
+extern PLL_Handle   myPll;
+extern CLK_Handle   myClk;
+extern FLASH_Handle myFlash;
+extern ADC_Handle   myAdc;
+extern SCI_Handle   mySci;
+extern GPIO_Handle  myGpio;
+extern PIE_Handle   myPie;
+extern PWM_Handle   myPwm1, myPwm2, myPwm3;
+extern TIMER_Handle myTimer;
+extern WDOG_Handle  myWDog;
+
 //..............................................................................
 int          i=0, i_tx=0, i_rx=0;
 int          i_pwm3=0;
@@ -148,7 +160,6 @@ uint16_t     rdata_pointA;       // Used for checking the received data
 uint16_t     RxTx;
 char         lcd_buff[8] = "       \n";
 
-
 //..............................................................................
 extern volatile uint16_t     update_LCD_flag;
 extern volatile uint16_t     update_data_from_adc;
@@ -160,6 +171,9 @@ extern uint16_t   adc_on_VarResistor;
 extern uint16_t   pwm1_Period;
 extern int        adc_T_sampling_ns;
 
+extern uint32_t   EPwm1TimerIntCount;
+extern uint32_t   EPwm2TimerIntCount;
+extern uint32_t   EPwm3TimerIntCount;
 
 //..............................................................................
 typedef enum {
@@ -169,9 +183,8 @@ typedef enum {
 
 lcd_update_seq_t lcd_update_seq = LCD_UPD_PREPARE;
 
+
 /* ========================================================================== */
-
-
 
 uint16_t adc_find_offset_for_start (char mode)
 {
@@ -217,7 +230,6 @@ uint16_t adc_find_center_for_sinus (char mode)
 
 	return 0;
 }
-
 
 
 /* ==========================================================================
