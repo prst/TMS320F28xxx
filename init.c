@@ -13,21 +13,6 @@
 
 
 /* ========================================================================== */
-// Maximum Dead Band values
-#define EPWM1_MAX_DB   0x03FF
-#define EPWM2_MAX_DB   0x03FF
-#define EPWM3_MAX_DB   0x03FF
-
-#define EPWM1_MIN_DB   50
-#define EPWM2_MIN_DB   50
-#define EPWM3_MIN_DB   50
-
-// To keep track of which way the Dead Band is moving
-#define DB_UP   1
-#define DB_DOWN 0
-
-
-/* ========================================================================== */
 
 CPU_Handle   myCpu;
 PLL_Handle   myPll;
@@ -352,9 +337,87 @@ t_error Init_PWM (void) {
 
     CLK_disableTbClockSync(myClk);
 
-    InitEPwm1();
-    InitEPwm2();
-    InitEPwm3();
+    //InitEPwm1();
+    //InitEPwm2();
+    //InitEPwm3();
+
+    // EPWM Module 2 config
+    CLK_enablePwmClock(myClk, PWM_Number_1);
+    CLK_enablePwmClock(myClk, PWM_Number_2);
+
+    // Setup TBCLK myPwm1
+    PWM_setCounterMode    (myPwm1, PWM_CounterMode_UpDown); // Count up
+    PWM_disableCounterLoad(myPwm1);                         // Disable phase loading
+    PWM_setHighSpeedClkDiv(myPwm1, PWM_HspClkDiv_by_1);     // Clock ratio to SYSCLKOUT
+    PWM_setClkDiv         (myPwm1, PWM_ClkDiv_by_1);        // Slow just to observe on the scope
+
+    // Setup TBCLK myPwm2
+    PWM_setCounterMode    (myPwm2, PWM_CounterMode_UpDown); // Count up
+    PWM_disableCounterLoad(myPwm2);                         // Disable phase loading
+    PWM_setHighSpeedClkDiv(myPwm2, PWM_HspClkDiv_by_1);     // Clock ratio to SYSCLKOUT
+    PWM_setClkDiv         (myPwm2, PWM_ClkDiv_by_1);        // Slow just to observe on the scope
+
+    //=====================================================================
+    // Config
+    //=====================================================================
+    // Initialization Time
+    //========================
+    // EPWM Module 1 config
+    EPwm1Regs.TBPRD = PWM2_FREQ_PERIOD; //500; // Period = 1201 TBCLK counts
+    EPwm1Regs.CMPA.all = PWM2_FREQ_PERIOD/2; //100; // Set 50% fixed duty for EPWM1A
+    EPwm1Regs.TBPHS.half.TBPHS = 0; // Set Phase register to zero
+    EPwm1Regs.TBCTL.bit.CTRMODE = TB_COUNT_UP; // Asymmetrical mode
+    EPwm1Regs.TBCTL.bit.PHSEN = TB_DISABLE; // Master module
+    EPwm1Regs.TBCTL.bit.PRDLD = TB_SHADOW;
+    EPwm1Regs.TBCTL.bit.SYNCOSEL = TB_CTR_ZERO; // Sync down-stream module
+    EPwm1Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW;
+    EPwm1Regs.CMPCTL.bit.SHDWBMODE = CC_SHADOW;
+    EPwm1Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO; // load on CTR=Zero
+    EPwm1Regs.CMPCTL.bit.LOADBMODE = CC_CTR_ZERO; // load on CTR=Zero
+    EPwm1Regs.AQCTLA.bit.ZRO = AQ_SET; // set actions for EPWM1A
+    EPwm1Regs.AQCTLA.bit.CAU = AQ_CLEAR;
+    EPwm1Regs.DBCTL.bit.OUT_MODE = DB_FULL_ENABLE; // enable Dead-band module
+    EPwm1Regs.DBCTL.bit.POLSEL = DB_ACTV_HIC; // Active Hi complementary
+    EPwm1Regs.DBFED = 50; // FED = 50 TBCLKs initially
+    EPwm1Regs.DBRED = 70; // RED = 70 TBCLKs initially
+
+    // EPWM Module 2 config
+    EPwm2Regs.TBPRD = PWM2_FREQ_PERIOD; //500; // Period = 1201 TBCLK counts
+    EPwm2Regs.CMPA.half.CMPA = PWM2_FREQ_PERIOD/2; //300; // Set 50% fixed duty EPWM2A
+    EPwm2Regs.TBPHS.half.TBPHS = 0; // Set Phase register to zero initially
+    EPwm2Regs.TBCTL.bit.CTRMODE = TB_COUNT_UP; // Asymmetrical mode
+    EPwm2Regs.TBCTL.bit.PHSEN = TB_ENABLE; // Slave module
+    EPwm2Regs.TBCTL.bit.PRDLD = TB_SHADOW;
+    EPwm2Regs.TBCTL.bit.SYNCOSEL = TB_SYNC_IN; // sync flow-through
+    EPwm2Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW;
+    EPwm2Regs.CMPCTL.bit.SHDWBMODE = CC_SHADOW;
+    EPwm2Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO; // load on CTR=Zero
+    EPwm2Regs.CMPCTL.bit.LOADBMODE = CC_CTR_ZERO; // load on CTR=Zero
+    EPwm2Regs.AQCTLA.bit.ZRO = AQ_SET; // set actions for EPWM2A
+    EPwm2Regs.AQCTLA.bit.CAU = AQ_CLEAR;
+    EPwm2Regs.AQCTLB.bit.ZRO = AQ_CLEAR; // set actions for EPWM2A
+    EPwm2Regs.AQCTLB.bit.CAU = AQ_SET;
+    EPwm2Regs.DBCTL.bit.OUT_MODE = DB_FULL_ENABLE; // enable Dead-band module
+    EPwm2Regs.DBCTL.bit.POLSEL = DB_ACTV_HIC; // Active Hi complementary
+    EPwm2Regs.DBFED = 30; // FED = 30 TBCLKs initially
+    EPwm2Regs.DBRED = 40; // RED = 40 TBCLKs initially
+
+    // Run Time (Note: Example execution of one run-time instant)
+    //============================================================
+    EPwm2Regs.TBPHS.all = 100;//1200-300; // Set Phase reg to 300/1200 * 360 = 90 deg
+    EPwm1Regs.DBFED = 0; //FED1_NewValue; // Update ZVS transition interval
+    EPwm1Regs.DBRED = 0; //RED1_NewValue; // Update ZVS transition interval
+    EPwm2Regs.DBFED = 0; //FED2_NewValue; // Update ZVS transition interval
+    EPwm2Regs.DBRED = 0; //RED2_NewValue; // Update ZVS transition interval
+    EPwm1Regs.CMPB = 100; // adjust point-in-time for ADCSOC trigger
+
+    // Interrupt where we will modify the deadband
+    PWM_setIntMode  (myPwm1, PWM_IntMode_CounterEqualZero); // Select INT on Zero event
+    PWM_enableInt   (myPwm1);                               // Enable INT
+    PWM_setIntPeriod(myPwm1, PWM_IntPeriod_ThirdEvent);     // Generate INT on 3rd event
+    PWM_setIntMode  (myPwm2, PWM_IntMode_CounterEqualZero); // Select INT on Zero event
+    PWM_enableInt   (myPwm2);                               // Enable INT
+    PWM_setIntPeriod(myPwm2, PWM_IntPeriod_ThirdEvent);     // Generate INT on 3rd event
 
     CLK_enableTbClockSync(myClk);
 
@@ -477,38 +540,37 @@ void InitEPwm2 (void)
 {
     CLK_enablePwmClock(myClk, PWM_Number_2);
 
-    PWM_setPeriod(myPwm2, 6000);    // Set timer period
-    PWM_setPhase(myPwm2, 0x0000);   // Phase is 0
-    PWM_setCount(myPwm2, 0x0000);   // Clear counter
+    PWM_setPeriod(myPwm2, 256);      // Set timer period
+    PWM_setPhase (myPwm2, 0x0000);   // Phase is 0
+    PWM_setCount (myPwm2, 0x0000);   // Clear counter
 
     // Setup TBCLK
-    PWM_setCounterMode(myPwm2, PWM_CounterMode_UpDown); // Count up
-    PWM_disableCounterLoad(myPwm2);                     // Disable phase loading
-    PWM_setHighSpeedClkDiv(myPwm2, PWM_HspClkDiv_by_4); // Clock ratio to SYSCLKOUT
-    PWM_setClkDiv(myPwm2, PWM_ClkDiv_by_4);             // Slow just to observe on the scope
+    PWM_setCounterMode    (myPwm2, PWM_CounterMode_UpDown); // Count up
+    PWM_disableCounterLoad(myPwm2);                         // Disable phase loading
+    PWM_setHighSpeedClkDiv(myPwm2, PWM_HspClkDiv_by_10);    // Clock ratio to SYSCLKOUT
+    PWM_setClkDiv(myPwm2, PWM_ClkDiv_by_64);                // Slow just to observe on the scope
 
     // Setup compare
-    PWM_setCmpA(myPwm2, 3000);
+    PWM_setCmpA(myPwm2, 128);
 
     // Set actions
-    PWM_setActionQual_CntUp_CmpA_PwmA(myPwm2, PWM_ActionQual_Set);
-    PWM_setActionQual_CntDown_CmpA_PwmA(myPwm2, PWM_ActionQual_Clear);
-
-    PWM_setActionQual_CntUp_CmpA_PwmB(myPwm2, PWM_ActionQual_Clear);
-    PWM_setActionQual_CntDown_CmpA_PwmB(myPwm2, PWM_ActionQual_Set);
+    PWM_setActionQual_CntUp_CmpA_PwmA  ( myPwm2, PWM_ActionQual_Set   );
+    PWM_setActionQual_CntDown_CmpA_PwmA( myPwm2, PWM_ActionQual_Clear );
+    PWM_setActionQual_CntUp_CmpA_PwmB  ( myPwm2, PWM_ActionQual_Clear );
+    PWM_setActionQual_CntDown_CmpA_PwmB( myPwm2, PWM_ActionQual_Set   );
 
     // Active Low complementary PWMs - setup the deadband
     PWM_setDeadBandOutputMode(myPwm2, PWM_DeadBandOutputMode_EPWMxA_Rising_EPWMxB_Falling);
-    PWM_setDeadBandPolarity(myPwm2, PWM_DeadBandPolarity_EPWMxA_Inverted_EPWMxB_Inverted);
-    PWM_setDeadBandInputMode(myPwm2, PWM_DeadBandInputMode_EPWMxA_Rising_and_Falling);
-    PWM_setDeadBandRisingEdgeDelay(myPwm2, EPWM2_MIN_DB);
+    PWM_setDeadBandPolarity  (myPwm2, PWM_DeadBandPolarity_EPWMxA_Inverted_EPWMxB_Inverted);
+    PWM_setDeadBandInputMode (myPwm2, PWM_DeadBandInputMode_EPWMxA_Rising_and_Falling);
+    PWM_setDeadBandRisingEdgeDelay (myPwm2, EPWM2_MIN_DB);
     PWM_setDeadBandFallingEdgeDelay(myPwm2, EPWM2_MIN_DB);
     EPwm2_DB_Direction = DB_UP;
 
     // Interrupt where we will modify the deadband
-    PWM_setIntMode(myPwm2, PWM_IntMode_CounterEqualZero); // Select INT on Zero event
-    PWM_enableInt(myPwm2);                                // Enable INT
-    PWM_setIntPeriod(myPwm2, PWM_IntPeriod_ThirdEvent);   // Generate INT on 3rd event
+    PWM_setIntMode  (myPwm2, PWM_IntMode_CounterEqualZero); // Select INT on Zero event
+    PWM_enableInt   (myPwm2);                               // Enable INT
+    PWM_setIntPeriod(myPwm2, PWM_IntPeriod_ThirdEvent);     // Generate INT on 3rd event
 }
 
 

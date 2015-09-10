@@ -36,6 +36,47 @@
 /* ************************************************************************** */
 
 /* ========================================================================== */
+
+#if (CPU_FRQ_40MHZ)
+#define CPU_FREQ  (40000000) //Default=40 MHz Change to 50E6 for 50 MHz devices
+#endif
+
+#if (CPU_FRQ_50MHZ)
+#define CPU_FREQ  (50000000) //Default=40 MHz Change to 50E6 for 50 MHz devices
+#endif
+
+#if (CPU_FRQ_60MHZ)
+#define CPU_FREQ  (60000000) //Default=40 MHz Change to 50E6 for 50 MHz devices
+#endif
+
+#define LSPCLK_FREQ       (CPU_FREQ/4)
+
+//#define SCI_FREQ          100E3
+#define SCI_FREQ          115200
+//#define SCI_PRD           (LSPCLK_FREQ/(SCI_FREQ*8))-1
+#define SCI_BRR           (LSPCLK_FREQ/(SCI_FREQ*8))-1
+/* ========================================================================== */
+
+/* ========================================================================== */
+// Maximum Dead Band values
+#define EPWM1_MAX_DB   0x03FF
+#define EPWM2_MAX_DB   0x03FF
+#define EPWM3_MAX_DB   0x03FF
+
+#define EPWM1_MIN_DB   0//50
+#define EPWM2_MIN_DB   0//50
+#define EPWM3_MIN_DB   0//50
+
+// To keep track of which way the Dead Band is moving
+#define DB_UP   1
+#define DB_DOWN 0
+
+/* ========================================================================== */
+#define PWM_FREQ_SINUS     ( 50 )  // HZ
+#define STEPS              ( 360 ) // 360 degree in sinus
+#define PWM2_FREQ_SWITCH   18000/3   // ( PWM_FREQ_SINUS * STEPS )
+#define PWM2_FREQ_PERIOD   ( CPU_FREQ / PWM2_FREQ_SWITCH )
+
 #define TIME_PERIOD_1MS    (60 * 1000)
 #define TIME_PERIOD_10MS   (60 * 10000)
 #define TIME_PERIOD_20MS   (60 * 20000)
@@ -68,27 +109,8 @@
 //#define PWM3_TIMER_TBPRD  0x1FFF
 #define PWM3_TIMER_TBPRD  0xFFFF
 
+
 /* ========================================================================== */
-#if (CPU_FRQ_40MHZ)
-#define CPU_FREQ  (40000000) //Default=40 MHz Change to 50E6 for 50 MHz devices
-#endif
-
-#if (CPU_FRQ_50MHZ)
-#define CPU_FREQ  (50000000) //Default=40 MHz Change to 50E6 for 50 MHz devices
-#endif
-
-#if (CPU_FRQ_60MHZ)
-#define CPU_FREQ  (60000000) //Default=40 MHz Change to 50E6 for 50 MHz devices
-#endif
-
-#define LSPCLK_FREQ       (CPU_FREQ/4)
-
-//#define SCI_FREQ          100E3
-#define SCI_FREQ          115200
-//#define SCI_PRD           (LSPCLK_FREQ/(SCI_FREQ*8))-1
-#define SCI_BRR           (LSPCLK_FREQ/(SCI_FREQ*8))-1
-/* ========================================================================== */
-
 //#define  USE_UART_IRQ_1   (0)
 //#define  USE_UART_IRQ_2   (1)
 

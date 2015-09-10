@@ -40,8 +40,8 @@
 /* ========================================================================== */
 //Sinus
 //Sin table values
-int sinus[] = {
-	/*// http://www.meraman.com/htmls/en/sinTableOld.html
+int sinus360[] = {
+	// http://www.meraman.com/htmls/en/sinTableOld.html
 	// 360 values
 	127, 129, 131, 134, 136, 138, 140, 142, 145, 147, 149, 151, 153, 156, 158, 160,
 	162, 164, 166, 168, 170, 173, 175, 177, 179, 181, 183, 185, 187, 189, 191, 192,
@@ -62,11 +62,13 @@ int sinus[] = {
 	2, 3, 3, 4, 4, 5, 6, 6, 7, 8, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
 	22, 23, 24, 26, 27, 28, 30, 31, 33, 34, 36, 37, 39, 40, 42, 44, 45, 47, 49, 51,
 	52, 54, 56, 58, 60, 62, 63, 65, 67, 69, 71, 73, 75, 77, 79, 81, 84, 86, 88, 90,
-	92, 94, 96, 98, 101, 103, 105, 107, 109, 112, 114, 116, 118, 120, 123, 125*/
+	92, 94, 96, 98, 101, 103, 105, 107, 109, 112, 114, 116, 118, 120, 123, 125
+};
 
+int sinus360_1[] = {
 	// http://www.daycounter.com/Calculators/Sine-Generator-Calculator2.phtml
 	// 360 values
-	/*0x80,0x82,0x84,0x86,0x88,0x8b,0x8d,0x8f,
+	0x80,0x82,0x84,0x86,0x88,0x8b,0x8d,0x8f,
 	0x91,0x93,0x96,0x98,0x9a,0x9c,0x9e,0xa0,
 	0xa3,0xa5,0xa7,0xa9,0xab,0xad,0xaf,0xb1,
 	0xb3,0xb5,0xb7,0xb9,0xbb,0xbd,0xbf,0xc1,
@@ -110,8 +112,10 @@ int sinus[] = {
 	0x3c,0x3e,0x40,0x42,0x44,0x46,0x48,0x4a,
 	0x4c,0x4e,0x50,0x52,0x54,0x56,0x58,0x5a,
 	0x5c,0x5f,0x61,0x63,0x65,0x67,0x69,0x6c,
-	0x6e,0x70,0x72,0x74,0x77,0x79,0x7b,0x7d */
+	0x6e,0x70,0x72,0x74,0x77,0x79,0x7b,0x7d
+};
 
+int sinus[] = {
 	// 84 values
 	0x80,0x89,0x93,0x9c,0xa5,0xae,0xb7,0xbf,
 	0xc7,0xcf,0xd6,0xdd,0xe3,0xe9,0xee,0xf2,
@@ -142,6 +146,9 @@ extern PIE_Handle   myPie;
 extern PWM_Handle   myPwm1, myPwm2, myPwm3;
 extern TIMER_Handle myTimer;
 extern WDOG_Handle  myWDog;
+
+extern t_error      rc;
+extern t_status     sys_stat;
 
 //..............................................................................
 int          i=0, i_tx=0, i_rx=0;
@@ -237,7 +244,18 @@ uint16_t adc_find_center_for_sinus (char mode)
  * ========================================================================== */
 void main (void)
 {
-	Init_All();
+	//Init_All();
+	if (E_OK==rc)  rc = Init_Sys();   else  Error(rc); // Init system and handles
+    if (E_OK==rc)  rc = Init_PLL();   else  Error(rc); // Init PLL
+    if (E_OK==rc)  rc = Init_FLASH(); else  Error(rc); // Init FLASH
+    if (E_OK==rc)  rc = Init_GPIO();  else  Error(rc); // Init GPIO system
+    if (E_OK==rc)  rc = Init_PWM();   else  Error(rc); // Init IRQs
+    //if (E_OK==rc)  rc = Init_Timer0(); else  Error(rc); // Init Timer0
+    //if (E_OK==rc)  rc = Init_ADC();   else  Error(rc); // Init ADC
+    //if (E_OK==rc)  rc = Init_UART_IRQ(); else  Error(rc); // Init UART IRQ
+    //rc = Init_UART_pooling (); // Init UART without IRQ
+    //if (E_OK==rc)  rc = Init_TM1638();  else  Error(rc); // Init TM1638
+    if (E_OK==rc) { sys_stat.sys.error = E_OK; }
 
 #if (1==__USE_LCD_5110__)
 	Lcd_clear();
@@ -247,6 +265,7 @@ void main (void)
 	// Main code
     for(;;)
     {
+#if (0)
     	//wrapper_Main();
 
     	//tm1638_prints("123456789");
@@ -354,6 +373,7 @@ void main (void)
         	}
 
     	}
+#endif //(0)
     }
 #endif //(1==__USE__LCD_5110__)
 }

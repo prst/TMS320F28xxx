@@ -46,6 +46,9 @@ uint32_t     EPwm3TimerIntCount;
 uint32_t     Timer0IntCount;
 
 extern t_status  sys_stat;
+extern int sinus[];
+extern int sinus360[];
+extern int sinus360_1[];
 
 volatile uint16_t     update_LCD_flag;
 volatile uint16_t     update_data_from_adc=0;
@@ -64,10 +67,21 @@ volatile uint16_t     update_data_from_adc=0;
 interrupt void epwm1_timer_isr (void) {
 #if (1==USE_F28027_PWM)
 #if (1==PWM1_INT_ENABLE)
-    EPwm1TimerIntCount++;
+	static uint16_t cnt=0;
+
+    //EPwm1TimerIntCount++;
 
     //if (EPwm1TimerIntCount==0) EPwm1TimerIntCount = 1;
     //PWM_setPeriod(myPwm1, EPwm1TimerIntCount );
+	if ( cnt < 360 ) {
+		//SinusRMS += sinus[cnt];
+		//PWM_setPeriod(myPwm1, sinus[cnt] );
+	    PWM_setCmpA(myPwm1, /*EPWM1_MIN_DB+*/sinus360_1[cnt]);
+	    PWM_setCmpB(myPwm1, /*EPWM1_MIN_DB+*/sinus360_1[cnt]);
+		cnt++;
+	} else {
+		cnt=0;
+	}
 
     // Clear INT flag for this timer
     PWM_clearIntFlag(myPwm1);
@@ -92,9 +106,23 @@ interrupt void epwm1_timer_isr (void) {
 interrupt void epwm2_timer_isr (void) {
 #if (1==USE_F28027_PWM)
 #if (1==PWM2_INT_ENABLE)
-    EPwm2TimerIntCount++;
+	static uint16_t cnt=0;
 
-    // Clear INT flag for this timer
+	//EPwm2TimerIntCount++;
+
+    //if (EPwm1TimerIntCount==0) EPwm1TimerIntCount = 1;
+    //PWM_setPeriod(myPwm1, EPwm1TimerIntCount );
+	if ( cnt < 360 ) {
+		//SinusRMS += sinus[cnt];
+		//PWM_setPeriod(myPwm1, sinus[cnt] );
+	    PWM_setCmpA(myPwm2, /*EPWM2_MIN_DB+*/1*sinus360_1[cnt]);
+	    PWM_setCmpB(myPwm2, /*EPWM2_MIN_DB+*/1*sinus360_1[cnt]);
+		cnt++;
+	} else {
+		cnt=0;
+	}
+
+	// Clear INT flag for this timer
     PWM_clearIntFlag(myPwm2);
 
     // Acknowledge this interrupt to receive more interrupts from group 3
