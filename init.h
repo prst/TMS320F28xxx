@@ -72,10 +72,17 @@
 #define DB_DOWN 0
 
 /* ========================================================================== */
+#define PWM_UP_MODE        0
+#define PWM_DOWN_MODE      1
+#define PWM_UP_DOWN_MODE   2
 #define PWM_FREQ_SINUS     ( 50 )  // HZ
-#define STEPS              ( 360 ) // 360 degree in sinus
-#define PWM2_FREQ_SWITCH   18000/3   // ( PWM_FREQ_SINUS * STEPS )
-#define PWM2_FREQ_PERIOD   ( CPU_FREQ / PWM2_FREQ_SWITCH )
+#define STEPS              360 //( 360 ) // 360 degree in sinus
+
+#define PWM1_FREQ_SWITCH   ( PWM_FREQ_SINUS * STEPS ) / (2+1)
+#define PWM1_FREQ_PERIOD   ( CPU_FREQ / PWM1_FREQ_SWITCH )/PWM_UP_DOWN_MODE
+
+#define PWM2_FREQ_SWITCH   ( PWM_FREQ_SINUS * STEPS ) / (2+1)
+#define PWM2_FREQ_PERIOD   ( CPU_FREQ / PWM2_FREQ_SWITCH )/PWM_UP_DOWN_MODE
 
 #define TIME_PERIOD_1MS    (60 * 1000)
 #define TIME_PERIOD_10MS   (60 * 10000)

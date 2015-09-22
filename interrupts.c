@@ -73,15 +73,23 @@ interrupt void epwm1_timer_isr (void) {
 
     //if (EPwm1TimerIntCount==0) EPwm1TimerIntCount = 1;
     //PWM_setPeriod(myPwm1, EPwm1TimerIntCount );
-	if ( cnt < 360 ) {
-		//SinusRMS += sinus[cnt];
-		//PWM_setPeriod(myPwm1, sinus[cnt] );
-	    PWM_setCmpA(myPwm1, /*EPWM1_MIN_DB+*/sinus360_1[cnt]);
-	    PWM_setCmpB(myPwm1, /*EPWM1_MIN_DB+*/sinus360_1[cnt]);
-		cnt++;
-	} else {
+//	if ( cnt < 360 ) {
+//		//SinusRMS += sinus[cnt];
+//		//PWM_setPeriod(myPwm1, sinus[cnt] );
+//	    PWM_setCmpA(myPwm1, /*EPWM1_MIN_DB+*/sinus360_1[cnt]);
+//	    PWM_setCmpB(myPwm1, /*EPWM1_MIN_DB+*/sinus360_1[cnt]);
+//		cnt++;
+//	} else {
+//		cnt=0;
+//	}
+
+	//SinusRMS += sinus[cnt];
+	//PWM_setPeriod(myPwm1, sinus[cnt] );
+	PWM_setCmpA(myPwm1, /*EPWM2_MIN_DB+*/1*sinus360_1[cnt]);
+	PWM_setCmpB(myPwm1, PWM2_FREQ_PERIOD-/*EPWM2_MIN_DB+*/1*sinus360_1[cnt]);
+
+	if (++cnt >= STEPS )
 		cnt=0;
-	}
 
     // Clear INT flag for this timer
     PWM_clearIntFlag(myPwm1);
@@ -112,15 +120,23 @@ interrupt void epwm2_timer_isr (void) {
 
     //if (EPwm1TimerIntCount==0) EPwm1TimerIntCount = 1;
     //PWM_setPeriod(myPwm1, EPwm1TimerIntCount );
-	if ( cnt < 360 ) {
-		//SinusRMS += sinus[cnt];
-		//PWM_setPeriod(myPwm1, sinus[cnt] );
-	    PWM_setCmpA(myPwm2, /*EPWM2_MIN_DB+*/1*sinus360_1[cnt]);
-	    PWM_setCmpB(myPwm2, /*EPWM2_MIN_DB+*/1*sinus360_1[cnt]);
-		cnt++;
-	} else {
+//	if ( cnt < 360 ) {
+//		//SinusRMS += sinus[cnt];
+//		//PWM_setPeriod(myPwm1, sinus[cnt] );
+//	    PWM_setCmpA(myPwm2, /*EPWM2_MIN_DB+*/1*sinus360_1[cnt]);
+//	    PWM_setCmpB(myPwm2, /*EPWM2_MIN_DB+*/1*sinus360_1[cnt]);
+//		cnt++;
+//	} else {
+//		cnt=0;
+//	}
+
+	//SinusRMS += sinus[cnt];
+	//PWM_setPeriod(myPwm1, sinus[cnt] );
+	PWM_setCmpA(myPwm2, /*EPWM2_MIN_DB+*/1*sinus360_1[cnt]);
+	PWM_setCmpB(myPwm2, PWM2_FREQ_PERIOD-/*EPWM2_MIN_DB+*/1*sinus360_1[cnt]);
+
+	if (++cnt >= STEPS )
 		cnt=0;
-	}
 
 	// Clear INT flag for this timer
     PWM_clearIntFlag(myPwm2);
