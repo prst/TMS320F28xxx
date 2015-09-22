@@ -46,6 +46,9 @@ uint32_t     EPwm3TimerIntCount;
 uint32_t     Timer0IntCount;
 
 extern t_status  sys_stat;
+extern int sinus[];
+extern int sinus360[];
+extern int sinus360_1[];
 
 volatile uint16_t     update_LCD_flag;
 volatile uint16_t     update_data_from_adc=0;
@@ -64,7 +67,29 @@ volatile uint16_t     update_data_from_adc=0;
 interrupt void epwm1_timer_isr (void) {
 #if (1==USE_F28027_PWM)
 #if (1==PWM1_INT_ENABLE)
-    EPwm1TimerIntCount++;
+	static uint16_t cnt=0;
+
+    //EPwm1TimerIntCount++;
+
+    //if (EPwm1TimerIntCount==0) EPwm1TimerIntCount = 1;
+    //PWM_setPeriod(myPwm1, EPwm1TimerIntCount );
+//	if ( cnt < 360 ) {
+//		//SinusRMS += sinus[cnt];
+//		//PWM_setPeriod(myPwm1, sinus[cnt] );
+//	    PWM_setCmpA(myPwm1, /*EPWM1_MIN_DB+*/sinus360_1[cnt]);
+//	    PWM_setCmpB(myPwm1, /*EPWM1_MIN_DB+*/sinus360_1[cnt]);
+//		cnt++;
+//	} else {
+//		cnt=0;
+//	}
+
+	//SinusRMS += sinus[cnt];
+	//PWM_setPeriod(myPwm1, sinus[cnt] );
+	PWM_setCmpA(myPwm1, /*EPWM2_MIN_DB+*/1*sinus360_1[cnt]);
+	PWM_setCmpB(myPwm1, PWM2_FREQ_PERIOD-/*EPWM2_MIN_DB+*/1*sinus360_1[cnt]);
+
+	if (++cnt >= STEPS )
+		cnt=0;
 
     // Clear INT flag for this timer
     PWM_clearIntFlag(myPwm1);
@@ -72,7 +97,7 @@ interrupt void epwm1_timer_isr (void) {
     // Acknowledge this interrupt to receive more interrupts from group 3
     PIE_clearInt(myPie, PIE_GroupNumber_3);
 
-    //GPIO_setPortData (myGpio, GPIO_Port_A, ++i_pwm3 & 0x1 ? 0xE : 0xF );
+    //GPIO_setPortData (myGpio, GPIO_Port_A, EPwm1TimerIntCount & 0x1 ? 0xE : 0xF );
 #endif //(1==PWM1_INT_ENABLE)
 #endif //(1==USE_F28027_PWM)
 }
@@ -89,9 +114,31 @@ interrupt void epwm1_timer_isr (void) {
 interrupt void epwm2_timer_isr (void) {
 #if (1==USE_F28027_PWM)
 #if (1==PWM2_INT_ENABLE)
-    EPwm2TimerIntCount++;
+	static uint16_t cnt=0;
 
-    // Clear INT flag for this timer
+	//EPwm2TimerIntCount++;
+
+    //if (EPwm1TimerIntCount==0) EPwm1TimerIntCount = 1;
+    //PWM_setPeriod(myPwm1, EPwm1TimerIntCount );
+//	if ( cnt < 360 ) {
+//		//SinusRMS += sinus[cnt];
+//		//PWM_setPeriod(myPwm1, sinus[cnt] );
+//	    PWM_setCmpA(myPwm2, /*EPWM2_MIN_DB+*/1*sinus360_1[cnt]);
+//	    PWM_setCmpB(myPwm2, /*EPWM2_MIN_DB+*/1*sinus360_1[cnt]);
+//		cnt++;
+//	} else {
+//		cnt=0;
+//	}
+
+	//SinusRMS += sinus[cnt];
+	//PWM_setPeriod(myPwm1, sinus[cnt] );
+	PWM_setCmpA(myPwm2, /*EPWM2_MIN_DB+*/1*sinus360_1[cnt]);
+	PWM_setCmpB(myPwm2, PWM2_FREQ_PERIOD-/*EPWM2_MIN_DB+*/1*sinus360_1[cnt]);
+
+	if (++cnt >= STEPS )
+		cnt=0;
+
+	// Clear INT flag for this timer
     PWM_clearIntFlag(myPwm2);
 
     // Acknowledge this interrupt to receive more interrupts from group 3
@@ -139,8 +186,8 @@ interrupt void epwm3_timer_isr (void) {
     PIE_clearInt(myPie, PIE_GroupNumber_3);
 
     //GPIO_setPortData (myGpio, GPIO_Port_A, ++i_pwm3 & 0x1 ? 0xE : 0xF );
-    if ( ++i_pwm3 & 0x1)  GpioDataRegs.GPADAT.bit.GPIO0 = 1;
-    else                  GpioDataRegs.GPADAT.bit.GPIO0 = 0;
+    //if ( ++i_pwm3 & 0x1)  GpioDataRegs.GPADAT.bit.GPIO0 = 1;
+    //else                  GpioDataRegs.GPADAT.bit.GPIO0 = 0;
 #endif //(1==PWM3_INT_ENABLE)
 #endif //(1==USE_F28027_PWM)
 }

@@ -6,6 +6,9 @@ Project Logs for Uni_Gen_SG3524
 RAM/*
 Flash/*
 
+*.bin
+*.hex
+
 # Compiled source
 # ###################
 *.apk
