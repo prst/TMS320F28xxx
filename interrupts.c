@@ -47,6 +47,8 @@ uint32_t     Timer0IntCount;
 
 extern t_status  sys_stat;
 extern int sinus[];
+extern int sinus90[];
+extern int sinus180[];
 extern int sinus360[];
 extern int sinus360_1[];
 
@@ -85,8 +87,8 @@ interrupt void epwm1_timer_isr (void) {
 
 	//SinusRMS += sinus[cnt];
 	//PWM_setPeriod(myPwm1, sinus[cnt] );
-	PWM_setCmpA(myPwm1, /*EPWM2_MIN_DB+*/1*sinus360_1[cnt]);
-	PWM_setCmpB(myPwm1, PWM2_FREQ_PERIOD-/*EPWM2_MIN_DB+*/1*sinus360_1[cnt]);
+	PWM_setCmpA(myPwm1, /*EPWM2_MIN_DB+*/ 1 * sinus90[cnt]);
+	PWM_setCmpB(myPwm1, PWM2_FREQ_PERIOD-/*EPWM2_MIN_DB+*/ 1 * sinus90[cnt]);
 
 	if (++cnt >= STEPS )
 		cnt=0;

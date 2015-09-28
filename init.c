@@ -346,16 +346,16 @@ t_error Init_PWM (void) {
     CLK_enablePwmClock(myClk, PWM_Number_2);
 
     // Setup TBCLK myPwm1
-    PWM_setCounterMode    (myPwm1, PWM_CounterMode_Up); // Count up
-    PWM_disableCounterLoad(myPwm1);                         // Disable phase loading
-    PWM_setHighSpeedClkDiv(myPwm1, PWM_HspClkDiv_by_2);     // Clock ratio to SYSCLKOUT
-    PWM_setClkDiv         (myPwm1, PWM_ClkDiv_by_2);        // Slow just to observe on the scope
+    //PWM_setCounterMode    (myPwm1, PWM_CounterMode_Up); // Count up
+    //PWM_disableCounterLoad(myPwm1);                         // Disable phase loading
+    //PWM_setHighSpeedClkDiv(myPwm1, PWM_HspClkDiv_by_2);     // Clock ratio to SYSCLKOUT
+    //PWM_setClkDiv         (myPwm1, PWM_ClkDiv_by_2);        // Slow just to observe on the scope
 
     // Setup TBCLK myPwm2
-    PWM_setCounterMode    (myPwm2, PWM_CounterMode_Up); // Count up
-    PWM_disableCounterLoad(myPwm2);                         // Disable phase loading
-    PWM_setHighSpeedClkDiv(myPwm2, PWM_HspClkDiv_by_2);     // Clock ratio to SYSCLKOUT
-    PWM_setClkDiv         (myPwm2, PWM_ClkDiv_by_2);        // Slow just to observe on the scope
+    //PWM_setCounterMode    (myPwm2, PWM_CounterMode_Up); // Count up
+    //PWM_disableCounterLoad(myPwm2);                         // Disable phase loading
+    //PWM_setHighSpeedClkDiv(myPwm2, PWM_HspClkDiv_by_2);     // Clock ratio to SYSCLKOUT
+    //PWM_setClkDiv         (myPwm2, PWM_ClkDiv_by_2);        // Slow just to observe on the scope
 
     //=====================================================================
     // Config
@@ -395,8 +395,8 @@ t_error Init_PWM (void) {
     EPwm1Regs.TBCTL.bit.PHSEN = TB_DISABLE; // Phase loading disabled
     EPwm1Regs.TBCTL.bit.PRDLD = TB_SHADOW;
     EPwm1Regs.TBCTL.bit.SYNCOSEL = TB_SYNC_DISABLE;
-    EPwm1Regs.TBCTL.bit.HSPCLKDIV = TB_DIV1; // TBCLK = SYSCLKOUT
-    EPwm1Regs.TBCTL.bit.CLKDIV = TB_DIV1;
+    EPwm1Regs.TBCTL.bit.HSPCLKDIV = TB_DIV2; // TBCLK = SYSCLKOUT
+    EPwm1Regs.TBCTL.bit.CLKDIV = TB_DIV2;
     EPwm1Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW;
     EPwm1Regs.CMPCTL.bit.SHDWBMODE = CC_SHADOW;
     EPwm1Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO; // load on CTR = Zero
