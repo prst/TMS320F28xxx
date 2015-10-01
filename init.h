@@ -49,7 +49,7 @@
 #define CPU_FREQ  (60000000) //Default=40 MHz Change to 50E6 for 50 MHz devices
 #endif
 
-#define LSPCLK_FREQ       (CPU_FREQ/4)
+#define LSPCLK_FREQ   (CPU_FREQ/4)
 
 //#define SCI_FREQ          100E3
 #define SCI_FREQ          115200
@@ -63,9 +63,9 @@
 #define EPWM2_MAX_DB   0x03FF
 #define EPWM3_MAX_DB   0x03FF
 
-#define EPWM1_MIN_DB   0//50
-#define EPWM2_MIN_DB   0//50
-#define EPWM3_MIN_DB   0//50
+#define EPWM1_MIN_DB   0
+#define EPWM2_MIN_DB   0
+#define EPWM3_MIN_DB   0
 
 // To keep track of which way the Dead Band is moving
 #define DB_UP   1
@@ -76,14 +76,14 @@
 #define PWM_DOWN_MODE      1
 #define PWM_UP_DOWN_MODE   2
 #define PWM_FREQ_SINUS     ( 50 )  // HZ
-//#define STEPS              360 //( 360 ) // 360 degree in sinus
-#define STEPS              90 //( 360 ) // 360 degree in sinus
+//#define STEPS            ( 360 ) // degree in sinus
+#define STEPS              ( 90 )  // degree in sinus
 
 #define PWM1_FREQ_SWITCH   ( PWM_FREQ_SINUS * STEPS ) / (2+10)
-#define PWM1_FREQ_PERIOD   ( CPU_FREQ / PWM1_FREQ_SWITCH )/PWM_UP_DOWN_MODE
+#define PWM1_FREQ_PERIOD   ( CPU_FREQ/PWM1_FREQ_SWITCH ) / PWM_UP_DOWN_MODE
 
-#define PWM2_FREQ_SWITCH   ( PWM_FREQ_SINUS * STEPS ) / (2+1)
-#define PWM2_FREQ_PERIOD   ( CPU_FREQ / PWM2_FREQ_SWITCH )/PWM_UP_DOWN_MODE
+#define PWM2_FREQ_SWITCH   ( PWM_FREQ_SINUS * STEPS ) / (2+10)
+#define PWM2_FREQ_PERIOD   ( CPU_FREQ/PWM2_FREQ_SWITCH ) / PWM_UP_DOWN_MODE
 
 #define TIME_PERIOD_1MS    (60 * 1000)
 #define TIME_PERIOD_10MS   (60 * 10000)

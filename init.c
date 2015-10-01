@@ -321,10 +321,10 @@ t_error Init_PWM (void) {
     GPIO_setMode(myGpio, GPIO_Number_2, GPIO_2_Mode_EPWM2A);
     GPIO_setMode(myGpio, GPIO_Number_3, GPIO_3_Mode_EPWM2B);
 
-    GPIO_setPullUp(myGpio, GPIO_Number_4, GPIO_PullUp_Disable);
-    GPIO_setPullUp(myGpio, GPIO_Number_5, GPIO_PullUp_Disable);
-    GPIO_setMode(myGpio, GPIO_Number_4, GPIO_4_Mode_EPWM3A);
-    GPIO_setMode(myGpio, GPIO_Number_5, GPIO_5_Mode_EPWM3B);
+    //GPIO_setPullUp(myGpio, GPIO_Number_4, GPIO_PullUp_Disable);
+    //GPIO_setPullUp(myGpio, GPIO_Number_5, GPIO_PullUp_Disable);
+    //GPIO_setMode(myGpio, GPIO_Number_4, GPIO_4_Mode_EPWM3A);
+    //GPIO_setMode(myGpio, GPIO_Number_5, GPIO_5_Mode_EPWM3B);
 
     // Setup a debug vector table and enable the PIE
     PIE_setDebugIntVectorTable(myPie);
@@ -333,7 +333,7 @@ t_error Init_PWM (void) {
     // Register interrupt handlers in the PIE vector table
     PIE_registerPieIntHandler(myPie, PIE_GroupNumber_3, PIE_SubGroupNumber_1, (intVec_t)&epwm1_timer_isr);
     PIE_registerPieIntHandler(myPie, PIE_GroupNumber_3, PIE_SubGroupNumber_2, (intVec_t)&epwm2_timer_isr);
-    PIE_registerPieIntHandler(myPie, PIE_GroupNumber_3, PIE_SubGroupNumber_3, (intVec_t)&epwm3_timer_isr);
+    //PIE_registerPieIntHandler(myPie, PIE_GroupNumber_3, PIE_SubGroupNumber_3, (intVec_t)&epwm3_timer_isr);
 
     CLK_disableTbClockSync(myClk);
 
@@ -345,47 +345,11 @@ t_error Init_PWM (void) {
     CLK_enablePwmClock(myClk, PWM_Number_1);
     CLK_enablePwmClock(myClk, PWM_Number_2);
 
-    // Setup TBCLK myPwm1
-    //PWM_setCounterMode    (myPwm1, PWM_CounterMode_Up); // Count up
-    //PWM_disableCounterLoad(myPwm1);                         // Disable phase loading
-    //PWM_setHighSpeedClkDiv(myPwm1, PWM_HspClkDiv_by_2);     // Clock ratio to SYSCLKOUT
-    //PWM_setClkDiv         (myPwm1, PWM_ClkDiv_by_2);        // Slow just to observe on the scope
-
-    // Setup TBCLK myPwm2
-    //PWM_setCounterMode    (myPwm2, PWM_CounterMode_Up); // Count up
-    //PWM_disableCounterLoad(myPwm2);                         // Disable phase loading
-    //PWM_setHighSpeedClkDiv(myPwm2, PWM_HspClkDiv_by_2);     // Clock ratio to SYSCLKOUT
-    //PWM_setClkDiv         (myPwm2, PWM_ClkDiv_by_2);        // Slow just to observe on the scope
-
     //=====================================================================
     // Config
     //=====================================================================
     // Initialization Time
-    //========================
-/*
-    // EPWM Module 1 config
-    EPwm1Regs.TBPRD = PWM2_FREQ_PERIOD; //500; // Period = 1201 TBCLK counts
-    EPwm1Regs.CMPA.all = PWM2_FREQ_PERIOD/2; //100; // Set 50% fixed duty for EPWM1A
-    EPwm1Regs.TBPHS.half.TBPHS = 0; // Set Phase register to zero
-    EPwm1Regs.TBCTL.bit.CTRMODE = TB_COUNT_UPDOWN; // Asymmetrical mode
-    EPwm1Regs.TBCTL.bit.PHSEN = TB_DISABLE; // Master module
-    EPwm1Regs.TBCTL.bit.PRDLD = TB_SHADOW;
-    EPwm1Regs.TBCTL.bit.SYNCOSEL = TB_CTR_ZERO; // Sync down-stream module
-    EPwm1Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW;
-    EPwm1Regs.CMPCTL.bit.SHDWBMODE = CC_SHADOW;
-    EPwm1Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO; // load on CTR=Zero
-    EPwm1Regs.CMPCTL.bit.LOADBMODE = CC_CTR_ZERO; // load on CTR=Zero
-    EPwm1Regs.AQCTLA.bit.ZRO = AQ_SET; // set actions for EPWM1A
-    EPwm1Regs.AQCTLA.bit.CAU = AQ_CLEAR;
-    EPwm1Regs.AQCTLB.bit.ZRO = AQ_CLEAR; // set actions for EPWM2B
-    EPwm1Regs.AQCTLB.bit.CAU = AQ_SET;
-    EPwm1Regs.DBCTL.bit.OUT_MODE = DB_FULL_ENABLE; // enable Dead-band module
-    EPwm1Regs.DBCTL.bit.POLSEL = DB_ACTV_HIC; // Active Hi complementary
-    EPwm1Regs.DBFED = 50; // FED = 50 TBCLKs initially
-    EPwm1Regs.DBRED = 70; // RED = 70 TBCLKs initially
-*/
-    // Initialization Time
-    // = = = = = = = = = = = = = = = = = = = = = = = =
+    //=====================================================================
     EPwm1Regs.TBPRD = PWM1_FREQ_PERIOD; //600; // Period = 2'600 TBCLK counts
     EPwm1Regs.CMPA.half.CMPA = PWM1_FREQ_PERIOD; //350; // Compare A = 350 TBCLK counts
     EPwm1Regs.CMPB = PWM1_FREQ_PERIOD; //400; // Compare B = 400 TBCLK counts
@@ -403,41 +367,13 @@ t_error Init_PWM (void) {
     EPwm1Regs.CMPCTL.bit.LOADBMODE = CC_CTR_ZERO; // load on CTR = Zero
     EPwm1Regs.AQCTLA.bit.CAU = AQ_CLEAR;
     EPwm1Regs.AQCTLA.bit.CAD = AQ_SET;
-    EPwm1Regs.AQCTLB.bit.CBU = AQ_SET;
-    EPwm1Regs.AQCTLB.bit.CBD = AQ_CLEAR;
+    EPwm1Regs.AQCTLB.bit.CBU = AQ_CLEAR;
+    EPwm1Regs.AQCTLB.bit.CBD = AQ_SET;
     // Run Time
     // = = = = = = = = = = = = = = = = = = = = = = = =
     //EPwm1Regs.CMPA.half.CMPA = Duty1A; // adjust duty for output EPWM1A
-    //EPwm1Regs.CMPB = Duty1B; // adjust duty for output EPWM1B
+    //EPwm1Regs.CMPB = Duty1B;           // adjust duty for output EPWM1B
 
-/*
-    // EPWM Module 2 config
-    EPwm2Regs.TBPRD = PWM2_FREQ_PERIOD; //500; // Period = 1201 TBCLK counts
-    EPwm2Regs.CMPA.half.CMPA = PWM2_FREQ_PERIOD/2; //300; // Set 50% fixed duty EPWM2A
-    EPwm2Regs.TBPHS.half.TBPHS = 0; // Set Phase register to zero initially
-    EPwm2Regs.TBCTL.bit.CTRMODE = TB_COUNT_UPDOWN; // Asymmetrical mode
-    EPwm2Regs.TBCTL.bit.PHSEN = TB_ENABLE; // Slave module
-    EPwm2Regs.TBCTL.bit.PRDLD = TB_SHADOW;
-    EPwm2Regs.TBCTL.bit.SYNCOSEL = TB_SYNC_IN; // sync flow-through
-    EPwm2Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW;
-    EPwm2Regs.CMPCTL.bit.SHDWBMODE = CC_SHADOW;
-    EPwm2Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO; // load on CTR=Zero
-    EPwm2Regs.CMPCTL.bit.LOADBMODE = CC_CTR_ZERO; // load on CTR=Zero
-    //EPwm2Regs.AQCTLA.bit.ZRO = AQ_SET; // set actions for EPWM2A
-    //EPwm2Regs.AQCTLA.bit.CAU = AQ_CLEAR;
-    //EPwm2Regs.AQCTLB.bit.ZRO = AQ_CLEAR; // set actions for EPWM2B
-    //EPwm2Regs.AQCTLB.bit.CAU = AQ_SET;
-    EPwm2Regs.AQCTLA.bit.ZRO = AQ_SET; // set actions for EPWM2A
-    EPwm2Regs.AQCTLA.bit.CAU = AQ_CLEAR;
-    EPwm2Regs.AQCTLB.bit.PRD = AQ_CLEAR; // set actions for EPWM2B
-    EPwm2Regs.AQCTLB.bit.CBD = AQ_SET;
-    EPwm2Regs.DBCTL.bit.OUT_MODE = DB_FULL_ENABLE; // enable Dead-band module
-    EPwm2Regs.DBCTL.bit.POLSEL = DB_ACTV_HIC; // Active Hi complementary
-    EPwm2Regs.DBFED = 30; // FED = 30 TBCLKs initially
-    EPwm2Regs.DBRED = 40; // RED = 40 TBCLKs initially
-*/
-    // Initialization Time
-    // = = = = = = = = = = = = = = = = = = = = = = = =
     EPwm2Regs.TBPRD = PWM2_FREQ_PERIOD; //600; // Period = 2'600 TBCLK counts
     EPwm2Regs.CMPA.half.CMPA = PWM2_FREQ_PERIOD; //350; // Compare A = 350 TBCLK counts
     EPwm2Regs.CMPB = PWM2_FREQ_PERIOD; //400; // Compare B = 400 TBCLK counts
@@ -447,8 +383,8 @@ t_error Init_PWM (void) {
     EPwm2Regs.TBCTL.bit.PHSEN = TB_DISABLE; // Phase loading disabled
     EPwm2Regs.TBCTL.bit.PRDLD = TB_SHADOW;
     EPwm2Regs.TBCTL.bit.SYNCOSEL = TB_SYNC_DISABLE;
-    EPwm2Regs.TBCTL.bit.HSPCLKDIV = TB_DIV1; // TBCLK = SYSCLKOUT
-    EPwm2Regs.TBCTL.bit.CLKDIV = TB_DIV1;
+    EPwm2Regs.TBCTL.bit.HSPCLKDIV = TB_DIV2; // TBCLK = SYSCLKOUT
+    EPwm2Regs.TBCTL.bit.CLKDIV = TB_DIV2;
     EPwm2Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW;
     EPwm2Regs.CMPCTL.bit.SHDWBMODE = CC_SHADOW;
     EPwm2Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO; // load on CTR = Zero
@@ -459,16 +395,16 @@ t_error Init_PWM (void) {
     EPwm2Regs.AQCTLB.bit.CBD = AQ_CLEAR;
     // Run Time
     // = = = = = = = = = = = = = = = = = = = = = = = =
-    //EPwm2Regs.CMPA.half.CMPA = Duty1A; // adjust duty for output EPWM1A
-    //EPwm2Regs.CMPB = Duty1B; // adjust duty for output EPWM1B
+    //EPwm2Regs.CMPA.half.CMPA = Duty2A; // adjust duty for output EPWM2A
+    //EPwm2Regs.CMPB = Duty2B;           // adjust duty for output EPWM2B
 
     // Run Time (Note: Example execution of one run-time instant)
     //============================================================
     EPwm2Regs.TBPHS.all = 100;//1200-300; // Set Phase reg to 300/1200 * 360 = 90 deg
-    EPwm1Regs.DBFED = 0; //FED1_NewValue; // Update ZVS transition interval
-    EPwm1Regs.DBRED = 0; //RED1_NewValue; // Update ZVS transition interval
-    EPwm2Regs.DBFED = 0; //FED2_NewValue; // Update ZVS transition interval
-    EPwm2Regs.DBRED = 0; //RED2_NewValue; // Update ZVS transition interval
+    EPwm2Regs.DBFED = EPWM2_MIN_DB; //FED2_NewValue; //Update ZVS transition interval
+    EPwm2Regs.DBRED = EPWM2_MIN_DB; //RED2_NewValue; //Update ZVS transition interval
+    EPwm1Regs.DBFED = EPWM1_MIN_DB; //FED1_NewValue; //Update ZVS transition interval
+    EPwm1Regs.DBRED = EPWM1_MIN_DB; //RED1_NewValue; //Update ZVS transition interval
     EPwm1Regs.CMPB = 100; // adjust point-in-time for ADCSOC trigger
 
     // Interrupt where we will modify the deadband
