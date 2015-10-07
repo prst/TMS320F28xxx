@@ -47,6 +47,7 @@ uint32_t     Timer0IntCount;
 
 extern t_status  sys_stat;
 extern int sinus[];
+extern int sinus45[];
 extern int sinus90[];
 extern int sinus180[];
 extern int sinus360[];
@@ -71,28 +72,75 @@ interrupt void epwm1_timer_isr (void) {
 #if (1==PWM1_INT_ENABLE)
 	static uint16_t cnt=0;
 	static uint16_t val;
+	//static uint16_t safa_begin=0;
 
 	//SinusRMS += sinus[cnt];
 	//PWM_setPeriod(myPwm1, sinus[cnt] );
 	//PWM_setCmpA(myPwm1, EPWM1_MIN_DB+(1*sinus90[cnt]) );
 	//PWM_setCmpB(myPwm1, /*PWM2_FREQ_PERIOD-*/EPWM1_MIN_DB+(1*sinus90[cnt]) );
-#if 1
-	val = EPWM1_MIN_DB+sinus90[cnt];
+
+#if 0 // 360 steps
+	if ( cnt >= STEPS ) cnt=0;
+
+	val = EPWM1_MIN_DB+sinus360[cnt]/2;
+	if ( cnt<STEPS/2 )
+	{
+		PWM_setCmpA(myPwm1, /*0x300*/0 );
+		PWM_setCmpB(myPwm1, 1*(val) );
+	}
+	else
+	{
+		PWM_setCmpA(myPwm1, 1*(val) );
+		PWM_setCmpB(myPwm1, /*0x300*/0x0 );
+	}
+	cnt += 1;
+#endif //0
+
+#if 1 // 90 steps - sinus OK
+	if ( cnt >= STEPS ) cnt=0;
+
+	val = EPWM1_MIN_DB+sinus90[cnt]/2;
+	if ( cnt<STEPS/2 )
+	{
+		PWM_setCmpA(myPwm1, /*0x300*/0 );
+		PWM_setCmpB(myPwm1, 1*(val/*-0x200*/) );
+	}
+	else
+	{
+		PWM_setCmpA(myPwm1, 1*(0x200-val) );
+		PWM_setCmpB(myPwm1, /*0x300*/0x0 );
+	}
+	cnt += 1;
+#endif //0
+
+#if 0
+	if ( cnt >= STEPS ) cnt=0;
+
+	val = EPWM1_MIN_DB+ (sinus45[cnt]/2);
 	if ( cnt<STEPS/2 )
 	//if ( (cnt>=22/*STEPS*/) && (cnt<67/*STEPS*/) )
 	{
-		PWM_setCmpA(myPwm1, 0 );
-		PWM_setCmpB(myPwm1, val - 0x80 );
+		PWM_setCmpA(myPwm1, /*0x300*/0 );
+		//PWM_setCmpB(myPwm1, 1*(val-0x400) );
+		PWM_setCmpB(myPwm1, (val) );
+		/*if (cnt == ((STEPS/2)-1)) {
+			PWM_setCmpA(myPwm1, 0 );
+			PWM_setCmpB(myPwm1, 0 );
+		}*/
 	}
 	else
 	//if ( (cnt>=67/*STEPS*/) && (cnt<22/*STEPS*/) )
 	{
-		PWM_setCmpA(myPwm1, 0x80 - val );
-		PWM_setCmpB(myPwm1, 0 );
+		//PWM_setCmpA(myPwm1, 1*(0x400-val) );
+		PWM_setCmpA(myPwm1, (0x400-val) );
+		PWM_setCmpB(myPwm1, /*0x300*/0x0 );
+		/*if (cnt == ((STEPS)-1)) {
+			PWM_setCmpA(myPwm1, 0 );
+			PWM_setCmpB(myPwm1, 0 );
+		}*/
 	}
-#endif //0
 	cnt += 1;
-	if ( cnt >= STEPS ) cnt=0;
+#endif //0
 
     // Clear INT flag for this timer
     PWM_clearIntFlag(myPwm1);

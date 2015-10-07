@@ -78,7 +78,9 @@
 #define PWM_FREQ_SINUS     ( 50 )  // HZ
 //#define STEPS            ( 360 ) // degree in sinus
 #define STEPS              ( 90 )  // degree in sinus
+//#define STEPS              ( 45 )  // degree in sinus
 
+//#define PWM1_FREQ_SWITCH   ( PWM_FREQ_SINUS * STEPS ) / (2+10)
 #define PWM1_FREQ_SWITCH   ( PWM_FREQ_SINUS * STEPS ) / (2+10)
 #define PWM1_FREQ_PERIOD   ( CPU_FREQ/PWM1_FREQ_SWITCH ) / PWM_UP_DOWN_MODE
 
