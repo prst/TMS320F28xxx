@@ -102,19 +102,18 @@ interrupt void epwm1_timer_isr (void) {
 	//val = EPWM1_MIN_DB+sinus90[cnt]/4;
 	val = EPWM1_MIN_DB+sinus180[cnt];
 
-	if ( cnt >= STEPS ) cnt=0;
-	//if ( cnt==(STEPS/2) ) cnt=0;
 	if ( cnt<(STEPS/2) )
 	{
 		PWM_setCmpA(myPwm1, 0x00 );
-		PWM_setCmpB(myPwm1, 1*(val) ); // ok !!!
+		PWM_setCmpB(myPwm1, 1*(val)+0 ); // ok !!!
 	}
 	else
 	{
-		PWM_setCmpA(myPwm1, 1*(0x7f-val) );
+		PWM_setCmpA(myPwm1, 1*(0x80-val) );
 		PWM_setCmpB(myPwm1, 0x00 );
 	}
 	cnt += 1;
+	if ( cnt >= STEPS ) cnt=0;
 #endif //0
 
 #if 0
