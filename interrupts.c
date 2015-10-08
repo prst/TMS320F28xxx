@@ -65,6 +65,7 @@ volatile uint16_t     update_data_from_adc=0;
  * IN   - void
  * OUT  - void
  * RET  - void
+   http://www.daycounter.com/Calculators/Sine-Generator-Calculator2.phtml
    ========================================================================== */
 // Interrupt routines uses in this example:
 interrupt void epwm1_timer_isr (void) {
@@ -97,18 +98,21 @@ interrupt void epwm1_timer_isr (void) {
 #endif //0
 
 #if 1 // 90 steps - sinus OK
-	if ( cnt >= STEPS ) cnt=0;
 
-	val = EPWM1_MIN_DB+sinus90[cnt]/2;
-	if ( cnt<STEPS/2 )
+	//val = EPWM1_MIN_DB+sinus90[cnt]/4;
+	val = EPWM1_MIN_DB+sinus180[cnt];
+
+	if ( cnt >= STEPS ) cnt=0;
+	//if ( cnt==(STEPS/2) ) cnt=0;
+	if ( cnt<(STEPS/2) )
 	{
-		PWM_setCmpA(myPwm1, /*0x300*/0 );
-		PWM_setCmpB(myPwm1, 1*(val/*-0x200*/) );
+		PWM_setCmpA(myPwm1, 0x00 );
+		PWM_setCmpB(myPwm1, 1*(val) ); // ok !!!
 	}
 	else
 	{
-		PWM_setCmpA(myPwm1, 1*(0x200-val) );
-		PWM_setCmpB(myPwm1, /*0x300*/0x0 );
+		PWM_setCmpA(myPwm1, 1*(0x7f-val) );
+		PWM_setCmpB(myPwm1, 0x00 );
 	}
 	cnt += 1;
 #endif //0

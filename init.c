@@ -359,8 +359,8 @@ t_error Init_PWM (void) {
     EPwm1Regs.TBCTL.bit.PHSEN = TB_DISABLE; // Phase loading disabled
     EPwm1Regs.TBCTL.bit.PRDLD = TB_SHADOW;
     EPwm1Regs.TBCTL.bit.SYNCOSEL = TB_SYNC_DISABLE;
-    EPwm1Regs.TBCTL.bit.HSPCLKDIV = TB_DIV2; // TBCLK = SYSCLKOUT
-    EPwm1Regs.TBCTL.bit.CLKDIV = TB_DIV2;
+    EPwm1Regs.TBCTL.bit.HSPCLKDIV = TB_DIV4; // TBCLK = SYSCLKOUT
+    EPwm1Regs.TBCTL.bit.CLKDIV    = TB_DIV2;
     EPwm1Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW;
     EPwm1Regs.CMPCTL.bit.SHDWBMODE = CC_SHADOW;
     EPwm1Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO; // load on CTR = Zero
@@ -384,7 +384,7 @@ t_error Init_PWM (void) {
     EPwm2Regs.TBCTL.bit.PRDLD = TB_SHADOW;
     EPwm2Regs.TBCTL.bit.SYNCOSEL = TB_SYNC_DISABLE;
     EPwm2Regs.TBCTL.bit.HSPCLKDIV = TB_DIV2; // TBCLK = SYSCLKOUT
-    EPwm2Regs.TBCTL.bit.CLKDIV = TB_DIV2;
+    EPwm2Regs.TBCTL.bit.CLKDIV    = TB_DIV2;
     EPwm2Regs.CMPCTL.bit.SHDWAMODE = CC_SHADOW;
     EPwm2Regs.CMPCTL.bit.SHDWBMODE = CC_SHADOW;
     EPwm2Regs.CMPCTL.bit.LOADAMODE = CC_CTR_ZERO; // load on CTR = Zero
