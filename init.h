@@ -63,8 +63,11 @@
 #define EPWM2_MAX_DB   0x03FF
 #define EPWM3_MAX_DB   0x03FF
 
-#define EPWM1_MIN_DB   0
-#define EPWM2_MIN_DB   0
+#define EPWM1_MIN_DB_UP    20
+#define EPWM1_MIN_DB_DOWN  20
+#define EPWM2_MIN_DB_UP    20
+
+#define EPWM2_MIN_DB_DOWN  20
 #define EPWM3_MIN_DB   0
 
 // To keep track of which way the Dead Band is moving

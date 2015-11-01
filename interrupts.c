@@ -39,11 +39,18 @@ uint16_t   ConvCount=0;
 uint16_t   TempSensorVoltage[10];
 stat_adc_t stat_adc=ADC_INIT;
 
+uint16_t   PWM_Ramp = (STEPS/2)+10;
+uint16_t   PWM_Ramp_TMP = 0;
+uint16_t   PWM_StartUP=0;
+
 //..............................................................................
-uint32_t     EPwm1TimerIntCount;
-uint32_t     EPwm2TimerIntCount;
-uint32_t     EPwm3TimerIntCount;
-uint32_t     Timer0IntCount;
+uint32_t   EPwm1TimerIntCount;
+uint32_t   EPwm2TimerIntCount;
+uint32_t   EPwm3TimerIntCount;
+uint32_t   Timer0IntCount;
+
+uint16_t   pwm1_duty;
+uint16_t   pwm1_duty_val;
 
 extern t_status  sys_stat;
 extern int sinus[];
@@ -71,8 +78,7 @@ volatile uint16_t     update_data_from_adc=0;
 interrupt void epwm1_timer_isr (void) {
 #if (1==USE_F28027_PWM)
 #if (1==PWM1_INT_ENABLE)
-	static uint16_t cnt=0;
-	static uint16_t val;
+	static uint16_t tetha=0;
 	//static uint16_t safa_begin=0;
 
 	//SinusRMS += sinus[cnt];
@@ -81,51 +87,72 @@ interrupt void epwm1_timer_isr (void) {
 	//PWM_setCmpB(myPwm1, /*PWM2_FREQ_PERIOD-*/EPWM1_MIN_DB+(1*sinus90[cnt]) );
 
 #if 0 // 360 steps
-	if ( cnt >= STEPS ) cnt=0;
+	if ( tetha >= STEPS ) tetha=0;
 
-	val = EPWM1_MIN_DB+sinus360[cnt]/2;
-	if ( cnt<STEPS/2 )
+	pwm1_duty = EPWM1_MIN_DB+sinus360[tetha]/2;
+	if ( tetha<STEPS/2 )
 	{
 		PWM_setCmpA(myPwm1, /*0x300*/0 );
-		PWM_setCmpB(myPwm1, 1*(val) );
+		PWM_setCmpB(myPwm1, 1*(pwm1_duty) );
 	}
 	else
 	{
-		PWM_setCmpA(myPwm1, 1*(val) );
+		PWM_setCmpA(myPwm1, 1*(pwm1_duty) );
 		PWM_setCmpB(myPwm1, /*0x300*/0x0 );
 	}
-	cnt += 1;
+	tetha += 1;
 #endif //0
 
 #if 1 // 90 steps - sinus OK
 
-	//val = EPWM1_MIN_DB+sinus90[cnt]/4;
-	val = EPWM1_MIN_DB+sinus180[cnt];
+	pwm1_duty = ((sinus180[tetha]));
 
-	if ( cnt<(STEPS/2) )
-	{
+	if ( tetha > (STEPS/2) ) {
+		// increase ramp if sinus in zerro-point
+		if ( 0==(sinus180[tetha]) ) {
+			if ( 1==PWM_StartUP ) {
+				if ( PWM_Ramp < STEPS ) {
+					if ( PWM_Ramp_TMP < 10 ) {
+						PWM_Ramp_TMP++;
+					} else {
+						PWM_Ramp_TMP=0;
+						PWM_Ramp++;
+					}
+				}
+			}
+		}
+	}
+
+	if ( tetha<(STEPS/2) ) {
+		pwm1_duty_val = (PWM_Ramp * pwm1_duty)/STEPS;  // Ramp
 		PWM_setCmpA(myPwm1, 0x00 );
-		PWM_setCmpB(myPwm1, 1*(val)+0 ); // ok !!!
-	}
-	else
-	{
-		PWM_setCmpA(myPwm1, 1*(0x80-val) );
+		if ( tetha < 22 ) {
+			PWM_setCmpB(myPwm1, 1+pwm1_duty_val ); // ok !!!
+		}else{
+			PWM_setCmpB(myPwm1, pwm1_duty_val ); // ok !!!
+		}
+	} else {
+		pwm1_duty_val = (PWM_Ramp * (0x80-pwm1_duty) )/STEPS;  // Ramp
+		PWM_setCmpA(myPwm1, pwm1_duty_val );
 		PWM_setCmpB(myPwm1, 0x00 );
+		/*if ( cnt == (STEPS)-1 ) {
+			PWM_setCmpA(myPwm1, 0x80-pwm1_duty_val );
+		}*/
 	}
-	cnt += 1;
-	if ( cnt >= STEPS ) cnt=0;
+	tetha += 1;
+	if ( tetha >= STEPS ) tetha=0;
 #endif //0
 
 #if 0
-	if ( cnt >= STEPS ) cnt=0;
+	if ( tetha >= STEPS ) tetha=0;
 
-	val = EPWM1_MIN_DB+ (sinus45[cnt]/2);
-	if ( cnt<STEPS/2 )
+	pwm1_duty = EPWM1_MIN_DB+ (sinus45[tetha]/2);
+	if ( tetha<STEPS/2 )
 	//if ( (cnt>=22/*STEPS*/) && (cnt<67/*STEPS*/) )
 	{
 		PWM_setCmpA(myPwm1, /*0x300*/0 );
 		//PWM_setCmpB(myPwm1, 1*(val-0x400) );
-		PWM_setCmpB(myPwm1, (val) );
+		PWM_setCmpB(myPwm1, (pwm1_duty) );
 		/*if (cnt == ((STEPS/2)-1)) {
 			PWM_setCmpA(myPwm1, 0 );
 			PWM_setCmpB(myPwm1, 0 );
@@ -135,14 +162,14 @@ interrupt void epwm1_timer_isr (void) {
 	//if ( (cnt>=67/*STEPS*/) && (cnt<22/*STEPS*/) )
 	{
 		//PWM_setCmpA(myPwm1, 1*(0x400-val) );
-		PWM_setCmpA(myPwm1, (0x400-val) );
+		PWM_setCmpA(myPwm1, (0x400-pwm1_duty) );
 		PWM_setCmpB(myPwm1, /*0x300*/0x0 );
 		/*if (cnt == ((STEPS)-1)) {
 			PWM_setCmpA(myPwm1, 0 );
 			PWM_setCmpB(myPwm1, 0 );
 		}*/
 	}
-	cnt += 1;
+	tetha += 1;
 #endif //0
 
     // Clear INT flag for this timer
@@ -172,8 +199,8 @@ interrupt void epwm2_timer_isr (void) {
 
 	//SinusRMS += sinus[cnt];
 	//PWM_setPeriod(myPwm1, sinus[cnt] );
-	PWM_setCmpA(myPwm2, EPWM2_MIN_DB+(1*sinus90[cnt]) );
-	PWM_setCmpB(myPwm2, /*PWM2_FREQ_PERIOD-*/EPWM2_MIN_DB+(1*sinus90[cnt]) );
+	PWM_setCmpA(myPwm2, /*EPWM2_MIN_DB+/ (1*sinus90[cnt]) );
+	PWM_setCmpB(myPwm2, /*PWM2_FREQ_PERIOD-*/ /*EPWM2_MIN_DB+*/ (1*sinus90[cnt]) );
 
 	if (++cnt >= STEPS ) cnt=0;
 

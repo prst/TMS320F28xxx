@@ -48,6 +48,7 @@ uint16_t  EPwm1_DB_Direction;
 uint16_t  EPwm2_DB_Direction;
 uint16_t  EPwm3_DB_Direction;
 
+extern uint16_t   PWM_StartUP;
 
 /* ========================================================================== */
 t_error      rc = E_OK;
@@ -373,6 +374,7 @@ t_error Init_PWM (void) {
     // = = = = = = = = = = = = = = = = = = = = = = = =
     //EPwm1Regs.CMPA.half.CMPA = Duty1A; // adjust duty for output EPWM1A
     //EPwm1Regs.CMPB = Duty1B;           // adjust duty for output EPWM1B
+    PWM_StartUP = 1;
 
     EPwm2Regs.TBPRD = PWM2_FREQ_PERIOD; //600; // Period = 2'600 TBCLK counts
     EPwm2Regs.CMPA.half.CMPA = PWM2_FREQ_PERIOD; //350; // Compare A = 350 TBCLK counts
@@ -400,12 +402,12 @@ t_error Init_PWM (void) {
 
     // Run Time (Note: Example execution of one run-time instant)
     //============================================================
-    EPwm2Regs.TBPHS.all = 100;//1200-300; // Set Phase reg to 300/1200 * 360 = 90 deg
-    EPwm2Regs.DBFED = EPWM2_MIN_DB; //FED2_NewValue; //Update ZVS transition interval
-    EPwm2Regs.DBRED = EPWM2_MIN_DB; //RED2_NewValue; //Update ZVS transition interval
-    EPwm1Regs.DBFED = EPWM1_MIN_DB; //FED1_NewValue; //Update ZVS transition interval
-    EPwm1Regs.DBRED = EPWM1_MIN_DB; //RED1_NewValue; //Update ZVS transition interval
+    EPwm1Regs.DBRED = EPWM1_MIN_DB_UP;   //RED1_NewValue; //Update ZVS transition interval
+    EPwm1Regs.DBFED = EPWM1_MIN_DB_DOWN; //FED1_NewValue; //Update ZVS transition interval
     EPwm1Regs.CMPB = 100; // adjust point-in-time for ADCSOC trigger
+    EPwm2Regs.TBPHS.all = 100;//1200-300; // Set Phase reg to 300/1200 * 360 = 90 deg
+    EPwm2Regs.DBRED = EPWM1_MIN_DB_UP;   //RED2_NewValue; //Update ZVS transition interval
+    EPwm2Regs.DBFED = EPWM1_MIN_DB_DOWN; //FED2_NewValue; //Update ZVS transition interval
 
     // Interrupt where we will modify the deadband
     PWM_setIntMode  (myPwm1, PWM_IntMode_CounterEqualZero); // Select INT on Zero event
@@ -520,8 +522,8 @@ void InitEPwm1 (void)
     PWM_setDeadBandOutputMode(myPwm1, PWM_DeadBandOutputMode_EPWMxA_Rising_EPWMxB_Falling );
     PWM_setDeadBandPolarity(myPwm1,   PWM_DeadBandPolarity_EPWMxB_Inverted );
     PWM_setDeadBandInputMode(myPwm1,  PWM_DeadBandInputMode_EPWMxB_Rising_and_Falling);
-    PWM_setDeadBandRisingEdgeDelay(myPwm1,  EPWM1_MIN_DB);
-    PWM_setDeadBandFallingEdgeDelay(myPwm1, EPWM1_MIN_DB);
+    PWM_setDeadBandRisingEdgeDelay(myPwm1,  EPWM1_MIN_DB_UP);
+    PWM_setDeadBandFallingEdgeDelay(myPwm1, EPWM1_MIN_DB_DOWN);
     EPwm1_DB_Direction = DB_UP;
 
     // Interrupt where we will change the Deadband
@@ -559,8 +561,8 @@ void InitEPwm2 (void)
     PWM_setDeadBandOutputMode(myPwm2, PWM_DeadBandOutputMode_EPWMxA_Rising_EPWMxB_Falling);
     PWM_setDeadBandPolarity  (myPwm2, PWM_DeadBandPolarity_EPWMxA_Inverted_EPWMxB_Inverted);
     PWM_setDeadBandInputMode (myPwm2, PWM_DeadBandInputMode_EPWMxA_Rising_and_Falling);
-    PWM_setDeadBandRisingEdgeDelay (myPwm2, EPWM2_MIN_DB);
-    PWM_setDeadBandFallingEdgeDelay(myPwm2, EPWM2_MIN_DB);
+    PWM_setDeadBandRisingEdgeDelay (myPwm2, EPWM2_MIN_DB_UP);
+    PWM_setDeadBandFallingEdgeDelay(myPwm2, EPWM2_MIN_DB_DOWN);
     EPwm2_DB_Direction = DB_UP;
 
     // Interrupt where we will modify the deadband

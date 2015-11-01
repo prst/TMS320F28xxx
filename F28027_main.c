@@ -301,6 +301,9 @@ extern uint32_t   EPwm1TimerIntCount;
 extern uint32_t   EPwm2TimerIntCount;
 extern uint32_t   EPwm3TimerIntCount;
 
+extern uint16_t   pwm1_duty;
+extern uint16_t   pwm1_duty_val;
+
 //..............................................................................
 typedef enum {
 	LCD_UPD_PREPARE = 0,
@@ -369,6 +372,8 @@ uint16_t adc_find_center_for_sinus (char mode)
  * ========================================================================== */
 void main (void)
 {
+	static uint32_t  cnt, cnt_Update;
+
 	//Init_All();
 	if (E_OK==rc)  rc = Init_Sys();   else  Error(rc); // Init system and handles
     if (E_OK==rc)  rc = Init_PLL();   else  Error(rc); // Init PLL
@@ -390,6 +395,18 @@ void main (void)
 	// Main code
     for(;;)
     {
+/*		if ( cnt_Update > 600000 )
+		{
+			cnt_Update = 0;
+			//Lcd_update();
+			Lcd_prints ( 0,  5, FONT_1X, "PWM1 Duty     " );
+			ltoa( pwm1_duty_val, (char *)&lcd_buff[0] );
+			Lcd_prints ( 10, 5, FONT_1X, (byte *)lcd_buff );
+			Lcd_update();
+		}
+		cnt_Update++;
+*/
+
 #if (0)
     	//wrapper_Main();
 
@@ -407,7 +424,6 @@ void main (void)
 
     	if ( update_data_from_adc )
     	{
-    		static uint16_t  cnt, cnt_Update;
     		static uint16_t  xx=0;
     		static uint16_t  x1=0, y1=0, x2=0, y2=0;
     		uint16_t         adc_lcd_offset , sinus_center;
